@@ -32,10 +32,10 @@ FacultyBoard is a digital solution designed to streamline faculty consultations 
 - **Display System**: Public-facing dashboard system
 
 ### Technology Stack
-- **Frontend**: React, TypeScript, Next.js (App Router)
-- **Styling**: Tailwind CSS, Radix UI components
+- **Frontend**: React
+- **Styling**: CSS
 - **State Management**: Built on React hooks
-- **Backend Integration**: Microsoft Teams API, Copilot Studio
+- **Backend Integration**: Node.js, Express, Microsoft Teams API, Copilot Studio
 - **Version Control**: Git/GitHub
 
 ## 🚀 Getting Started
