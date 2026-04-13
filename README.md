@@ -13,7 +13,7 @@ FacultyBoard is a digital solution designed to streamline faculty consultations 
 - **Consultation Queue System**: Organized queue management for student consultations
 - **Public Display Dashboards**: Real-time faculty availability information displayed throughout campus
 - **Microsoft Teams Integration**: Seamless integration with institutional Teams infrastructure
-- **AI-Powered Assistant**: Built-in Microsoft Copilot Studio integration for intelligent support
+- **Automation**: Power Automate Workflows
 
 ### User Capabilities
 - Faculty can manage their availability status
@@ -28,14 +28,13 @@ FacultyBoard is a digital solution designed to streamline faculty consultations 
 - **Frontend**: React-based user interface with TypeScript
 - **Backend**: Consultation queue and status management logic
 - **Integration Layer**: Microsoft Teams API integration
-- **AI Module**: Microsoft Copilot Studio integration (M365 ecosystem)
 - **Display System**: Public-facing dashboard system
 
 ### Technology Stack
 - **Frontend**: React
 - **Styling**: CSS
 - **State Management**: Built on React hooks
-- **Backend Integration**: Node.js, Express, Microsoft Teams API, Copilot Studio
+- **Backend Integration**: Node.js, Express, Microsoft Teams API, Power Automate
 - **Version Control**: Git/GitHub
 
 ## 🚀 Getting Started
@@ -43,7 +42,7 @@ FacultyBoard is a digital solution designed to streamline faculty consultations 
 ### Prerequisites
 - Node.js (recommended version 18+)
 - Git
-- Microsoft 365 account (for Teams and Copilot Studio)
+- Microsoft 365 account (for Teams and Power Automate)
 
 ## 🔄 Faculty Status States
 
@@ -72,14 +71,6 @@ The system manages faculty through distinct status states:
 3. Views their consultation queue
 4. Accepts/completes consultations
 5. Logs out when finished
-
-## 🤖 AI Integration (Copilot Studio)
-
-The system includes AI-powered features through Microsoft Copilot Studio:
-- Intelligent consultation scheduling suggestions
-- Automated FAQ responses
-- Natural language query processing
-- Administrative insights and analytics
 
 **Last Updated**: April 2026  
 **Version**: 1.0.0  
