@@ -49,10 +49,10 @@ const STATUS_CONFIG: Record<FacultyStatus, StatusConfig> = {
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
         <div className="flex flex-col gap-0.5">
-            <span className="text-xs uppercase text-[#5a7698]">
+            <span className="text-[8px] uppercase text-[#5a7698]">
                 {label}
             </span>
-            <span className="text-sm text-foreground">
+            <span className="text-[10px] text-foreground">
                 {value}
             </span>
         </div>
@@ -110,20 +110,20 @@ export function FacultyCard({ faculty }: { faculty: Faculty }) {
 
             {/* Status Header Bar */}
             <div className={cn("w-full px-4 py-2 m-0", config.badgeBg)}>
-                <span className={cn("block text-sm font-bold uppercase tracking-wide", config.badgeText)}>
+                <span className={cn("block text-xs font-bold uppercase tracking-wide", config.badgeText)}>
                     {config.label}
                 </span>
             </div>
 
             {/* Name + Avatar */}
-            <div className="flex flex-row items-center justify-between w-full px-3 py-3">
+            <div className="flex flex-row items-center justify-between w-full px-4 py-2">
                 <div className="flex flex-col gap-0.5">
-                    <h3 className="text-sm font-normal text-foreground leading-tight">{faculty.name}</h3>
-                    <span className="text-xs text-muted-foreground leading-tight">
+                    <h3 className="text-xs font-normal text-foreground leading-tight">{faculty.name}</h3>
+                    <span className="text-[10px] text-muted-foreground leading-tight">
                         {faculty.strand}
                     </span>
                 </div>
-                <Avatar className="h-12 w-12 shrink-0 shadow-sm border border-muted/50">
+                <Avatar className="h-10 w-10 shrink-0 shadow-sm border border-muted/50">
                     <AvatarImage src={faculty.photoUrl} alt={faculty.name} />
                     <AvatarFallback className="bg-muted text-xs font-bold text-muted-foreground">
                         {getInitials}
@@ -132,7 +132,7 @@ export function FacultyCard({ faculty }: { faculty: Faculty }) {
             </div>
 
             {/* Info Rows - padded extra on the left to indent past the name */}
-            <CardContent className="space-y-2 px-5 py-5">
+            <CardContent className="space-y-1 px-4 py-2">
                 {/* Row 1: Location */}
                 <InfoRow 
                     label="Current Location" 
@@ -147,7 +147,7 @@ export function FacultyCard({ faculty }: { faculty: Faculty }) {
             </CardContent>
             {/* Row 3: Consultation Hours (Moved inside Content) */}
             {faculty.status === "off-campus" || faculty.status === "do-not-disturb" ? (
-                <div className="rounded-md bg-muted/50 p-2.5 mx-4 mb-4 h-12.5 flex items-center justify-center">
+                <div className="rounded-md bg-muted/50 p-2.5 mx-4 mb-4 h-12 flex items-center justify-center">
                     <p className="text-[11px] italic leading-snug text-muted-foreground">
                         "{faculty.note || "No additional note provided."}"
                     </p>
@@ -157,7 +157,7 @@ export function FacultyCard({ faculty }: { faculty: Faculty }) {
                     <span className="text-[10px] font-bold uppercase text-slate-800/70">
                         Consultation Hours
                     </span>
-                    <span className="text-sm font-medium text-slate-900">
+                    <span className="text-xs font-medium text-slate-900">
                         {faculty.consultationHours 
                             ? `${faculty.consultationHours.start} - ${faculty.consultationHours.end}`
                             : "No Hours Set"
