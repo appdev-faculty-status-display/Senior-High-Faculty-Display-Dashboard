@@ -1,13 +1,61 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+    /* Typography */
     --font-heading: var(--font-sans);
     --font-sans: 'Inter Variable', sans-serif;
+    
+    /* Color Palette - Primaries */
+    --color-primary: var(--primary);
+    --color-primary-hover: var(--primary-hover);
+    --color-primary-active: var(--primary-active);
+    --color-primary-foreground: var(--primary-foreground);
+    
+    --color-secondary: var(--secondary);
+    --color-secondary-hover: var(--secondary-hover);
+    --color-secondary-active: var(--secondary-active);
+    --color-secondary-foreground: var(--secondary-foreground);
+    
+    /* Color Palette - Neutrals */
+    --color-black: var(--black);
+    --color-dark-gray: var(--dark-gray);
+    --color-light-gray: var(--light-gray);  
+    --color-pastel-blue: var(--pastel-blue);
+    --color-white: var(--white);
+    
+    /* Color Palette - Semantic (Faculty States) */
+    --color-on-break: var(--on-break);
+    --color-available: var(--available);
+    --color-do-not-disturb: var(--do-not-disturb);
+    --color-off-campus: var(--off-campus);
+    --color-in-meeting: var(--in-meeting);
+    --color-in-class: var(--in-class);
+    
+    /* Color Palette - Accents */
+    --color-accent-yellow: var(--accent-yellow);
+    --color-accent-blue: var(--accent-blue);
+    
+    /* UI Colors */
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    
+    /* Sidebar */
+    --color-sidebar: var(--sidebar);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -15,30 +63,15 @@
     --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
     --color-sidebar-primary: var(--sidebar-primary);
     --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
+    
+    /* Charts */
     --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    
+    /* Border Radius */
     --radius-sm: calc(var(--radius) * 0.6);
     --radius-md: calc(var(--radius) * 0.8);
     --radius-lg: var(--radius);
@@ -49,82 +82,221 @@
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    /* Primaries - Gold */
+    --primary: #ffc107;
+    --primary-hover: #ffd41c;
+    --primary-active: #e6a800;
+    --primary-foreground: #1a1a1a;
+    
+    /* Primaries - Blue */
+    --secondary: #064db6;
+    --secondary-hover: #002f73;
+    --secondary-active: #001f4d;
+    --secondary-foreground: #ffffff;
+    
+    /* Neutrals */
+    --black: #1a1a1a;
+    --dark-gray: #4f4f4f;
+    --light-gray: #d6d6d6;
+    --pastel-blue: #cbd5e1;
+    --white: #ffffff;
+    
+    /* Semantic Colors - Faculty States */
+    --on-break: #3b74fa;
+    --available: #31ac52;
+    --do-not-disturb: #ed3a30;
+    --off-campus: #ff914d;
+    --in-meeting: #9440dd;
+    --in-class: #ffef5f;
+    
+    /* Accents */
+    --accent-yellow: #ffef5f;
+    --accent-blue: #3b74fa;
+    
+    /* UI Base Colors */
+    --background: #ffffff;
+    --foreground: #1a1a1a;
+    --card: #ffffff;
+    --card-foreground: #1a1a1a;
+    --popover: #ffffff;
+    --popover-foreground: #1a1a1a;
+    --muted: #d6d6d6;
+    --muted-foreground: #4f4f4f;
+    --accent-foreground: #1a1a1a;
+    --destructive: #ed3a30;
+    --border: #d6d6d6;
+    --input: #f5f5f5;
+    --ring: #064db6;
+    
+    /* Sidebar */
+    --sidebar: #ffffff;
+    --sidebar-foreground: #1a1a1a;
+    --sidebar-primary: #064db6;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #ffc107;
+    --sidebar-accent-foreground: #1a1a1a;
+    --sidebar-border: #d6d6d6;
+    --sidebar-ring: #064db6;
+    
+    /* Charts */
+    --chart-1: #064db6;
+    --chart-2: #ffc107;
+    --chart-3: #31ac52;
+    --chart-4: #ff914d;
+    --chart-5: #9440dd;
+    
+    /* Border Radius */
+    --radius: 0.5rem;
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    /* Primaries - Gold (adjusted for dark mode) */
+    --primary: #ffc107;
+    --primary-hover: #ffd41c;
+    --primary-active: #e6a800;
+    --primary-foreground: #1a1a1a;
+    
+    /* Primaries - Blue (adjusted for dark mode) */
+    --secondary: #064db6;
+    --secondary-hover: #002f73;
+    --secondary-active: #001f4d;
+    --secondary-foreground: #ffffff;
+    
+    /* Neutrals - inverted for dark mode */
+    --black: #f5f5f5;
+    --dark-gray: #b0b0b0;
+    --light-gray: #404040;
+    --pastel-blue: #4a5568;
+    --white: #1a1a1a;
+    
+    /* Semantic Colors remain the same */
+    --on-break: #3b74fa;
+    --available: #31ac52;
+    --do-not-disturb: #ed3a30;
+    --off-campus: #ff914d;
+    --in-meeting: #9440dd;
+    --in-class: #ffef5f;
+    
+    /* Accents remain the same */
+    --accent-yellow: #ffef5f;
+    --accent-blue: #3b74fa;
+    
+    /* UI Base Colors - Dark Mode */
+    --background: #1a1a1a;
+    --foreground: #f5f5f5;
+    --card: #2a2a2a;
+    --card-foreground: #f5f5f5;
+    --popover: #2a2a2a;
+    --popover-foreground: #f5f5f5;
+    --muted: #404040;
+    --muted-foreground: #b0b0b0;
+    --accent-foreground: #1a1a1a;
+    --destructive: #ff6b5b;
+    --border: #404040;
+    --input: #2a2a2a;
+    --ring: #ffc107;
+    
+    /* Sidebar - Dark Mode */
+    --sidebar: #2a2a2a;
+    --sidebar-foreground: #f5f5f5;
+    --sidebar-primary: #ffc107;
+    --sidebar-primary-foreground: #1a1a1a;
+    --sidebar-accent: #064db6;
+    --sidebar-accent-foreground: #f5f5f5;
+    --sidebar-border: #404040;
+    --sidebar-ring: #ffc107;
+    
+    /* Charts - Dark Mode */
+    --chart-1: #ffc107;
+    --chart-2: #064db6;
+    --chart-3: #31ac52;
+    --chart-4: #ff914d;
+    --chart-5: #9440dd;
 }
 
+/* Typography Scales */
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+    h1 {
+        @apply text-5xl font-bold leading-tight;
+        font-size: clamp(36px, 5vw, 48px);
     }
-  body {
-    @apply bg-background text-foreground;
+
+    h2 {
+        @apply text-4xl font-bold leading-snug;
+        font-size: clamp(28px, 4vw, 32px);
     }
-  html {
-    @apply font-sans;
+
+    h3 {
+        @apply text-3xl font-semibold leading-snug;
+        font-size: clamp(22px, 3vw, 24px);
+    }
+
+    h4 {
+        @apply text-2xl font-semibold leading-normal;
+        font-size: clamp(18px, 2.5vw, 20px);
+    }
+
+    p {
+        @apply text-base leading-relaxed;
+        font-size: clamp(12px, 1.2vw, 14px);
+    }
+
+    /* Global Base Styles */
+    * {
+        @apply border-border outline-ring/50;
+    }
+
+    body {
+        @apply bg-background text-foreground font-sans;
+    }
+
+    html {
+        @apply font-sans;
+    }
+}
+
+/* Utility Classes for Faculty States */
+@layer components {
+    .state-on-break {
+        @apply bg-on-break/10 text-on-break border border-on-break/30;
+    }
+
+    .state-available {
+        @apply bg-available/10 text-available border border-available/30;
+    }
+
+    .state-do-not-disturb {
+        @apply bg-do-not-disturb/10 text-do-not-disturb border border-do-not-disturb/30;
+    }
+
+    .state-off-campus {
+        @apply bg-off-campus/10 text-off-campus border border-off-campus/30;
+    }
+
+    .state-in-meeting {
+        @apply bg-in-meeting/10 text-in-meeting border border-in-meeting/30;
+    }
+
+    .state-in-class {
+        @apply bg-in-class/10 text-in-class border border-in-class/30;
+    }
+
+    /* Button States */
+    .btn-primary {
+        @apply bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active transition-colors;
+    }
+
+    .btn-secondary {
+        @apply bg-secondary text-secondary-foreground hover:bg-secondary-hover active:bg-secondary-active transition-colors;
+    }
+
+    /* Focus States */
+    .focus-ring {
+        @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+    }
+
+    /* Dark mode focus offset */
+    .dark .focus-ring {
+        @apply focus:ring-offset-background;
     }
 }
