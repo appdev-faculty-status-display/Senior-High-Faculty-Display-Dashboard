@@ -13,7 +13,7 @@ FacultyBoard is a digital solution designed to streamline faculty consultations 
 - **Consultation Queue System**: Organized queue management for student consultations
 - **Public Display Dashboards**: Real-time faculty availability information displayed throughout campus
 - **Microsoft Teams Integration**: Seamless integration with institutional Teams infrastructure
-- **AI-Powered Assistant**: Built-in Microsoft Copilot Studio integration for intelligent support
+- **Power Automate**: Power automte workflow for notifications and reminders
 
 ### User Capabilities
 - Faculty can manage their availability status
@@ -24,19 +24,51 @@ FacultyBoard is a digital solution designed to streamline faculty consultations 
 
 ## 🏗️ System Architecture
 
-### Components
-- **Frontend**: React-based user interface with TypeScript
-- **Backend**: Consultation queue and status management logic
-- **Integration Layer**: Microsoft Teams API integration
-- **AI Module**: Microsoft Copilot Studio integration (M365 ecosystem)
-- **Display System**: Public-facing dashboard system
+### Current Architecture (Implemented)
+
+The project is currently implemented as a two-tier web application:
+
+- **Presentation Layer (Frontend)**: React 19 + TypeScript application powered by Vite
+- **API Layer (Backend)**: Node.js + Express REST API
+- **Data Layer**: MongoDB accessed through Mongoose
+
+### Runtime Flow
+
+```text
+[Students / Faculty / Admin / Public Displays]
+		   |
+		   v
+     [Frontend: React + TypeScript + Tailwind CSS]
+		   |
+		   v
+	   [Backend API: Express]
+		   |
+		   v
+	 [MongoDB Database: Mongoose ODM]
+```
+
+### Backend Structure
+- `server.js`: Express bootstrap, middleware setup, MongoDB connection, and base health endpoint (`/api`)
+- `routes/`: Reserved for domain API routes (consultation, faculty, status)
+- `controllers/`: Reserved for request handlers/business logic
+- `models/`: Reserved for MongoDB data models and schemas
+
+### Frontend Structure
+- `src/main.tsx`: React application entry point
+- `src/App.tsx`: Root UI component (dashboard shell)
+- `src/index.css`: Global styles and Tailwind CSS setup
 
 ### Technology Stack
-- **Frontend**: React
-- **Styling**: CSS
-- **State Management**: Built on React hooks
-- **Backend Integration**: Node.js, Express, Microsoft Teams API, Copilot Studio
+- **Frontend**: React 19, TypeScript, Vite
+- **Styling**: Tailwind CSS 4
+- **Backend**: Node.js, Express 5
+- **Database**: MongoDB + Mongoose
 - **Version Control**: Git/GitHub
+
+### Planned Integrations (Roadmap)
+- Microsoft Teams API integration
+- Power Automate workflows for notifications/reminders
+- Microsoft Copilot Studio AI assistants
 
 ## 🚀 Getting Started
 
