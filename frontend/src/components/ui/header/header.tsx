@@ -18,7 +18,9 @@ const Header = ({ variant = "default" }: HeaderProps) => {
                 </div>
                 <div className={cn("flex flex-col leading-tight", isAdmin ? "text-secondary-active" : "text-white")}>
                     <h1 className="font-bold tracking-tight text-3xl">NU LAGUNA</h1>
-                    <p className="text-sm font-medium opacity-95 text-base">SSHS Faculty Status Display Board</p>
+                    <p className="text-sm font-medium opacity-95">
+                        {isAdmin ? "Admin Panel" : "SSHS Faculty Status Display Board"}
+                    </p>
                 </div>
             </div>
 
