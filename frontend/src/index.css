@@ -300,3 +300,17 @@
         @apply focus:ring-offset-background;
     }
 }
+
+@keyframes ticker {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker {
+  animation: ticker 27s linear infinite;
+}
+
