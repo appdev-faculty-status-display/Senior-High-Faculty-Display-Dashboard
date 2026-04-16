@@ -1,6 +1,8 @@
 import { FacultyCard } from "../components/ui/faculty-card/faculty-card";
 import { MOCK_FACULTY } from "../data/mockFaculty";
 import Header from "../components/ui/header/header";
+import Consultation from "@/components/ui/consultation/consultation";
+import Footer from "@/components/ui/footer/footer";
 
 export default function FacultyCardDemo() {
 
@@ -53,6 +55,8 @@ export default function FacultyCardDemo() {
         </div>
 
       </div>
+
+    <Footer/>
     </main>
   );
 }
