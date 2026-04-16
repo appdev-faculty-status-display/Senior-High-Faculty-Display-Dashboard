@@ -46,13 +46,13 @@ export default function FacultyCardDemo() {
             ))}
           </div>
         </section>
-
-        {/* Card grid */}
+{/* 
+        Card grid
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-6 ">
           {MOCK_FACULTY.map((faculty) => (
             <FacultyCard key={faculty.id} faculty={faculty} />
           ))}
-        </div>
+        </div> */}
 
       </div>
 
