@@ -5,12 +5,10 @@ interface FooterProps {
 }
 
 const defaultAnnouncements = [
-    "Welcome to our consultation portal!",
-    "New schedules available for April 2026.",
-    "Scan the QR code to book your meeting.",
-    "Enrollment is now open for SY 2025-2026",
-    "Consultation hours: Monday to Friday, 8am - 5pm",
-    "Please bring your student ID during consultations",
+    "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
+    "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
+    "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
+    "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
   ];
 
 const Footer: React.FC<FooterProps> = ({ announcements = defaultAnnouncements }) => {

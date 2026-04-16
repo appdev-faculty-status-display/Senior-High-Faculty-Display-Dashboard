@@ -1,9 +1,8 @@
 import React from "react";
-import type { Faculty, FacultyStatus } from "../../../types/faculty-states";
+import type { Faculty, FacultyStatus } from "@/types/faculty-states";
 import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 
 // Status Config
 interface StatusConfig {
