@@ -4,27 +4,7 @@ import logo from "@/assets/logo.svg";
 import { type Room } from "@/types/requestForm";
 import type { FormState, FormErrors, UrgencyLevel, RoomStatus } from "@/types/requestForm";
 import { mockRooms, strands, teachers } from "@/data/mockRequestForm";
-
-// Helpers
-function generateTimeSlots(startHour: number, endHour: number): string[] {
-  const slots: string[] = [];
-  for (let h = startHour; h < endHour; h++) {
-    for (let m = 0; m < 60; m += 15) {
-      const nextM = m + 15;
-      const nextH = nextM === 60 ? h + 1 : h;
-      const normNextM = nextM === 60 ? 0 : nextM;
-      if (nextH > endHour) break;
-      const fmt = (hour: number, min: number): string => {
-        const period = hour < 12 ? "AM" : "PM";
-        const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-        const displayMin = min.toString().padStart(2, "0");
-        return `${displayHour}:${displayMin} ${period}`;
-      };
-      slots.push(`${fmt(h, m)} – ${fmt(nextH, normNextM)}`);
-    }
-  }
-  return slots;
-}
+import { generateTimeSlots } from "@/utils/timeSlots";
 
 // Sub-components
 interface ConsultationRoomPickerProps {
@@ -52,7 +32,7 @@ function ConsultationRoomPicker({ rooms, selected, onChange }: ConsultationRoomP
             key={room.id}
             type="button"
             disabled={isDisabled}
-            onClick={() => !isDisabled && onChange(room.id)}
+            onClick={() => onChange(room.id)}
             className={`px-4 py-1.5 text-sm font-black tracking-wide transition-all ${style}`}
           >
             {room.id}
@@ -110,13 +90,20 @@ function UrgencySelector({ selected, onChange }: UrgencySelectorProps) {
     { value: "low",    label: "LOW",    color: "#31ac52" },
   ];
   return (
-    <div className="flex items-center gap-6">
+    <div className="flex items-center gap-6" role="radiogroup">
       {levels.map((level) => (
         <label
           key={level.value}
           className="flex items-center gap-2 cursor-pointer select-none"
-          onClick={() => onChange(level.value)}
         >
+          <input
+            type="radio"
+            name="urgency"
+            value={level.value}
+            checked={selected === level.value}
+            onChange={() => onChange(level.value)}
+            className="sr-only"
+          />
           <div
             className="relative w-5 h-5 rounded-full flex items-center justify-center border-2 transition-all"
             style={{
@@ -144,7 +131,7 @@ export default function RequestForm() {
   const prefillStudentId = searchParams.get("studentId") ?? "";
   const prefillName      = searchParams.get("name") ?? "";
 
-  const [rooms] = useState<Room[]>(mockRooms);
+  const rooms: Room[] = mockRooms;
 
   const [form, setForm] = useState<FormState>({
     name:      prefillName,
@@ -174,7 +161,11 @@ export default function RequestForm() {
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
     if (!form.name.trim())      newErrors.name      = "Name is required.";
-    if (!form.studentId.trim()) newErrors.studentId = "Student ID is required.";
+    if (!form.studentId.trim()) {
+        newErrors.studentId = "Student ID is required.";    
+    } else if (!/^\d{4}-\d{6}$/.test(form.studentId.trim())) {
+        newErrors.studentId = "Invalid format. Use: 2025-123456";
+    }
     if (!form.strand)           newErrors.strand    = "Please select a strand.";
     if (!form.teacher)          newErrors.teacher   = "Please select a teacher.";
     if (!form.reason.trim())    newErrors.reason    = "Reason is required.";
@@ -204,7 +195,13 @@ export default function RequestForm() {
           </p>
           <button
             type="button"
-            onClick={() => { setSubmitted(false); setForm({ name: "", studentId: "", strand: "", teacher: "", reason: "", room: "", time: "", urgency: "" }); }}
+            onClick={() => {
+                setSubmitted(false);
+                setForm({ name: "", studentId: "", strand: "", teacher: "", reason: "", room: "", time: "", urgency: "" });
+                setTeacherQuery("");
+                setShowTeacherDropdown(false);
+                setErrors({});
+            }}
             className="mt-6 px-6 py-2.5 bg-[#064db6] text-white text-sm font-black tracking-widest hover:bg-[#002f73] transition-all"
           >
             SUBMIT ANOTHER
@@ -219,9 +216,14 @@ export default function RequestForm() {
     errors[field] ? "border-[#ed3a30] focus:border-[#ed3a30]" : "border-[#cbd5e1] focus:border-[#064db6]";
   const errorMsg = (field: keyof FormErrors) =>
     errors[field] ? <p className="text-xs text-[#ed3a30] mt-1">{errors[field]}</p> : null;
-  const fieldLabel = (text: string) => (
-    <label className="block text-xs font-black text-[#1a1a1a] uppercase tracking-widest mb-1.5">{text}</label>
-  );
+  const fieldLabel = (text: string, fieldId: string) => (
+    <label
+        htmlFor={fieldId}
+        className="block text-xs font-black text-[#1a1a1a] uppercase tracking-widest mb-1.5"
+    >
+        {text}
+    </label>
+    );
 
   return (
     <div className="min-h-screen bg-[#f5f6fa] flex items-center justify-center px-4 py-8">
@@ -248,23 +250,23 @@ export default function RequestForm() {
 
           {/* Name */}
           <div>
-            {fieldLabel("Name:")}
-            <input type="text" placeholder="Ex. Dela Cruz, Juan A." value={form.name} onChange={(e) => set("name", e.target.value)} className={`${inputBase} ${inputBorder("name")}`} />
+            {fieldLabel("Name:", "name")}
+            <input id="name" type="text" placeholder="Ex. Dela Cruz, Juan A." value={form.name} onChange={(e) => set("name", e.target.value)} className={`${inputBase} ${inputBorder("name")}`} />
             {errorMsg("name")}
           </div>
 
           {/* Student ID */}
           <div>
-            {fieldLabel("Student ID:")}
-            <input type="text" placeholder="Ex. 2025-123456" value={form.studentId} onChange={(e) => set("studentId", e.target.value)} className={`${inputBase} ${inputBorder("studentId")}`} />
+            {fieldLabel("Student ID:", "studentId")}
+            <input id="studentId" type="text" placeholder="Ex. 2025-123456" value={form.studentId} onChange={(e) => set("studentId", e.target.value)} className={`${inputBase} ${inputBorder("studentId")}`} />
             {errorMsg("studentId")}
           </div>
 
           {/* Strand */}
           <div>
-            {fieldLabel("Strand:")}
+            {fieldLabel("Strand:", "strand")}
             <div className="relative">
-              <select value={form.strand} onChange={(e) => set("strand", e.target.value)} className={`w-full border px-3 py-2.5 text-sm appearance-none bg-white focus:outline-none focus:border-[#064db6] focus:ring-1 focus:ring-[#064db6]/30 transition-all ${form.strand ? "text-[#1a1a1a]" : "text-[#d6d6d6]"} ${inputBorder("strand")}`}>
+              <select id="strand" value={form.strand} onChange={(e) => set("strand", e.target.value)} className={`w-full border px-3 py-2.5 text-sm appearance-none bg-white focus:outline-none focus:border-[#064db6] focus:ring-1 focus:ring-[#064db6]/30 transition-all ${form.strand ? "text-[#1a1a1a]" : "text-[#d6d6d6]"} ${inputBorder("strand")}`}>
                 <option value="" disabled>Select Strand</option>
                 {strands.map((s) => <option key={s} value={s} className="text-[#1a1a1a]">{s}</option>)}
               </select>
@@ -277,13 +279,14 @@ export default function RequestForm() {
 
           {/* Teacher */}
           <div className="relative">
-            {fieldLabel("Teacher:")}
+            {fieldLabel("Teacher:", "teacher")}
             <div className="relative">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none">
                 <circle cx="11" cy="11" r="8" stroke="#4f4f4f" strokeWidth="2" />
                 <path d="M21 21l-4.35-4.35" stroke="#4f4f4f" strokeWidth="2" strokeLinecap="round" />
               </svg>
               <input
+                id="teacher"
                 type="text"
                 placeholder="Search for Teacher"
                 value={form.teacher || teacherQuery}
@@ -307,8 +310,8 @@ export default function RequestForm() {
 
           {/* Reason */}
           <div>
-            {fieldLabel("Reason:")}
-            <textarea placeholder="Enter reason for consultation..." value={form.reason} onChange={(e) => set("reason", e.target.value)} rows={4} className={`w-full border px-3 py-2.5 text-sm text-[#1a1a1a] placeholder:text-[#d6d6d6] resize-none focus:outline-none focus:border-[#064db6] focus:ring-1 focus:ring-[#064db6]/30 transition-all ${inputBorder("reason")}`} />
+            {fieldLabel("Reason:", "reason")}
+            <textarea id="reason" placeholder="Enter reason for consultation..." value={form.reason} onChange={(e) => set("reason", e.target.value)} rows={4} className={`w-full border px-3 py-2.5 text-sm text-[#1a1a1a] placeholder:text-[#d6d6d6] resize-none focus:outline-none focus:border-[#064db6] focus:ring-1 focus:ring-[#064db6]/30 transition-all ${inputBorder("reason")}`} />
             {errorMsg("reason")}
           </div>
 
