@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom"
 import FacultyBoard from "./pages/facultyDashboard"
 import AdminLogin from "./pages/admin/admin-login"
-import RequestForm from "./pages/requestForm/requestFormPage"
+import RequestForm from "@/pages/requestFormPage";
 
 export default function App() {
   return (
