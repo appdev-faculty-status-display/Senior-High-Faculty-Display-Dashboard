@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom"
 import FacultyBoard from "./pages/facultyDashboard"
 import AdminLogin from "./pages/admin/admin-login"
+import RequestForm from "@/pages/requestFormPage";
 
 export default function App() {
   return (
@@ -8,6 +9,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<FacultyBoard/>} />
         <Route path="/admin/login" element={<AdminLogin/>} />
+        <Route path="/request" element={<RequestForm/>} />
       </Routes>
     </div>
   )
