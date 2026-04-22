@@ -1,5 +1,6 @@
 import logo from "@/assets/logo.svg";
 import { useState, type ReactNode } from "react";
+import AddSchedule from "@/components/ui/admin-dashboard/addSchedule";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -124,8 +125,6 @@ interface MainContentProps {
 }
 
 function MainContent({ activeNav }: MainContentProps) {
-  // Each nav section renders its own content area.
-  // Content is empty per the mockup — ready for your team to fill in.
   const contentMap: Record<string, ReactNode> = {
     "faculty-activity": (
       <div className="w-full h-full flex items-start justify-start">
@@ -142,6 +141,7 @@ function MainContent({ activeNav }: MainContentProps) {
         {/* Resource & Communication content goes here */}
       </div>
     ),
+    "add-schedule": <AddSchedule />, // ✅ fixed — no stray parenthesis
   };
 
   return (
