@@ -28,7 +28,11 @@ const consultationHoursSchema = new Schema(
 const facultySchema = new Schema(
   {
     id: { type: String, required: true, index: true, trim: true },
+    userId: { type: String, sparse: true, index: true, trim: true },
     name: { type: String, required: true, trim: true },
+    role: { type: String, required: true, enum: ['faculty', 'strand_head', 'principal'], default: 'faculty' },
+    passwordHash: { type: String, required: true, select: false },
+    refreshTokenHash: { type: String, default: null, select: false },
     strand: { type: String, required: true, enum: strandValues },
     photoUrl: { type: String, required: true, trim: true },
     status: { type: String, required: true, enum: facultyStatusValues, default: 'available' },
@@ -64,8 +68,7 @@ const queueSchema = new Schema(
     facultyId: { type: String, required: true, index: true, trim: true },
     accessKey: { type: String, required: true, unique: true, index: true, trim: true },
     status: { type: String, required: true, enum: queueStatusValues, default: 'pending', index: true },
-    expiresAt: { type: Date, required: true, index: true },
-
+    expiresAt: { type: Date, required: true },
     studentName: { type: String, default: null, trim: true },
     studentId: { type: String, default: null, trim: true },
     strand: { type: String, default: null, trim: true },
