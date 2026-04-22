@@ -1,6 +1,7 @@
 import logo from "@/assets/logo.svg";
 import { useState, type ReactNode } from "react";
 import AddSchedule from "@/components/ui/admin-dashboard/addSchedule";
+import AnnouncementTable from "@/components/AnnouncementTable";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ function NULogo() {
     <img 
       src={logo} 
       alt="NU Logo" 
-      className="w-[36px] h-[36px] flex-shrink-0 rounded-md object-contain" 
+      className="w-9 h-9shrink-0 rounded-md object-contain" 
     />
   );
 }
@@ -64,7 +65,7 @@ function AdminAvatar({ name, role }: AdminAvatarProps) {
       </div>
       {/* Replace with actual avatar image: <img src="/admin-avatar.png" className="w-9 h-9 rounded-full object-cover border-2 border-[#cbd5e1]" /> */}
       <div
-        className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden border-2"
+        className="w-9 h-9 rounded-full shrink-0 overflow-hidden border-2"
         style={{ borderColor: "#cbd5e1" }}
       >
         <div
@@ -141,7 +142,8 @@ function MainContent({ activeNav }: MainContentProps) {
         {/* Resource & Communication content goes here */}
       </div>
     ),
-    "add-schedule": <AddSchedule />, // ✅ fixed — no stray parenthesis
+    "add-announcement": <AnnouncementTable announcements={[]} onDelete={() => {}} />,
+    "add-schedule": <AddSchedule />, 
   };
 
   return (
@@ -186,7 +188,7 @@ export default function AdminDashboard() {
 
       {/* ── Accent Bar: gold → blue gradient ── */}
       <div
-        className="h-2 w-full flex-shrink-0"
+        className="h-2 w-full shrink-0"
         style={{
           background: "linear-gradient(to right, #ffc107 0%, #ffd41c 20%, #d4a800 40%, #003a8f 70%, #002f73 100%)",
         }}
@@ -197,7 +199,7 @@ export default function AdminDashboard() {
 
         {/* Sidebar */}
         <aside
-          className="flex-shrink-0 flex flex-col bg-white border-r border-[#cbd5e1]"
+          className="shrink-0 flex flex-col bg-white border-r border-[#cbd5e1]"
           style={{ width: "160px" }}
         >
           <nav className="flex flex-col pt-4">

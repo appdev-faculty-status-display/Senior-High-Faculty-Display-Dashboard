@@ -83,7 +83,7 @@ export default function ClassScheduleDashboard() {
                 onChange={handleFilterChange(setRoomFilter)}
                 options={ROOMS}
             />
-            <div className="flex items-center border border-gray-200 px-3 py-2 bg-white flex-1 min-w-[160px] gap-2">
+            <div className="flex items-center border border-gray-200 px-3 py-2 bg-white flex-1 min-w-40 gap-2">
                 <IconSearch />
                 <input
                 type="text"

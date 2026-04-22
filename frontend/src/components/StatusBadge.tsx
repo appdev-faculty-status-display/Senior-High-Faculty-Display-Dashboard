@@ -20,3 +20,4 @@ export default function StatusBadge({ status }: Props) {
         </span>
     );
 }
+

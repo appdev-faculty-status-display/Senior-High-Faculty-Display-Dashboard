@@ -4,6 +4,7 @@ import AdminLogin from "./pages/admin/admin-login";
 import AdminBoard from "./pages/adminDashboard";
 import RequestForm from "./pages/requestFormPage";
 import AddSchedule from "./components/ui/admin-dashboard/addSchedule"; 
+import AddAnnouncement from "./components/ui/admin-dashboard/AddAnnouncement";
 
 export default function App() {
   return (
@@ -14,7 +15,7 @@ export default function App() {
         <Route path="/request" element={<RequestForm />} />
         <Route path="/admin" element={<AdminBoard />}>
           <Route path="add-schedule" element={<AddSchedule />} />
-          {/* later you can add more nested routes here */}
+          <Route path="add-announcement" element={<AddAnnouncement />} />
         </Route>
       </Routes>
     </div>

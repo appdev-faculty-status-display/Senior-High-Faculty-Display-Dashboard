@@ -92,3 +92,5 @@ export const scheduleData: FacultySchedule[] = [
         day: "Saturday",
     },
     ];
+
+    
