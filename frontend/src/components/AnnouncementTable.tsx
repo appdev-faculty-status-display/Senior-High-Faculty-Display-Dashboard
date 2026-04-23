@@ -1,16 +1,50 @@
+import { useState } from "react";
 import type { Announcement } from "../types/announcement";
 import EditIcon from "./icons/EditIcon";
 import TrashIcon from "./icons/TrashIcon";
 import PlusIcon from "./icons/PlusIcon";
+import AddAnnouncementModal from "./modal/AddAnnouncementModal";
+import EditAnnouncementModal from "./modal/EditAnnouncementModal";
 
 interface Props {
     announcements: Announcement[];
     onDelete: (id: number) => void;
-}
+    onAdd: (announcement: Omit<Announcement, "id">) => void;
+    onEdit: (updated: Announcement) => void;
+    }
 
-export default function AnnouncementTable({ announcements, onDelete }: Props) {
+    export default function AnnouncementTable({ announcements, onDelete, onAdd, onEdit }: Props) {
+    const [showAdd, setShowAdd] = useState(false);
+    const [editTarget, setEditTarget] = useState<Announcement | null>(null);
+
+    const addBtnHover = {
+        onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.currentTarget.style.backgroundColor = "#002f73";
+        e.currentTarget.style.color = "#facc15";
+        },
+        onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.currentTarget.style.backgroundColor = "#facc15";
+        e.currentTarget.style.color = "#ffffff";
+        },
+    };
+
     return (
         <section className="p-6">
+        {showAdd && (
+            <AddAnnouncementModal
+            onClose={() => setShowAdd(false)}
+            onSubmit={onAdd}
+            />
+        )}
+        {editTarget && (
+            <EditAnnouncementModal
+            announcement={editTarget}
+            onClose={() => setEditTarget(null)}
+            onSave={onEdit}
+            onDelete={onDelete}
+            />
+        )}
+
         <div className="flex items-start justify-between mb-5">
             <div>
             <h2 className="text-2xl font-extrabold tracking-tight uppercase" style={{ color: "#002f73" }}>
@@ -21,7 +55,9 @@ export default function AnnouncementTable({ announcements, onDelete }: Props) {
             </p>
             </div>
             <button
-            className="flex items-center gap-1.5 text-white text-sm font-bold px-4 py-2 shadow-sm transition-colors bg-yellow-400 hover:bg-yellow-500"
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-1.5 text-white text-sm font-bold px-4 py-2 shadow-sm transition-colors bg-yellow-400"
+            {...addBtnHover}
             >
             <PlusIcon />
             Add Announcement
@@ -56,7 +92,11 @@ export default function AnnouncementTable({ announcements, onDelete }: Props) {
                         <td className="px-5 py-4 text-gray-400 whitespace-nowrap text-xs">{a.datePosted}</td>
                         <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
-                            <button className="p-1.5 hover:bg-blue-100 transition-colors" style={{ color: "#002f73" }}>
+                            <button
+                            onClick={() => setEditTarget(a)}
+                            className="p-1.5 hover:bg-blue-100 transition-colors"
+                            style={{ color: "#002f73" }}
+                            >
                             <EditIcon />
                             </button>
                             <button

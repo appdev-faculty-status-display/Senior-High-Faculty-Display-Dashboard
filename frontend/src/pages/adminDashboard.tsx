@@ -1,7 +1,7 @@
 // frontend/src/pages/adminDashboard.tsx
 import logo from "@/assets/logo.svg";
 import { useState, type ReactNode } from "react";
-import AddSchedule from "@/components/ui/admin-dashboard/addSchedule";
+import AddSchedule from "@/components/ui/admin-dashboard/AddSchedule";
 import AnnouncementPage from "@/pages/announcementPage";
 
 // Chart Components
@@ -51,7 +51,7 @@ function NULogo() {
     <img
       src={logo}
       alt="NU Logo"
-      className="w-[36px] h-[36px] flex-shrink-0 rounded-md object-contain"
+      className="w-9 h-9 shrink-0 rounded-md object-contain"
     />
   );
 }
@@ -63,7 +63,7 @@ function AdminAvatar({ name, role }: AdminAvatarProps) {
         <p className="text-sm font-black text-[#002f73] leading-tight">{name}</p>
         <p className="text-xs text-[#4f4f4f] font-medium">{role}</p>
       </div>
-      <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden border-2" style={{ borderColor: "#cbd5e1" }}>
+      <div className="w-9 h-9 rounded-full shrink-0 overflow-hidden border-2" style={{ borderColor: "#cbd5e1" }}>
         <div
           className="w-full h-full flex items-center justify-center text-white font-black text-xs"
           style={{ background: "linear-gradient(135deg, #064db6, #002f73)" }}
@@ -195,7 +195,7 @@ export default function AdminDashboard() {
 
       {/* ── Accent Bar ── */}
       <div
-        className="h-2 w-full flex-shrink-0"
+        className="h-2 w-full shrink-0"
         style={{ background: "linear-gradient(to right, #ffc107 0%, #ffd41c 20%, #d4a800 40%, #003a8f 70%, #002f73 100%)" }}
       />
 
@@ -203,7 +203,7 @@ export default function AdminDashboard() {
       <div className="flex flex-1 min-h-0">
 
         {/* Sidebar */}
-        <aside className="flex-shrink-0 flex flex-col bg-white border-r border-[#cbd5e1]" style={{ width: "160px" }}>
+        <aside className="shrink-0 flex flex-col bg-white border-r border-[#cbd5e1]" style={{ width: "160px" }}>
           <nav className="flex flex-col pt-4">
             {NAV_ITEMS.map((item) => (
               <SidebarNavItem key={item.id} item={item} active={activeNav} onSelect={setActiveNav} />

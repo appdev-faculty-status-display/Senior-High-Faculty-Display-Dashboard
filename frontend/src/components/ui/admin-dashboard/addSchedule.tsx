@@ -13,6 +13,8 @@ import IconEdit from "@/components/icons/EditIcon";
 import IconTrash from "@/components/icons/TrashIcon";
 import IconSearch from "@/components/icons/SearchIcon";
 import IconPlus from "@/components/icons/PlusIcon";
+import EditScheduleModal from "@/components/modal/EditScheduleModal";
+import ImportScheduleModal from "@/components/modal/importScheduleModal";
 
 export default function ClassScheduleDashboard() {
     const [strandFilter, setStrandFilter] = useState("All Strands");
@@ -22,6 +24,10 @@ export default function ClassScheduleDashboard() {
     const [schedulePage, setSchedulePage] = useState(1);
 
     const [schedules, setSchedules] = useState<FacultySchedule[]>(scheduleData);
+
+    const [isImporting, setIsImporting] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [selectedSchedule, setSelectedSchedule] = useState<FacultySchedule | null>(null);
 
     const filtered = schedules.filter((s) => {
         const matchStrand = strandFilter === "All Strands" || s.strand === strandFilter;
@@ -59,7 +65,10 @@ export default function ClassScheduleDashboard() {
                 Create, edit, and manage all class schedules.
             </p>
             </div>
-            <button className="flex items-center gap-1.5 bg-yellow-400 hover:bg-yellow-500 text-white text-sm font-bold px-4 py-2 shadow-sm transition-colors">
+            <button 
+            onClick={() => setIsImporting(true)} 
+            className="flex items-center gap-1.5 bg-yellow-400 hover:bg-yellow-500 text-white text-sm font-bold px-4 py-2 shadow-sm transition-colors"
+            >
             <IconPlus />
             Add Schedule
             </button>
@@ -141,7 +150,12 @@ export default function ClassScheduleDashboard() {
                         <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{s.time}</td>
                         <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                            <button className="p-1.5 hover:bg-blue-100 text-blue-500 transition-colors">
+                            <button 
+                            onClick={() => {
+                                setSelectedSchedule(s);
+                                setIsEditing(true);
+                            }}
+                            className="p-1.5 hover:bg-blue-100 text-blue-500 transition-colors">
                             <IconEdit />
                             </button>
                             <button
@@ -197,6 +211,35 @@ export default function ClassScheduleDashboard() {
             </div>
             </div>
         </div>
+        {isImporting && (
+            <ImportScheduleModal 
+                onClose={() => setIsImporting(false)} 
+                onImport={(newSchedules) => {
+                    setSchedules(prev => [...prev, ...newSchedules]);
+                    setIsImporting(false);
+                }}
+            />
+        )}
+
+        {isEditing && selectedSchedule && (
+            <EditScheduleModal
+                schedule={selectedSchedule}
+                onClose={() => {
+                    setIsEditing(false);
+                    setSelectedSchedule(null);
+                }}
+                onSave={(updated) => {
+                    setSchedules(prev => prev.map(s => s.id === updated.id ? updated : s));
+                    setIsEditing(false);
+                    setSelectedSchedule(null);
+                }}
+                onDelete={(id) => {
+                    deleteSchedule(id);
+                    setIsEditing(false);
+                    setSelectedSchedule(null);
+                }}
+            />
+        )}
         </section>
     );
 }
