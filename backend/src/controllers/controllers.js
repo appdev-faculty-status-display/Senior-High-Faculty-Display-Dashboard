@@ -183,14 +183,44 @@ async function logout(req, res) {
             });
         }
 
-        // Find faculty and clear their refresh token hash
+        // Find faculty and validate the provided refresh token before clearing its hash
         const faculty = await Faculty.findById(decoded.id).select('+refreshTokenHash');
 
-        if (faculty && faculty.refreshTokenHash) {
-            faculty.refreshTokenHash = null;
-            await faculty.save();
+        if (!faculty || !faculty.refreshTokenHash) {
+            return res.status(401).json({
+                error: 'Invalid refresh token',
+                code: 'UNAUTHORIZED'
+            });
         }
 
+        let decodedRefreshToken;
+        try {
+            decodedRefreshToken = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+        } catch {
+            return res.status(401).json({
+                error: 'Invalid refresh token',
+                code: 'UNAUTHORIZED'
+            });
+        }
+
+        if (decodedRefreshToken.id !== decoded.id) {
+            return res.status(401).json({
+                error: 'Invalid refresh token',
+                code: 'UNAUTHORIZED'
+            });
+        }
+
+        const isRefreshTokenValid = await bcrypt.compare(refreshToken, faculty.refreshTokenHash);
+
+        if (!isRefreshTokenValid) {
+            return res.status(401).json({
+                error: 'Invalid refresh token',
+                code: 'UNAUTHORIZED'
+            });
+        }
+
+        faculty.refreshTokenHash = null;
+        await faculty.save();
         return res.status(200).json({
             message: 'Successfully logged out'
         });
