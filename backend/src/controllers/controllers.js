@@ -2,17 +2,30 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Faculty } = require('../models/model');
 
+function getRequiredEnv(name) {
+    const value = process.env[name];
+
+    if (typeof value !== 'string' || value.trim() === '') {
+        throw new Error(`Missing required environment variable: ${name}`);
+    }
+
+    return value;
+}
+
+const JWT_SECRET = getRequiredEnv('JWT_SECRET');
+const JWT_REFRESH_SECRET = getRequiredEnv('JWT_REFRESH_SECRET');
+
 // Helpers
 
 // The access token will have a shorter expiration time and is used to authenticate API requests
 function signAccessToken(payload) {
-    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' });
 }
 
 
 // The refresh token will have a longer expiration time and can be used to get a new access token when the old one expires
 function signRefreshToken(payload) {
-    return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+    return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: '7d' });
 }
 
 // POST /auth/login
