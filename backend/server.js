@@ -28,5 +28,3 @@ connectDb()
     console.error('MongoDB connection error:', err);
     process.exit(1);
   });
-
-// run node "server.js" in terminal, make sure to cd into backend folder first
