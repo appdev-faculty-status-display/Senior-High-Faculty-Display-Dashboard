@@ -114,9 +114,9 @@ async function refresh(req, res) {
         }
 
         // Compare the incoming token against the stored hash
-        const inValid = await bcrypt.compare(refreshToken, faculty.refreshTokenHash);
+        const isValid = await bcrypt.compare(refreshToken, faculty.refreshTokenHash);
 
-        if (!inValid) {
+        if (!isValid) {
             return res.status(401).json({
                 error: 'Invalid/Expired refresh token',
                 code: 'UNAUTHORIZED'
