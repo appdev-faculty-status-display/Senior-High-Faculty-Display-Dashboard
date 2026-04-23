@@ -16,7 +16,13 @@ async function loginUser(credentials) {
         throw createAuthError('MISSING_CREDENTIALS');
     }
 
-    const faculty = await Faculty.findOne({ userId: email }).select('+passwordHash');
+    const facultyCandidates = await Faculty.find({ userId: email })
+        .select('+passwordHash')
+        .sort({ updatedAt: -1 });
+
+    const faculty = facultyCandidates.find(function (candidate) {
+        return Boolean(candidate.facultyId);
+    });
     const passwordToCheck = faculty ? faculty.passwordHash : TIMING_SAFE_DUMMY_HASH;
     const passwordMatch = await bcrypt.compare(password, passwordToCheck);
 

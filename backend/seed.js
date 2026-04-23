@@ -16,8 +16,10 @@ async function seed() {
 
         await Faculty.updateOne(
             { facultyId: 'FAC001' },
+            { userId: 'test.faculty@nu-laguna.edu.ph' },
             {
                 $set: {
+                    facultyId: 'FAC001',
                     userId: 'test.faculty@nu-laguna.edu.ph',
                     name: 'Test Faculty',
                     role: 'faculty',
