@@ -33,7 +33,8 @@ async function login(req, res) {
 
         // If faculty not found, still run bcrypt compare to prevent timing attacks
         // then return generic error message
-        const dummyHash = '$2b$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012345';
+        // Precomputed valid bcrypt hash of a constant password used only as a timing-safe fallback
+        const dummyHash = '$2b$10$CwTycUXWue0Thq9StjUM0uJ8p1pG7QW8Z0pniS3pSkeCZMt2rt7Nm';
         const passwordToCheck = faculty ? faculty.passwordHash : dummyHash;
         const passwordMatch = await bcrypt.compare(password, passwordToCheck);
 
