@@ -48,7 +48,7 @@ export default function CancellationRateChart({ resolved, scheduleConflict, long
           const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : "0.0";
           return (
             <div key={item.label} className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-none flex-shrink-0" style={{ background: item.color }} />
+              <span className="w-2.5 h-2.5 rounded-none shrink-0" style={{ background: item.color }} />
               <span className="text-[11px] text-[#1a1a1a] font-semibold flex-1">{item.label}</span>
               <span className="text-[11px] font-black text-[#4f4f4f]">{pct}%</span>
             </div>
