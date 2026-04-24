@@ -4,36 +4,24 @@ const cors = require('cors');
 require('dotenv').config();
 
 const { connectDb } = require('./src/config/config');
+const { corsOptions } = require('./src/config/cors');
+const { globalLimiter } = require('./src/middleware/rateLimit');
+const { notFoundHandler } = require('./src/middleware/notFound');
+const { errorHandler } = require('./src/middleware/errorHandler');
 const routes = require('./src/routes/route');
 
 const app = express();
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173')
-  .split(',')
-  .map(function (origin) {
-    return origin.trim();
-  })
-  .filter(Boolean);
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    return callback(new Error('Not allowed by CORS'));
-  },
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  credentials: true,
-  optionsSuccessStatus: 204
-};
 
 // Middleware
 app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(globalLimiter);
 
 // Routes
 app.use('/api', routes);
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 

@@ -3,7 +3,11 @@ const { isAuthError, toErrorResponse } = require('./auth.errors');
 
 function sendError(res, error) {
     const { status, body } = toErrorResponse(error);
-    return res.status(status).json(body);
+    return res.status(status).json({
+        error: body.error,
+        code: body.code,
+        details: body.details || {}
+    });
 }
 
 // POST /auth/login
