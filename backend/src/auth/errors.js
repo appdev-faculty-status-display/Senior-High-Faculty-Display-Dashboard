@@ -43,6 +43,16 @@ const AUTH_ERROR_DEFINITIONS = {
         status: 500,
         error: 'Something went wrong',
         code: 'INTERNAL_ERROR'
+    },
+    FORBIDDEN: {
+        status: 403,
+        error: 'You do not have permission to perform this action',
+        code: 'FORBIDDEN'
+    },
+    NOT_FOUND: {
+        status: 404,
+        error: 'The requested resource was not found',
+        code: 'NOT_FOUND'
     }
 };
 

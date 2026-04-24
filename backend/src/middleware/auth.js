@@ -1,0 +1,25 @@
+const { verifyToken } = require('../auth/token');
+const { createAuthError } = require('../auth/errors');
+
+function authToken(req, res, next) {
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.startsWith('Bearer ')
+        ? authHeader.split(' ')[1]
+        : null;
+
+    if (!token) {
+        return next(createAuthError('ACCESS_TOKEN_EXPIRED'));
+    }
+
+    try {
+        const decoded = verifyToken(token);
+        req.user = decoded;
+        next();
+    }
+    catch (error) {
+        return next(createAuthError('ACCESS_TOKEN_EXPIRED'));
+    }
+
+    module.exports = { authToken }
+}
