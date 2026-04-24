@@ -43,5 +43,4 @@ export default function AddAnnouncement() {
     );
 }
 
-console.log("Loaded announcements:", mockAnnouncement);
 

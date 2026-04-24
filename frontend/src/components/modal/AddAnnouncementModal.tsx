@@ -1,22 +1,22 @@
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import type { Announcement } from "../../types/announcement";
 
-interface Props {
-  onClose: () => void;
-  onSubmit: (announcement: Omit<Announcement, "id">) => void;
-}
+    interface Props {
+    onClose: () => void;
+    onSubmit: (announcement: Omit<Announcement, "id">) => void;
+    }
 
-const btnHover = {
-  onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.backgroundColor = "#002f73";
-    e.currentTarget.style.color = "#facc15";
-    e.currentTarget.style.borderColor = "#002f73";
-  },
-  onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.currentTarget.style.backgroundColor = "transparent";
-    e.currentTarget.style.color = "#4b5563";
-    e.currentTarget.style.borderColor = "#d1d5db";
-  },
+    const btnHover = {
+    onMouseEnter: (e: MouseEvent<HTMLButtonElement>) => {
+        e.currentTarget.style.backgroundColor = "#002f73";
+        e.currentTarget.style.color = "#facc15";
+        e.currentTarget.style.borderColor = "#002f73";
+    },
+    onMouseLeave: (e: MouseEvent<HTMLButtonElement>) => {
+        e.currentTarget.style.backgroundColor = "transparent";
+        e.currentTarget.style.color = "#4b5563";
+        e.currentTarget.style.borderColor = "#d1d5db";
+    },
 };
 
 export default function AddAnnouncementModal({ onClose, onSubmit }: Props) {

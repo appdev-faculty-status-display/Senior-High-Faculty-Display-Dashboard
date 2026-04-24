@@ -19,7 +19,6 @@ import UrgencyPurposeAnalysis from "@/components/ui/admin-dashboard/UrgencyPurpo
 
 // Types
 import type {
-  NavItem,
   ActiveNav,
   AdminAvatarProps,
   SidebarNavItemProps,

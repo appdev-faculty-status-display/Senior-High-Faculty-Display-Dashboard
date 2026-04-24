@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import type { Announcement } from "../../types/announcement";
 
 interface Props {
@@ -9,27 +9,60 @@ interface Props {
     }
 
     const btnHover = {
-    onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
+    onMouseEnter: (e: MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.style.backgroundColor = "#002f73";
         e.currentTarget.style.color = "#facc15";
         e.currentTarget.style.borderColor = "#002f73";
     },
-    onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
+    onMouseLeave: (e: MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.style.backgroundColor = "transparent";
         e.currentTarget.style.color = "#4b5563";
         e.currentTarget.style.borderColor = "#d1d5db";
     },
-    };
+};
 
-    export default function EditAnnouncementModal({ announcement, onClose, onSave, onDelete }: Props) {
+function formatDateTime(isoString: string): string {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "";
+
+    return date
+        .toLocaleString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+        })
+        .replace(",", "") // remove comma after day
+        .replace("AM", "am")
+        .replace("PM", "pm");
+    }
+
+export default function EditAnnouncementModal({
+    announcement,
+    onClose,
+    onSave,
+    onDelete,
+    }: Props) {
     const [title, setTitle] = useState(announcement.title);
     const [message, setMessage] = useState(announcement.message);
-    const [date, setDate] = useState(announcement.datePosted);
+    const [date, setDate] = useState(() => {
+        if (!announcement.datePosted) return "";
+        const parsed = new Date(announcement.datePosted);
+        return isNaN(parsed.getTime())
+        ? ""
+        : parsed.toISOString().split("T")[0]; // safe YYYY-MM-DD for <input type="date">
+    });
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
         <div className="bg-white shadow-lg w-full max-w-md p-8 border border-gray-100">
-            <h2 className="text-xl font-extrabold tracking-tight mb-1" style={{ color: "#002f73" }}>
+            <h2
+            className="text-xl font-extrabold tracking-tight mb-1"
+            style={{ color: "#002f73" }}
+            >
             Edit Announcement
             </h2>
             <div className="border-b-2 border-yellow-400 mb-6" />
@@ -69,6 +102,10 @@ interface Props {
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-yellow-400"
                 />
+                {/* 👇 Preview formatted date */}
+                <p className="text-xs text-gray-500 mt-1">
+                {date ? formatDateTime(new Date(date).toISOString()) : ""}
+                </p>
             </div>
             </div>
 
@@ -76,7 +113,10 @@ interface Props {
 
             <div className="flex items-center justify-end gap-3">
             <button
-                onClick={() => { onDelete(announcement.id); onClose(); }}
+                onClick={() => {
+                onDelete(announcement.id);
+                onClose();
+                }}
                 className="px-5 py-2 text-sm font-semibold border border-gray-300 text-gray-600 transition-colors"
                 {...btnHover}
             >
@@ -90,7 +130,11 @@ interface Props {
                 Cancel
             </button>
             <button
-                onClick={() => { onSave({ ...announcement, title, message, datePosted: date }); onClose(); }}
+                onClick={() => {
+                const isoDate = date ? new Date(date).toISOString() : "";
+                onSave({ ...announcement, title, message, datePosted: isoDate });
+                onClose();
+                }}
                 className="px-5 py-2 text-sm font-semibold border border-gray-300 text-gray-600 transition-colors"
                 {...btnHover}
             >

@@ -14,7 +14,7 @@ import IconTrash from "@/components/icons/TrashIcon";
 import IconSearch from "@/components/icons/SearchIcon";
 import IconPlus from "@/components/icons/PlusIcon";
 import EditScheduleModal from "@/components/modal/EditScheduleModal";
-import ImportScheduleModal from "@/components/modal/importScheduleModal";
+import ImportScheduleModal from "@/components/modal/ImportScheduleModal";
 
 export default function ClassScheduleDashboard() {
     const [strandFilter, setStrandFilter] = useState("All Strands");
@@ -67,7 +67,8 @@ export default function ClassScheduleDashboard() {
             </div>
             <button 
             onClick={() => setIsImporting(true)} 
-            className="flex items-center gap-1.5 bg-yellow-400 hover:bg-yellow-500 text-white text-sm font-bold px-4 py-2 shadow-sm transition-colors"
+            className="flex items-center gap-1.5 text-sm font-bold px-4 py-2 shadow-sm transition-colors bg-yellow-400 text-white border border-yellow-400
+                        hover:bg-[#002f73] hover:text-[#facc15] hover:border-[#002f73]"
             >
             <IconPlus />
             Add Schedule
@@ -212,13 +213,25 @@ export default function ClassScheduleDashboard() {
             </div>
         </div>
         {isImporting && (
-            <ImportScheduleModal 
-                onClose={() => setIsImporting(false)} 
-                onImport={(newSchedules) => {
-                    setSchedules(prev => [...prev, ...newSchedules]);
-                    setIsImporting(false);
-                }}
-            />
+        <ImportScheduleModal 
+            onClose={() => setIsImporting(false)} 
+            onImport={(newSchedules) => {
+            setSchedules((prev) => {
+                const maxExistingId = prev.reduce(
+                (maxId, schedule) => Math.max(maxId, schedule.id),
+                0
+                );
+
+                const importedSchedules = newSchedules.map((schedule, index) => ({
+                ...schedule,
+                id: maxExistingId + index + 1,
+                }));
+
+                return [...prev, ...importedSchedules];
+            });
+            setIsImporting(false);
+            }}
+        />
         )}
 
         {isEditing && selectedSchedule && (

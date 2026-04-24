@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import type { Announcement } from "../types/announcement";
 import EditIcon from "./icons/EditIcon";
 import TrashIcon from "./icons/TrashIcon";
 import PlusIcon from "./icons/PlusIcon";
 import AddAnnouncementModal from "./modal/AddAnnouncementModal";
 import EditAnnouncementModal from "./modal/EditAnnouncementModal";
+import { formatDateTime } from "@/lib/utils";
 
 interface Props {
     announcements: Announcement[];
@@ -18,14 +19,14 @@ interface Props {
     const [editTarget, setEditTarget] = useState<Announcement | null>(null);
 
     const addBtnHover = {
-        onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
+    onMouseEnter: (e: MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.style.backgroundColor = "#002f73";
         e.currentTarget.style.color = "#facc15";
-        },
-        onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
+    },
+    onMouseLeave: (e: MouseEvent<HTMLButtonElement>) => {
         e.currentTarget.style.backgroundColor = "#facc15";
         e.currentTarget.style.color = "#ffffff";
-        },
+    },
     };
 
     return (
@@ -89,7 +90,9 @@ interface Props {
                         {a.title}
                         </td>
                         <td className="px-5 py-4 text-gray-600 max-w-xs">{a.message}</td>
-                        <td className="px-5 py-4 text-gray-400 whitespace-nowrap text-xs">{a.datePosted}</td>
+                        <td className="px-5 py-4 text-gray-400 whitespace-nowrap text-xs">
+                        {formatDateTime(a.datePosted)}
+                        </td>
                         <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
                             <button

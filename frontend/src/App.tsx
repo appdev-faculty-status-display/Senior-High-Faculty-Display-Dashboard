@@ -3,7 +3,7 @@ import FacultyBoard from "./pages/facultyDashboard";
 import AdminLogin from "./pages/admin/admin-login";
 import AdminBoard from "./pages/adminDashboard";
 import RequestForm from "./pages/requestFormPage";
-import AddSchedule from "./components/ui/admin-dashboard/addSchedule"; 
+import AddSchedule from "./components/ui/admin-dashboard/AddSchedule"; 
 import AddAnnouncement from "./components/ui/admin-dashboard/AddAnnouncement";
 
 export default function App() {
@@ -13,10 +13,9 @@ export default function App() {
         <Route path="/" element={<FacultyBoard />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/request" element={<RequestForm />} />
-        <Route path="/admin" element={<AdminBoard />}>
-          <Route path="add-schedule" element={<AddSchedule />} />
-          <Route path="add-announcement" element={<AddAnnouncement />} />
-        </Route>
+        <Route path="/admin" element={<AdminBoard />} />
+        <Route path="/admin/add-schedule" element={<AddSchedule />} />
+        <Route path="/admin/add-announcement" element={<AddAnnouncement />} />
       </Routes>
     </div>
   );

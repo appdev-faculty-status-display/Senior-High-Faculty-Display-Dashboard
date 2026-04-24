@@ -1,6 +1,6 @@
 export type Strand = "STEM" | "HUMSS" | "ABM";
 export type Day = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
-export type Status = "IN CLASS" | "AVAILABLE" | "OFF CAMPUS" | "ON BREAK" | "IN MEETING" | "DO NOT DISTURB" | "OFF CAMPUS";
+export type Status = "IN CLASS" | "AVAILABLE" | "OFF CAMPUS" | "ON BREAK" | "IN MEETING" | "DO NOT DISTURB";
 
 export interface FacultySchedule {
     id: number;
