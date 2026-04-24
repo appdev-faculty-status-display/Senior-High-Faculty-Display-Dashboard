@@ -4,7 +4,6 @@ const {
     TIMING_SAFE_DUMMY_HASH,
     signAccessToken,
     signRefreshToken,
-    verifyAccessToken,
     verifyRefreshToken
 } = require('./auth.token');
 const { createAuthError } = require('./auth.errors');
@@ -100,29 +99,10 @@ async function refreshTokens(payload) {
 }
 
 async function logoutUser(payload) {
-    const { refreshToken, authorizationHeader } = payload || {};
-
-    if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-        throw createAuthError('ACCESS_TOKEN_EXPIRED');
-    }
+    const { refreshToken } = payload || {};
 
     if (!refreshToken) {
         throw createAuthError('MISSING_REFRESH_TOKEN');
-    }
-
-    const accessToken = authorizationHeader.split(' ')[1];
-
-    let decodedAccessToken;
-    try {
-        decodedAccessToken = verifyAccessToken(accessToken);
-    } catch {
-        throw createAuthError('ACCESS_TOKEN_EXPIRED');
-    }
-
-    const faculty = await Faculty.findById(decodedAccessToken.id).select('+refreshTokenHash');
-
-    if (!faculty || !faculty.refreshTokenHash) {
-        throw createAuthError('INVALID_REFRESH_TOKEN');
     }
 
     let decodedRefreshToken;
@@ -132,7 +112,9 @@ async function logoutUser(payload) {
         throw createAuthError('INVALID_REFRESH_TOKEN');
     }
 
-    if (decodedRefreshToken.id !== decodedAccessToken.id) {
+    const faculty = await Faculty.findById(decodedRefreshToken.id).select('+refreshTokenHash');
+
+    if (!faculty || !faculty.refreshTokenHash) {
         throw createAuthError('INVALID_REFRESH_TOKEN');
     }
 

@@ -8,15 +8,14 @@ async function seed() {
         throw new Error('Missing required environment variable: MONGODB_URI');
     }
 
-    try {
-        await mongoose.connect(process.env.MONGODB_URI);
-        console.log('Connected to MongoDB');
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('Connected to MongoDB');
 
+    try {
         const hash = await bcrypt.hash('Test1234!', 10);
 
         await Faculty.updateOne(
             { facultyId: 'FAC001' },
-            { userId: 'test.faculty@nu-laguna.edu.ph' },
             {
                 $set: {
                     facultyId: 'FAC001',
@@ -34,6 +33,9 @@ async function seed() {
         );
 
         console.log('Test faculty upserted successfully');
+    } catch (error) {
+        console.error('Error during seed operation:', error);
+        throw error;
     } finally {
         await mongoose.disconnect();
     }

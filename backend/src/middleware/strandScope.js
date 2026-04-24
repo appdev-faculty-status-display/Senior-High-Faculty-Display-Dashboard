@@ -1,7 +1,7 @@
 const { Faculty } = require('../models');
 const { createAuthError } = require('../controllers/auth.errors');
 
-function reqSameStrand(req, res, next) {
+function reqSameStrand(paramName = 'id') {
     return async function (req, res, next) {
         try {
             const facultyId = req.params[paramName];
@@ -15,6 +15,7 @@ function reqSameStrand(req, res, next) {
             if (faculty.strand !== reqStrand) {
                 return next(createAuthError('FORBIDDEN'));
             }
+
             next();
         } catch (error) {
             next(error);

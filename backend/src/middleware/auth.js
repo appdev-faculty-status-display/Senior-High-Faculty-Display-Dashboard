@@ -1,4 +1,4 @@
-const { verifyToken } = require('../controllers/auth.token');
+const { verifyAccessToken } = require('../controllers/auth.token');
 const { createAuthError } = require('../controllers/auth.errors');
 
 function authToken(req, res, next) {
@@ -13,7 +13,7 @@ function authToken(req, res, next) {
     }
 
     try {
-        const decoded = verifyToken(token);
+        const decoded = verifyAccessToken(token);
         req.user = decoded;
         next();
     }
@@ -21,5 +21,6 @@ function authToken(req, res, next) {
         return next(createAuthError('ACCESS_TOKEN_EXPIRED'));
     }
 
-    module.exports = { authToken }
 }
+
+module.exports = { authToken }
