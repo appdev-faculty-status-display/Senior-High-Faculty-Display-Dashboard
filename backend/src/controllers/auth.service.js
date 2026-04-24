@@ -100,7 +100,7 @@ async function refreshTokens(payload) {
 }
 
 async function logoutUser(payload) {
-    const { refreshToken } = payload || {};
+    const { refreshToken, authorizationHeader } = payload || {};
     const authorizationHeader = payload && payload.authorizationHeader;
 
     if (!refreshToken) {
@@ -126,27 +126,19 @@ async function logoutUser(payload) {
         throw createAuthError('INVALID_REFRESH_TOKEN');
     }
 
-    const accessToken = authorizationHeader && authorizationHeader.startsWith('Bearer ')
-        ? authorizationHeader.split(' ')[1]
-        : null;
-
-    if (accessToken) {
-        try {
-            const decodedAccessToken = verifyAccessToken(accessToken);
-
-            if (String(decodedAccessToken.id) !== String(faculty._id)) {
-                throw createAuthError('INVALID_REFRESH_TOKEN');
-            }
-        } catch (error) {
-            if (error && error.name === 'TokenExpiredError') {
-                // Allow logout to continue when the access token has already expired.
-            } else if (error && error.name === 'AuthError') {
-                throw error;
-            } else {
-                throw createAuthError('INVALID_REFRESH_TOKEN');
-            }
+    if (authorizationHeader && authorizationHeader.startsWith('Bearer ')) {
+    const accessToken = authorizationHeader.split(' ')[1];
+    try {
+        const decodedAccessToken = verifyAccessToken(accessToken);
+        if (decodedAccessToken.id !== decodedRefreshToken.id) {
+            throw createAuthError('INVALID_REFRESH_TOKEN');
+        }
+    } catch (err) {
+        // Only re-throw if it's our own auth error (token mismatch), not an expiry error
+        if (err.name === 'AuthError') throw err;
         }
     }
+
 
     faculty.refreshTokenHash = null;
     await faculty.save();
