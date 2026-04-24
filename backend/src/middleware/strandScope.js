@@ -1,5 +1,5 @@
 const { Faculty } = require('../models');
-const { createAuthError } = require('../auth/errors');
+const { createAuthError } = require('../controllers/auth.errors');
 
 function reqSameStrand(req, res, next) {
     return async function (req, res, next) {

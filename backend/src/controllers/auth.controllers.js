@@ -1,5 +1,5 @@
-const { loginUser, refreshTokens, logoutUser } = require('./service');
-const { isAuthError, toErrorResponse } = require('./errors');
+const { loginUser, refreshTokens, logoutUser } = require('./auth.service');
+const { isAuthError, toErrorResponse } = require('./auth.errors');
 
 function sendError(res, error) {
     const { status, body } = toErrorResponse(error);

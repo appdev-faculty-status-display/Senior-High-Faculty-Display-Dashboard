@@ -1,4 +1,4 @@
-const { createAuthError } = require('../auth/errors');
+const { createAuthError } = require('../controllers/auth.errors');
 
 function requireRole(...roles) {
     return function (req, res, next) {

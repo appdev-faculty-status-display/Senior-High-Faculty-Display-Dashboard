@@ -6,8 +6,8 @@ const {
     signRefreshToken,
     verifyAccessToken,
     verifyRefreshToken
-} = require('./token');
-const { createAuthError } = require('./errors');
+} = require('./auth.token');
+const { createAuthError } = require('./auth.errors');
 
 async function loginUser(credentials) {
     const { email, password } = credentials || {};
