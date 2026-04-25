@@ -16,7 +16,7 @@ function mapError(error) {
             body: {
                 error: body.error,
                 code: body.code,
-                details: {}
+                details: body.details || {}
             }
         };
     }
@@ -27,7 +27,7 @@ function mapError(error) {
             body: {
                 error: 'Origin is not allowed by CORS',
                 code: 'FORBIDDEN',
-                details: {}
+                details: body.details || {}
             }
         };
     }
@@ -50,20 +50,8 @@ function mapError(error) {
                 error: 'Invalid request parameter',
                 code: 'VALIDATION_ERROR',
                 details: {
-                    path: error.path,
-                    value: error.value
+                    path: error.path
                 }
-            }
-        };
-    }
-
-    if (error && ['JsonWebTokenError', 'TokenExpiredError', 'NotBeforeError'].includes(error.name)) {
-        return {
-            status: 401,
-            body: {
-                error: 'Invalid or expired token',
-                code: 'UNAUTHORIZED',
-                details: {}
             }
         };
     }
@@ -73,7 +61,7 @@ function mapError(error) {
         body: {
             error: 'Something went wrong',
             code: 'INTERNAL_ERROR',
-            details: {}
+            details: body.details || {}
         }
     };
 }

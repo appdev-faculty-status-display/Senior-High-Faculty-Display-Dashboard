@@ -15,8 +15,8 @@ const app = express();
 // Middleware
 app.use(helmet());
 app.use(cors(corsOptions));
-app.use(express.json());
 app.use(globalLimiter);
+app.use(express.json());
 
 // Routes
 app.use('/api', routes);

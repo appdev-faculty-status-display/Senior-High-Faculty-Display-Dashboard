@@ -19,7 +19,7 @@ const globalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: parseLimit(process.env.AUTH_RATE_LIMIT_MAX, 10),
+    max: parseLimit(process.env.AUTH_RATE_LIMIT_MAX, 20),
     standardHeaders: true,
     legacyHeaders: false,
     message: {
