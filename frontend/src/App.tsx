@@ -1,16 +1,22 @@
-import { Routes, Route } from "react-router-dom"
-import FacultyBoard from "./pages/facultyDashboard"
-import AdminLogin from "./pages/admin/admin-login"
-import RequestForm from "@/pages/requestFormPage";
+import { Routes, Route } from "react-router-dom";
+import FacultyBoard from "./pages/facultyDashboard";
+import AdminLogin from "./pages/admin/admin-login";
+import AdminBoard from "./pages/adminDashboard";
+import RequestForm from "./pages/requestFormPage";
+import AddSchedule from "./components/ui/admin-dashboard/AddSchedule"; 
+import AddAnnouncement from "./components/ui/admin-dashboard/AddAnnouncement";
 
 export default function App() {
   return (
     <div className="min-h-screen w-full overflow-x-hidden">
       <Routes>
-        <Route path="/" element={<FacultyBoard/>} />
-        <Route path="/admin/login" element={<AdminLogin/>} />
-        <Route path="/request" element={<RequestForm/>} />
+        <Route path="/" element={<FacultyBoard />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/request" element={<RequestForm />} />
+        <Route path="/admin" element={<AdminBoard />} />
+        <Route path="/admin/add-schedule" element={<AddSchedule />} />
+        <Route path="/admin/add-announcement" element={<AddAnnouncement />} />
       </Routes>
     </div>
-  )
+  );
 }
