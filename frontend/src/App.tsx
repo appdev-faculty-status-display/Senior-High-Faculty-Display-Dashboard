@@ -13,7 +13,7 @@ export default function App() {
         <Route path="/" element={<FacultyBoard />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/request" element={<RequestForm />} />
-        <Route path="/admin" element={<AdminBoard />} />
+        <Route path="/admin/dashboard" element={<AdminBoard />} />
         <Route path="/admin/add-schedule" element={<AddSchedule />} />
         <Route path="/admin/add-announcement" element={<AddAnnouncement />} />
       </Routes>
