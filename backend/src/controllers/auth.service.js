@@ -101,7 +101,6 @@ async function refreshTokens(payload) {
 
 async function logoutUser(payload) {
     const { refreshToken, authorizationHeader } = payload || {};
-    const authorizationHeader = payload && payload.authorizationHeader;
 
     if (!refreshToken) {
         throw createAuthError('MISSING_REFRESH_TOKEN');
