@@ -31,8 +31,29 @@ async function seed() {
             },
             { upsert: true, runValidators: true, setDefaultsOnInsert: true }
         );
-
         console.log('Test faculty upserted successfully');
+
+        const adminHash = await bcrypt.hash('Admin1234!', 10);
+
+        await Faculty.updateOne(
+            { facultyId: 'ADM001' },
+            {
+                $set: {
+                    facultyId: 'ADM001',
+                    userId: 'test.admin@nu-laguna.edu.ph',
+                    name: 'Test Admin',
+                    role: 'principal',
+                    passwordHash: adminHash,
+                    strand: 'STEM',
+                    photoUrl: 'https://placeholder.com/photo.jpg',
+                    status: 'available',
+                    currentLocation: 'Admin Office'
+                }
+            },
+            { upsert: true, runValidators: true, setDefaultsOnInsert: true }
+        );
+        console.log('Test admin upserted successfully');
+
     } catch (error) {
         console.error('Error during seed operation:', error);
         throw error;
