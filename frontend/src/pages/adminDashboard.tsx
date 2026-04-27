@@ -1,7 +1,7 @@
 // frontend/src/pages/adminDashboard.tsx
 import logo from "@/assets/logo.svg";
 import { useState, type ReactNode } from "react";
-import AddSchedule from "@/components/ui/admin-dashboard/AddSchedule";
+import AddSchedule from "@/components/ui/admin-dashboard/addSchedule";
 import AnnouncementPage from "@/pages/announcementPage";
 
 // Chart Components
