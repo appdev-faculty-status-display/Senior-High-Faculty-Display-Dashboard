@@ -1,23 +1,11 @@
-import { useRef, type MouseEvent } from "react";
+import { useRef } from "react";
 import type { FacultySchedule, Strand, Day, Status } from "../../types/schedule";
+import { Button } from "@/components/ui/button"; 
 
     interface Props {
     onClose: () => void;
     onImport: (schedules: FacultySchedule[]) => void;
     }
-
-    const btnHover = {
-    onMouseEnter: (e: MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.backgroundColor = "#002f73"; // deep blue
-        e.currentTarget.style.color = "#facc15";           // yellow text
-        e.currentTarget.style.borderColor = "#002f73";     // blue border
-    },
-    onMouseLeave: (e: MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.backgroundColor = "transparent"; // reset background
-        e.currentTarget.style.color = "#4b5563";               // gray text
-        e.currentTarget.style.borderColor = "#d1d5db";         // gray border
-    },
-    };
 
     const validStrands: Strand[] = ["STEM", "ABM", "HUMSS"];
     const validDays: Day[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
@@ -130,23 +118,17 @@ import type { FacultySchedule, Strand, Day, Status } from "../../types/schedule"
             <div className="border-b border-gray-100 mb-6" />
 
             <div className="flex items-center justify-end gap-3">
-            <button
+            <Button variant="active"
             onClick={onClose}
-            className="px-5 py-2 text-sm font-semibold border transition-colors"
-            style={{ backgroundColor: "transparent", color: "#4b5563", borderColor: "#d1d5db" }} 
-            {...btnHover}
             >
             Cancel
-            </button>
+            </Button>
 
-            <button
+            <Button variant="active"
             onClick={() => fileInputRef.current?.click()}
-            className="px-5 py-2 text-sm font-semibold border transition-colors"
-            style={{ backgroundColor: "transparent", color: "#4b5563", borderColor: "#d1d5db" }} 
-            {...btnHover}
             >
             Upload & Import
-            </button>
+            </Button>
             </div>
         </div>
         </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { FacultySchedule, Strand, Status, Day } from "../../types/schedule";
 import { STRANDS, DAYS, ROOMS } from "../../data/mockAddSchedule";
+import { Button } from "@/components/ui/button"; 
 
 interface Props {
     schedule: FacultySchedule;
@@ -17,19 +18,6 @@ interface Props {
     const [status, setStatus] = useState<Status>(schedule.status);
     const [time, setTime] = useState(schedule.time);
     const [day, setDay] = useState<Day>(schedule.day);
-
-    const btnHover = {
-        onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.backgroundColor = "#002f73";
-        e.currentTarget.style.color = "#facc15";
-        e.currentTarget.style.borderColor = "#002f73";
-        },
-        onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.backgroundColor = "transparent";
-        e.currentTarget.style.color = "#4b5563";
-        e.currentTarget.style.borderColor = "#d1d5db";
-        },
-    };
 
     const inputClass = "w-full border border-gray-300 px-2 py-2 text-sm text-gray-700 outline-none focus:border-yellow-400 appearance-none pr-8";
     const labelClass = "block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1";
@@ -133,26 +121,22 @@ interface Props {
             <div className="border-b border-gray-100 mt-6 mb-6" />
 
             <div className="flex items-center justify-end gap-3">
-            <button
+            <Button variant="active"
                 onClick={() => { onDelete(schedule.id); onClose(); }}
-                className="px-5 py-2 text-sm font-semibold border border-gray-300 text-gray-600 transition-colors"
-                {...btnHover}
             >
                 Delete
-            </button>
-            <button onClick={onClose} className="px-5 py-2 text-sm font-semibold border border-gray-300 text-gray-600 transition-colors" {...btnHover}>
+            </Button>
+            <Button variant="active" onClick={onClose}>
                 Cancel
-            </button>
-            <button
+            </Button>
+            <Button variant="active"
                 onClick={() => {
                 onSave({ ...schedule, name, subject, strand, room, status, time, day });
                 onClose();
                 }}
-                className="px-5 py-2 text-sm font-semibold border border-gray-300 text-gray-600 transition-colors"
-                {...btnHover}
             >
                 Save Changes
-            </button>
+            </Button>
             </div>
         </div>
         </div>

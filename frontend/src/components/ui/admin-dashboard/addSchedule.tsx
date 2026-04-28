@@ -15,6 +15,7 @@ import IconSearch from "@/components/icons/SearchIcon";
 import IconPlus from "@/components/icons/PlusIcon";
 import EditScheduleModal from "@/components/modal/EditScheduleModal";
 import ImportScheduleModal from "@/components/modal/ImportScheduleModal";
+import { Button } from "@/components/ui/button"; 
 
 export default function ClassScheduleDashboard() {
     const [strandFilter, setStrandFilter] = useState("All Strands");
@@ -65,14 +66,12 @@ export default function ClassScheduleDashboard() {
                 Create, edit, and manage all class schedules.
             </p>
             </div>
-            <button 
-            onClick={() => setIsImporting(true)} 
-            className="flex items-center gap-1.5 text-sm font-bold px-4 py-2 shadow-sm transition-colors bg-yellow-400 text-white border border-yellow-400
-                        hover:bg-[#002f73] hover:text-[#facc15] hover:border-[#002f73]"
+            <Button variant="active"
+            onClick={() => setIsImporting(true)}
             >
             <IconPlus />
             Add Schedule
-            </button>
+            </Button>
         </div>
 
         <div className="bg-white shadow-sm border border-gray-100 overflow-hidden h-full">

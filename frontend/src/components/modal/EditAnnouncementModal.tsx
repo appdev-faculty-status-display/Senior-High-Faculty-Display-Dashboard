@@ -1,5 +1,6 @@
-import { useState, type MouseEvent } from "react";
+import { useState } from "react";
 import type { Announcement } from "../../types/announcement";
+import { Button } from "@/components/ui/button"; 
 
 interface Props {
     announcement: Announcement;
@@ -7,19 +8,6 @@ interface Props {
     onSave: (updated: Announcement) => void;
     onDelete: (id: number) => void;
     }
-
-    const btnHover = {
-    onMouseEnter: (e: MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.backgroundColor = "#002f73";
-        e.currentTarget.style.color = "#facc15";
-        e.currentTarget.style.borderColor = "#002f73";
-    },
-    onMouseLeave: (e: MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.backgroundColor = "transparent";
-        e.currentTarget.style.color = "#4b5563";
-        e.currentTarget.style.borderColor = "#d1d5db";
-    },
-};
 
 function formatDateTime(isoString: string): string {
     if (!isoString) return "";
@@ -112,34 +100,28 @@ export default function EditAnnouncementModal({
             <div className="border-b border-gray-100 mt-6 mb-6" />
 
             <div className="flex items-center justify-end gap-3">
-            <button
+            <Button variant="active"
                 onClick={() => {
                 onDelete(announcement.id);
                 onClose();
                 }}
-                className="px-5 py-2 text-sm font-semibold border border-gray-300 text-gray-600 transition-colors"
-                {...btnHover}
             >
                 Delete
-            </button>
-            <button
+            </Button>
+            <Button variant="active"
                 onClick={onClose}
-                className="px-5 py-2 text-sm font-semibold border border-gray-300 text-gray-600 transition-colors"
-                {...btnHover}
             >
                 Cancel
-            </button>
-            <button
+            </Button>
+            <Button variant="active"
                 onClick={() => {
                 const isoDate = date ? new Date(date).toISOString() : "";
                 onSave({ ...announcement, title, message, datePosted: isoDate });
                 onClose();
                 }}
-                className="px-5 py-2 text-sm font-semibold border border-gray-300 text-gray-600 transition-colors"
-                {...btnHover}
             >
                 Save Changes
-            </button>
+            </Button>
             </div>
         </div>
         </div>
