@@ -1,4 +1,3 @@
-import React from "react";
 import { cn } from "@/lib/utils";
 import nuLogo from "@/assets/logo.svg";
 
@@ -28,8 +27,8 @@ const Header = ({ variant = "default" }: HeaderProps) => {
                 <div className="absolute inset-0 flex">
                     <div className={cn("h-full w-full", 
                         isAdmin ? 
-                            "bg-gradient-to-r from-secondary via-[#E8C35E] to-secondary" : 
-                            "bg-gradient-to-r from-primary via-white to-primary"
+                            "bg-linear-to-r from-secondary via-[#E8C35E] to-secondary" : 
+                            "bg-linear-to-r from-primary via-white to-primary"
                         )}> 
                     </div>
                 </div>

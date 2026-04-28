@@ -50,7 +50,7 @@ export default function ConsultationEfficiencyCard({
         </div>
 
         <div
-          className="rounded-none flex flex-col items-center justify-center gap-2 px-6 py-4 flex-shrink-0"
+          className="rounded-none flex flex-col items-center justify-center gap-2 px-6 py-4 shrink-0"
           style={{ background: "#ffc107", minWidth: 160 }}
         >
           <p className="text-[10px] font-black text-[#002f73] uppercase tracking-widest text-center leading-tight">

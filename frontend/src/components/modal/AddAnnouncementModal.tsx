@@ -1,23 +1,11 @@
-import { useState, type MouseEvent } from "react";
+import { useState } from "react";
 import type { Announcement } from "../../types/announcement";
+import { Button } from "@/components/ui/button"; 
 
     interface Props {
     onClose: () => void;
     onSubmit: (announcement: Omit<Announcement, "id">) => void;
     }
-
-    const btnHover = {
-    onMouseEnter: (e: MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.backgroundColor = "#002f73";
-        e.currentTarget.style.color = "#facc15";
-        e.currentTarget.style.borderColor = "#002f73";
-    },
-    onMouseLeave: (e: MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.backgroundColor = "transparent";
-        e.currentTarget.style.color = "#4b5563";
-        e.currentTarget.style.borderColor = "#d1d5db";
-    },
-};
 
 export default function AddAnnouncementModal({ onClose, onSubmit }: Props) {
     const [title, setTitle] = useState("");
@@ -100,20 +88,13 @@ export default function AddAnnouncementModal({ onClose, onSubmit }: Props) {
             <div className="border-b border-gray-100 mt-6 mb-6" />
 
             <div className="flex items-center justify-end gap-3">
-            <button
-                onClick={onClose}
-                className="px-5 py-2 text-sm font-semibold border border-gray-300 text-gray-600 transition-colors"
-                {...btnHover}
-            >
+            <Button variant="active" onClick={onClose}>
                 Cancel
-            </button>
-            <button
-                onClick={handleSubmit}
-                className="px-5 py-2 text-sm font-semibold border border-gray-300 text-gray-600 transition-colors"
-                {...btnHover}
-            >
+            </Button>
+
+            <Button variant="active" onClick={handleSubmit}>
                 Post Announcement
-            </button>
+            </Button>
             </div>
         </div>
         </div>

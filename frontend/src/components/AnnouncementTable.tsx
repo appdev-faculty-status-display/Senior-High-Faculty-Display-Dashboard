@@ -1,4 +1,4 @@
-import { useState, type MouseEvent } from "react";
+import { useState } from "react";
 import type { Announcement } from "../types/announcement";
 import EditIcon from "./icons/EditIcon";
 import TrashIcon from "./icons/TrashIcon";
@@ -6,6 +6,7 @@ import PlusIcon from "./icons/PlusIcon";
 import AddAnnouncementModal from "./modal/AddAnnouncementModal";
 import EditAnnouncementModal from "./modal/EditAnnouncementModal";
 import { formatDateTime } from "@/lib/utils";
+import { Button } from "@/components/ui/button"; 
 
 interface Props {
     announcements: Announcement[];
@@ -17,17 +18,6 @@ interface Props {
     export default function AnnouncementTable({ announcements, onDelete, onAdd, onEdit }: Props) {
     const [showAdd, setShowAdd] = useState(false);
     const [editTarget, setEditTarget] = useState<Announcement | null>(null);
-
-    const addBtnHover = {
-    onMouseEnter: (e: MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.backgroundColor = "#002f73";
-        e.currentTarget.style.color = "#facc15";
-    },
-    onMouseLeave: (e: MouseEvent<HTMLButtonElement>) => {
-        e.currentTarget.style.backgroundColor = "#facc15";
-        e.currentTarget.style.color = "#ffffff";
-    },
-    };
 
     return (
         <section className="p-6">
@@ -55,14 +45,12 @@ interface Props {
                 Latest updates from the faculty and administration.
             </p>
             </div>
-            <button
+            <Button variant="active"
             onClick={() => setShowAdd(true)}
-            className="flex items-center gap-1.5 text-white text-sm font-bold px-4 py-2 shadow-sm transition-colors bg-yellow-400"
-            {...addBtnHover}
             >
             <PlusIcon />
             Add Announcement
-            </button>
+            </Button>
         </div>
 
         <div className="bg-white shadow-sm border border-gray-100 overflow-hidden">

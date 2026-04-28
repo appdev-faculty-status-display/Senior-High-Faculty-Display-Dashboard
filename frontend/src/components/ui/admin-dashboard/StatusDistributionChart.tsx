@@ -25,7 +25,7 @@ export default function StatusDistributionChart({ data }: StatusDistributionChar
       <h3 className="text-sm font-black text-[#002f73]">Status Distribution</h3>
 
       <div className="flex items-center gap-5 flex-1">
-        <div className="relative flex-shrink-0" style={{ width: 150, height: 150 }}>
+        <div className="relative shrink-0" style={{ width: 150, height: 150 }}>
           <Doughnut
             data={{
               labels,
@@ -51,7 +51,7 @@ export default function StatusDistributionChart({ data }: StatusDistributionChar
             const pct   = total > 0 ? Math.round((count / total) * 100) : 0;
             return (
               <div key={s.label} className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-none flex-shrink-0" style={{ background: s.color }} />
+                <span className="w-2.5 h-2.5 rounded-none shrink-0" style={{ background: s.color }} />
                 <span className="text-[11px] text-[#1a1a1a] font-semibold flex-1 leading-tight">{s.label}</span>
                 <span className="text-[11px] font-black text-[#002f73] w-4 text-right">{count}</span>
                 <span className="text-[10px] text-[#4f4f4f] w-8 text-right">({pct}%)</span>
