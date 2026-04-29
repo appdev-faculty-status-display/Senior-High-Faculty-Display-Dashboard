@@ -10,10 +10,31 @@ const facultyStatusValues = [
   'do-not-disturb'
 ];
 
+const scheduleEntrySchema = new Schema(
+  {
+    day: { type: String, required: true, trim: true },
+    startTime: { type: String, required: true, trim: true },
+    endTime: { type: String, required: true, trim: true },
+    subject: { type: String, required: true, trim: true },
+    room: { type: String, required: true, trim: true }
+  },
+  { _id: false }
+);
+
 const consultationHoursSchema = new Schema(
   {
-    start: { type: String, required: true, trim: true },
-    end: { type: String, required: true, trim: true }
+    day: { type: String, required: true, trim: true },
+    startTime: { type: String, required: true, trim: true },
+    endTime: { type: String, required: true, trim: true }
+  },
+  { _id: false }
+);
+
+const statusOverrideSchema = new Schema(
+  {
+    status: { type: String, required: true, enum: facultyStatusValues, trim: true },
+    expiresAt: { type: Date, default: null },
+    setBy: { type: String, default: null, trim: true }
   },
   { _id: false }
 );
@@ -34,9 +55,11 @@ const facultySchema = new Schema(
     strand: { type: String, default: null, trim: true },
     photoUrl: { type: String, required: true, trim: true },
     status: { type: String, required: true, enum: facultyStatusValues, default: 'available' },
+    statusOverride: { type: statusOverrideSchema, default: null },
     currentLocation: { type: String, required: true, trim: true },
     subject: { type: String, default: null, trim: true },
-    consultationHours: { type: consultationHoursSchema, default: null },
+    schedule: { type: [scheduleEntrySchema], default: [] },
+    consultationHours: { type: [consultationHoursSchema], default: [] },
     meetingWith: { type: String, default: null, trim: true },
     returnTime: { type: String, default: null, trim: true },
     note: { type: String, default: null, trim: true },
