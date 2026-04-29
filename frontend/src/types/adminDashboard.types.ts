@@ -100,3 +100,14 @@ export interface SidebarNavItemProps {
 export interface MainContentProps {
   activeNav: ActiveNav;
 }
+
+export interface ConsultationParticipant {
+  id: number;
+  hashedStudentId: string;
+  facultyName: string;
+  reason: string;
+  consultationUsed: boolean;
+  date: string;
+  time: string;
+  status: "Completed" | "Cancelled" | "No-show";
+}

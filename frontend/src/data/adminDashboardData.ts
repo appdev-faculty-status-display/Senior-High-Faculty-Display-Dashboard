@@ -1,6 +1,6 @@
 // frontend/src/data/adminDashboardData.ts
 
-import type { NavItem, RecencyLogEntry, RoomData } from "@/types/adminDashboard.types";
+import type { NavItem, RecencyLogEntry, RoomData, ConsultationParticipant } from "@/types/adminDashboard.types";
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
@@ -30,6 +30,8 @@ export const MOCK_RECENCY_LOG: RecencyLogEntry[] = [
   { facultyName: "Garcia, Ana",     strand: "HUMSS", currentStatus: "In Meeting",     lastUpdated: "09:15 AM", recency: "Recent" },
   { facultyName: "Lopez, Jose",     strand: "STEM",  currentStatus: "Off Campus",     lastUpdated: "07:50 AM", recency: "Older"  },
   { facultyName: "Mendoza, Clara",  strand: "ABM",   currentStatus: "Do Not Disturb", lastUpdated: "09:10 AM", recency: "Recent" },
+  { facultyName: "Villanueva, Ed",  strand: "TVL",   currentStatus: "In Class",       lastUpdated: "07:30 AM", recency: "Older"  },
+  { facultyName: "Bautista, Liza",  strand: "GAS",   currentStatus: "Available",      lastUpdated: "09:20 AM", recency: "Recent" },
 ];
 
 // ─── Resource & Communication ─────────────────────────────────────────────────
@@ -80,3 +82,88 @@ export const MOCK_NOTIFICATION_SUCCESS = {
   sent:   [40, 30],
   failed: [34, 18],
 };
+
+// ─── Consultation Participants ────────────────────────────────────────────────
+
+export const MOCK_CONSULTATION_PARTICIPANTS: ConsultationParticipant[] = [
+  {
+    id: 1,
+    hashedStudentId:  "STU-4f3a2b",
+    facultyName:      "Dela Cruz, Juan",
+    reason:           "Grade inquiry for Q3 Math exam",
+    consultationUsed: true,
+    date:             "April 6, 2026",
+    time:             "08:30 AM",
+    status:           "Completed",
+  },
+  {
+    id: 2,
+    hashedStudentId:  "STU-9c1e7d",
+    facultyName:      "Santos, Maria",
+    reason:           "Clearance requirements for graduation",
+    consultationUsed: false,
+    date:             "April 6, 2026",
+    time:             "08:50 AM",
+    status:           "Completed",
+  },
+  {
+    id: 3,
+    hashedStudentId:  "STU-2b8f0a",
+    facultyName:      "Reyes, Carlo",
+    reason:           "Schedule conflict for capstone defense",
+    consultationUsed: true,
+    date:             "April 6, 2026",
+    time:             "09:05 AM",
+    status:           "Completed",
+  },
+  {
+    id: 4,
+    hashedStudentId:  "STU-7d4c3e",
+    facultyName:      "Garcia, Ana",
+    reason:           "Research paper feedback",
+    consultationUsed: true,
+    date:             "April 6, 2026",
+    time:             "09:20 AM",
+    status:           "Cancelled",
+  },
+  {
+    id: 5,
+    hashedStudentId:  "STU-1a5b9f",
+    facultyName:      "Dela Cruz, Juan",
+    reason:           "TOR request and document signing",
+    consultationUsed: false,
+    date:             "April 6, 2026",
+    time:             "09:35 AM",
+    status:           "No-show",
+  },
+  {
+    id: 6,
+    hashedStudentId:  "STU-6e2d8c",
+    facultyName:      "Mendoza, Clara",
+    reason:           "Project proposal review",
+    consultationUsed: true,
+    date:             "April 6, 2026",
+    time:             "10:00 AM",
+    status:           "Completed",
+  },
+  {
+    id: 7,
+    hashedStudentId:  "STU-3f7a1b",
+    facultyName:      "Santos, Maria",
+    reason:           "Final grade recomputation request",
+    consultationUsed: false,
+    date:             "April 6, 2026",
+    time:             "10:15 AM",
+    status:           "Completed",
+  },
+  {
+    id: 8,
+    hashedStudentId:  "STU-8b0c4d",
+    facultyName:      "Lopez, Jose",
+    reason:           "Missing requirements submission",
+    consultationUsed: true,
+    date:             "April 6, 2026",
+    time:             "10:40 AM",
+    status:           "Cancelled",
+  },
+];
