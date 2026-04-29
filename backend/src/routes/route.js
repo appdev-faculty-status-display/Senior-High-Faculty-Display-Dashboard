@@ -11,7 +11,9 @@ const {
 const { authToken } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimit');
 const { asyncHandler } = require('../utils/asyncHandler');
+const scheduleImportRouter = require('./scheduleImport.route');
 
+router.use('/schedule', scheduleImportRouter);
 router.post('/auth/login', authLimiter, login);
 router.post('/auth/refresh', authLimiter, refresh);
 router.post('/auth/logout', logout);

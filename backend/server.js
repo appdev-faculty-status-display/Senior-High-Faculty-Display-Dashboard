@@ -9,6 +9,7 @@ const { globalLimiter } = require('./src/middleware/rateLimit');
 const { notFoundHandler } = require('./src/middleware/notFound');
 const { errorHandler } = require('./src/middleware/errorHandler');
 const routes = require('./src/routes/route');
+const { startAutoStatusCron } = require('./src/services/autoStatus.service');
 
 const app = express();
 
@@ -30,9 +31,9 @@ connectDb()
     app.listen(PORT, function () {
       console.log('Server running on port ' + PORT);
     });
+    startAutoStatusCron();
   })
   .catch(function (err) {
     console.error('MongoDB connection error:', err);
     process.exit(1);
   });
-  
