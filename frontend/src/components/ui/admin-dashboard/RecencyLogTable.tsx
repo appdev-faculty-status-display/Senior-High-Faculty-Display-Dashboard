@@ -13,9 +13,8 @@ const STATUS_COLORS: Record<string, string> = {
   "Off Campus":     "#ff914d",
 };
 
-// Parses "April 6, 2026 – 7:42 am" style or "08:30 AM" style into comparable value
-function parseTime(str: string): number {
-  // Try HH:MM AM/PM
+// Converts "08:30 AM" → total minutes from midnight for comparison
+function timeToMinutes(str: string): number {
   const match = str.match(/(\d+):(\d+)\s*(AM|PM)/i);
   if (!match) return 0;
   let h = parseInt(match[1]);
@@ -26,12 +25,18 @@ function parseTime(str: string): number {
   return h * 60 + m;
 }
 
+// Converts "HH:MM" input (24h) → total minutes from midnight
+function inputToMinutes(hhmm: string): number {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+}
+
 export default function RecencyLogTable({ entries }: RecencyLogTableProps) {
-  const [searchName, setSearchName]     = useState("");
-  const [filterRecency, setFilterRecency] = useState<"All" | "Recent" | "Older">("All");
-  const [filterStatus, setFilterStatus]   = useState("All");
-  const [timeFrom, setTimeFrom]           = useState("");
-  const [timeTo, setTimeTo]               = useState("");
+  const [searchName,     setSearchName]     = useState("");
+  const [filterRecency,  setFilterRecency]  = useState<"All" | "Recent" | "Older">("All");
+  const [filterStatus,   setFilterStatus]   = useState("All");
+  const [timeFrom,       setTimeFrom]       = useState("");
+  const [timeTo,         setTimeTo]         = useState("");
 
   const allStatuses = useMemo(
     () => ["All", ...Array.from(new Set(entries.map((e) => e.currentStatus)))],
@@ -50,27 +55,13 @@ export default function RecencyLogTable({ entries }: RecencyLogTableProps) {
       const statusMatch =
         filterStatus === "All" || entry.currentStatus === filterStatus;
 
-      const entryTime = parseTime(entry.lastUpdated);
-      const fromTime  = timeFrom ? parseTime(timeFrom + ":00 AM") : null;
-      const toTime    = timeTo   ? parseTime(timeTo   + ":00 AM") : null;
-
-      // Use raw minute comparison from HH:MM inputs
-      const fromMinutes = timeFrom
-        ? (() => {
-            const [h, m] = timeFrom.split(":").map(Number);
-            return h * 60 + m;
-          })()
-        : null;
-      const toMinutes = timeTo
-        ? (() => {
-            const [h, m] = timeTo.split(":").map(Number);
-            return h * 60 + m;
-          })()
-        : null;
+      const entryMinutes  = timeToMinutes(entry.lastUpdated);
+      const fromMinutes   = timeFrom ? inputToMinutes(timeFrom) : null;
+      const toMinutes     = timeTo   ? inputToMinutes(timeTo)   : null;
 
       const timeMatch =
-        (fromMinutes === null || entryTime >= fromMinutes) &&
-        (toMinutes   === null || entryTime <= toMinutes);
+        (fromMinutes === null || entryMinutes >= fromMinutes) &&
+        (toMinutes   === null || entryMinutes <= toMinutes);
 
       return nameMatch && recencyMatch && statusMatch && timeMatch;
     });
@@ -119,7 +110,7 @@ export default function RecencyLogTable({ entries }: RecencyLogTableProps) {
             fill="none" stroke="currentColor" strokeWidth="2.5"
             strokeLinecap="round" strokeLinejoin="round"
           >
-            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <input
             type="text"
@@ -152,7 +143,7 @@ export default function RecencyLogTable({ entries }: RecencyLogTableProps) {
           <option value="Older">Older</option>
         </select>
 
-        {/* Time range */}
+        {/* Time range — HH:MM inputs converted directly to minutes, no intermediate vars */}
         <div className="col-span-2 sm:col-span-1 flex items-center gap-1.5">
           <input
             type="time"
@@ -230,8 +221,6 @@ export default function RecencyLogTable({ entries }: RecencyLogTableProps) {
             </tbody>
           </table>
         </div>
-
-        {/* Result count */}
         <p className="text-[10px] text-[#9ca3af] mt-2">
           Showing {filtered.length} of {entries.length} entries
         </p>

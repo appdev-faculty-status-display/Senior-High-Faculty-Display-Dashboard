@@ -7,13 +7,20 @@ interface ConsultationParticipantsTableProps {
 }
 
 const STATUS_STYLE: Record<ConsultationParticipant["status"], string> = {
-  Completed:  "bg-[#e6f9ec] text-[#31ac52]",
-  Cancelled:  "bg-[#fde8e7] text-[#ed3a30]",
-  "No-show":  "bg-[#f5f5f5] text-[#4f4f4f]",
+  Completed: "bg-[#e6f9ec] text-[#31ac52]",
+  Cancelled: "bg-[#fde8e7] text-[#ed3a30]",
+  "No-show": "bg-[#f5f5f5] text-[#4f4f4f]",
 };
 
-// ── Export helpers ────────────────────────────────────────────────────────────
+// ── CSV escape helper ─────────────────────────────────────────────────────────
+// Wraps every cell in quotes and escapes embedded double-quotes by doubling them.
+// Also strips newlines inside values to keep each record on one line.
+function csvCell(value: string): string {
+  const safe = value.replace(/"/g, '""').replace(/\r?\n/g, " ");
+  return `"${safe}"`;
+}
 
+// ── Export CSV ────────────────────────────────────────────────────────────────
 function exportCSV(data: ConsultationParticipant[]) {
   const headers = [
     "Student ID (Hashed)",
@@ -23,46 +30,42 @@ function exportCSV(data: ConsultationParticipant[]) {
     "Date",
     "Time",
     "Status",
-  ];
-  const rows = data.map((p) => [
-    p.hashedStudentId,
-    p.facultyName,
-    `"${p.reason}"`,
-    p.consultationUsed ? "Yes" : "No",
-    p.date,
-    p.time,
-    p.status,
-  ]);
+  ].map(csvCell);
+
+  const rows = data.map((p) =>
+    [
+      p.hashedStudentId,
+      p.facultyName,
+      p.reason,
+      p.consultationUsed ? "Yes" : "No",
+      p.date,
+      p.time,
+      p.status,
+    ].map(csvCell)
+  );
+
   const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href     = url;
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
   a.download = "consultation_participants.csv";
   a.click();
   URL.revokeObjectURL(url);
 }
 
+// ── Export PDF ────────────────────────────────────────────────────────────────
+// Uses DOM APIs (text nodes) to avoid XSS from interpolated user data.
 function exportPDF(data: ConsultationParticipant[]) {
-  const rows = data
-    .map(
-      (p) =>
-        `<tr>
-          <td>${p.hashedStudentId}</td>
-          <td>${p.facultyName}</td>
-          <td>${p.reason}</td>
-          <td>${p.consultationUsed ? "Yes" : "No"}</td>
-          <td>${p.date}</td>
-          <td>${p.time}</td>
-          <td>${p.status}</td>
-        </tr>`
-    )
-    .join("");
+  const win = window.open("", "_blank");
+  if (!win) return;
 
-  const html = `<!DOCTYPE html>
+  const doc = win.document;
+  doc.open();
+  doc.write(`<!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8"/>
   <title>Consultation Participants</title>
   <style>
     body { font-family: Inter, sans-serif; font-size: 11px; color: #1a1a1a; padding: 32px; }
@@ -76,7 +79,7 @@ function exportPDF(data: ConsultationParticipant[]) {
 </head>
 <body>
   <h1>Consultation Participants</h1>
-  <p>Exported on ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} — Student names are hashed for privacy.</p>
+  <p id="subtitle"></p>
   <table>
     <thead>
       <tr>
@@ -84,24 +87,50 @@ function exportPDF(data: ConsultationParticipant[]) {
         <th>Room Used</th><th>Date</th><th>Time</th><th>Status</th>
       </tr>
     </thead>
-    <tbody>${rows}</tbody>
+    <tbody id="tbody"></tbody>
   </table>
 </body>
-</html>`;
+</html>`);
+  doc.close();
 
-  const blob = new Blob([html], { type: "text/html" });
-  const url  = URL.createObjectURL(blob);
-  const win  = window.open(url, "_blank");
-  if (win) {
-    win.onload = () => {
-      win.print();
-      URL.revokeObjectURL(url);
-    };
+  // Set subtitle safely via textContent (no XSS risk)
+  const subtitle = doc.getElementById("subtitle");
+  if (subtitle) {
+    subtitle.textContent = `Exported on ${new Date().toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })} — Student names are hashed for privacy.`;
   }
+
+  // Build table rows via DOM APIs — no string interpolation of user data
+  const tbody = doc.getElementById("tbody");
+  if (tbody) {
+    data.forEach((p) => {
+      const tr = doc.createElement("tr");
+      const cells = [
+        p.hashedStudentId,
+        p.facultyName,
+        p.reason,
+        p.consultationUsed ? "Yes" : "No",
+        p.date,
+        p.time,
+        p.status,
+      ];
+      cells.forEach((value) => {
+        const td = doc.createElement("td");
+        td.textContent = value; // textContent is XSS-safe
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  win.focus();
+  win.print();
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-
 export default function ConsultationParticipantsTable({
   participants,
 }: ConsultationParticipantsTableProps) {
@@ -234,19 +263,8 @@ export default function ConsultationParticipantsTable({
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr style={{ background: "#002f73" }}>
-                {[
-                  "Student ID",
-                  "Faculty Name",
-                  "Reason",
-                  "Room Used",
-                  "Date",
-                  "Time",
-                  "Status",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="text-left text-white font-bold px-4 py-2.5 whitespace-nowrap tracking-wide"
-                  >
+                {["Student ID", "Faculty Name", "Reason", "Room Used", "Date", "Time", "Status"].map((h) => (
+                  <th key={h} className="text-left text-white font-bold px-4 py-2.5 whitespace-nowrap tracking-wide">
                     {h}
                   </th>
                 ))}
@@ -278,13 +296,7 @@ export default function ConsultationParticipantsTable({
                       <span className="line-clamp-2">{p.reason}</span>
                     </td>
                     <td className="px-4 py-2.5">
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 ${
-                          p.consultationUsed
-                            ? "bg-[#e6f9ec] text-[#31ac52]"
-                            : "bg-[#f5f5f5] text-[#4f4f4f]"
-                        }`}
-                      >
+                      <span className={`text-[10px] font-bold px-2 py-0.5 ${p.consultationUsed ? "bg-[#e6f9ec] text-[#31ac52]" : "bg-[#f5f5f5] text-[#4f4f4f]"}`}>
                         {p.consultationUsed ? "Yes" : "No"}
                       </span>
                     </td>

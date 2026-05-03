@@ -1,4 +1,4 @@
-// frontend/src/components/header.tsx
+// frontend/src/components/ui/header/header.tsx
 import { cn } from "@/lib/utils";
 import nuLogo from "@/assets/logo.svg";
 
@@ -45,7 +45,9 @@ const Header = ({
           >
             <h1 className="font-extrabold tracking-tight text-2xl">NU LAGUNA</h1>
             <p className="text-xs font-semibold uppercase tracking-widest opacity-90">
-              {isAdmin ? "SSHS Faculty Board — Admin Panel" : "SSHS Faculty Status Display Board"}
+              {isAdmin
+                ? "SSHS Faculty Board — Admin Panel"
+                : "SSHS Faculty Status Display Board"}
             </p>
           </div>
         </div>
@@ -59,7 +61,6 @@ const Header = ({
                 <p className="text-sm font-bold text-[#002f73] leading-tight">{adminName}</p>
                 <p className="text-xs text-[#4f4f4f] font-medium">{adminRole}</p>
               </div>
-              {/* Avatar */}
               <div
                 className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-white font-extrabold text-xs border-2 border-[#cbd5e1]"
                 style={{ background: "linear-gradient(135deg, #064db6, #002f73)" }}
@@ -71,44 +72,56 @@ const Header = ({
             {/* Divider */}
             <div className="w-px h-8 bg-[#cbd5e1]" />
 
-            {/* Logout Button */}
-            <button
-              onClick={onLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors duration-150"
-            >
-              {/* Logout icon */}
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            {/* Logout Button — only rendered when onLogout is provided */}
+            {onLogout ? (
+              <button
+                onClick={onLogout}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors duration-150"
               >
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
-              Logout
-            </button>
+                <svg
+                  width="14" height="14" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" strokeWidth="2.5"
+                  strokeLinecap="round" strokeLinejoin="round"
+                >
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Logout
+              </button>
+            ) : (
+              // Disabled placeholder so layout doesn't shift if onLogout isn't wired yet
+              <button
+                disabled
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#9ca3af] border border-[#e5e7eb] bg-white cursor-not-allowed opacity-50"
+                title="Logout not configured"
+              >
+                <svg
+                  width="14" height="14" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" strokeWidth="2.5"
+                  strokeLinecap="round" strokeLinejoin="round"
+                >
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Logout
+              </button>
+            )}
           </div>
         )}
       </div>
 
       {/* ── Accent Bar ── */}
       <div className="relative h-1.5 w-full overflow-hidden">
-        <div className="absolute inset-0 flex">
-          <div
-            className="h-full w-full"
-            style={{
-              background: isAdmin
-                ? "linear-gradient(to right, #ffc107 0%, #ffd41c 20%, #d4a800 40%, #003a8f 70%, #002f73 100%)"
-                : "linear-gradient(to right, #ffc107, #ffffff, #ffc107)",
-            }}
-          />
-        </div>
+        <div
+          className="absolute inset-0"
+          style={{
+            background: isAdmin
+              ? "linear-gradient(to right, #ffc107 0%, #ffd41c 20%, #d4a800 40%, #003a8f 70%, #002f73 100%)"
+              : "linear-gradient(to right, #ffc107, #ffffff, #ffc107)",
+          }}
+        />
       </div>
     </header>
   );

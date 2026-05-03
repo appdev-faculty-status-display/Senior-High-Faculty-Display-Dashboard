@@ -5,18 +5,18 @@ import AddAnnouncement from "@/components/ui/admin-dashboard/AddAnnouncement";
 import Header from "@/components/ui/header/header";
 
 // ─── Chart Components ─────────────────────────────────────────────────────────
-import StatusDistributionChart         from "@/components/ui/admin-dashboard/StatusDistributionChart";
-import ConsultationWindowChart         from "@/components/ui/admin-dashboard/ConsulationWindowChart";
-import ManualOverrideChart             from "@/components/ui/admin-dashboard/ManualOverrideChart";
-import RecencyLogTable                 from "@/components/ui/admin-dashboard/RecencyLogTable";
-import ConsultationEfficiencyCard      from "@/components/ui/admin-dashboard/ConsultationEfficiencyCard";
-import CancellationRateChart           from "@/components/ui/admin-dashboard/CancellationRateChart";
-import ApprovalBottleneckCard          from "@/components/ui/admin-dashboard/ApprovalBottleneckChart";
-import RoomOccupancyChart              from "@/components/ui/admin-dashboard/RoomOccupancyChart";
-import AnnouncementReachChart          from "@/components/ui/admin-dashboard/AnnouncementReachChart";
-import NotificationSuccessChart        from "@/components/ui/admin-dashboard/NotificationSuccessChart";
-import UrgencyPurposeAnalysis          from "@/components/ui/admin-dashboard/UrgencyPurposeAnalysis";
-import ConsultationParticipantsTable   from "@/components/ui/admin-dashboard/ConsultationParticipantsTable";
+import StatusDistributionChart       from "@/components/ui/admin-dashboard/StatusDistributionChart";
+import ConsultationWindowChart       from "@/components/ui/admin-dashboard/ConsulationWindowChart";
+import ManualOverrideChart           from "@/components/ui/admin-dashboard/ManualOverrideChart";
+import RecencyLogTable               from "@/components/ui/admin-dashboard/RecencyLogTable";
+import ConsultationEfficiencyCard    from "@/components/ui/admin-dashboard/ConsultationEfficiencyCard";
+import CancellationRateChart         from "@/components/ui/admin-dashboard/CancellationRateChart";
+import ApprovalBottleneckCard        from "@/components/ui/admin-dashboard/ApprovalBottleneckChart";
+import RoomOccupancyChart            from "@/components/ui/admin-dashboard/RoomOccupancyChart";
+import AnnouncementReachChart        from "@/components/ui/admin-dashboard/AnnouncementReachChart";
+import NotificationSuccessChart      from "@/components/ui/admin-dashboard/NotificationSuccessChart";
+import UrgencyPurposeAnalysis        from "@/components/ui/admin-dashboard/UrgencyPurposeAnalysis";
+import ConsultationParticipantsTable from "@/components/ui/admin-dashboard/ConsultationParticipantsTable";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 import type {
@@ -43,16 +43,34 @@ import {
   MOCK_CONSULTATION_PARTICIPANTS,
 } from "@/data/adminDashboardData";
 
-// ─── Shared Export Helpers ────────────────────────────────────────────────────
+// ─── CSV escape helper ────────────────────────────────────────────────────────
+// Wraps every cell in quotes and escapes embedded double-quotes by doubling them.
+// Also strips newlines inside values to keep each record on one line.
+function csvCell(value: string): string {
+  const safe = value.replace(/"/g, '""').replace(/\r?\n/g, " ");
+  return `"${safe}"`;
+}
 
-/**
- * Triggers a browser print dialog on a specific DOM element.
- * Creates a temporary iframe scoped to just that element so only
- * the analytics section prints (not the whole dashboard).
- */
+function exportAnalyticsCSV(sectionLabel: string, rows: string[][]) {
+  const csv = rows
+    .map((row) => row.map(csvCell).join(","))
+    .join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${sectionLabel.toLowerCase().replace(/\s+/g, "_")}_analytics.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Print helper ─────────────────────────────────────────────────────────────
+// Clones the app's <style> and <link rel="stylesheet"> nodes into the iframe
+// so Tailwind classes render correctly in the print view.
 function printElement(el: HTMLElement, title: string) {
   const iframe = document.createElement("iframe");
-  iframe.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+  iframe.style.cssText =
+    "position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden";
   document.body.appendChild(iframe);
 
   const doc = iframe.contentDocument!;
@@ -63,22 +81,41 @@ function printElement(el: HTMLElement, title: string) {
   <meta charset="utf-8"/>
   <title>${title}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Inter, sans-serif; font-size: 11px; color: #1a1a1a; padding: 24px; }
-    h1 { font-size: 15px; font-weight: 800; color: #002f73; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
-    p  { font-size: 10px; color: #4f4f4f; margin-bottom: 16px; }
-    /* Preserve card borders from the captured element */
-    canvas { max-width: 100%; }
+    h1   { font-size: 15px; font-weight: 800; color: #002f73; margin-bottom: 4px;
+           text-transform: uppercase; letter-spacing: 0.05em; }
+    p    { font-size: 10px; color: #4f4f4f; margin-bottom: 16px; }
   </style>
 </head>
 <body>
-  <h1>${title}</h1>
-  <p>Printed on ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
-  ${el.innerHTML}
+  <h1 id="print-title"></h1>
+  <p id="print-subtitle"></p>
+  <div id="print-content"></div>
 </body>
 </html>`);
   doc.close();
+
+  // Clone app stylesheets (covers Tailwind) into the iframe head
+  document.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => {
+    doc.head.appendChild(doc.importNode(node, true));
+  });
+
+  // Set title and subtitle via textContent — no XSS risk
+  const titleEl = doc.getElementById("print-title");
+  if (titleEl) titleEl.textContent = title;
+
+  const subtitleEl = doc.getElementById("print-subtitle");
+  if (subtitleEl) {
+    subtitleEl.textContent = `Printed on ${new Date().toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })}`;
+  }
+
+  // Clone the analytics section HTML
+  const contentEl = doc.getElementById("print-content");
+  if (contentEl) contentEl.appendChild(doc.importNode(el, true));
 
   iframe.onload = () => {
     iframe.contentWindow!.focus();
@@ -87,22 +124,7 @@ function printElement(el: HTMLElement, title: string) {
   };
 }
 
-/**
- * Exports a flat table of key-value pairs as CSV.
- */
-function exportAnalyticsCSV(sectionLabel: string, rows: string[][]) {
-  const csv = rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href     = url;
-  a.download = `${sectionLabel.toLowerCase().replace(/\s+/g, "_")}_analytics.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 // ─── Page Title Banner ────────────────────────────────────────────────────────
-
 interface PageHeaderProps {
   title: string;
   description: string;
@@ -123,8 +145,7 @@ function PageHeader({ title, description, actions }: PageHeaderProps) {
   );
 }
 
-// ─── Export Button ────────────────────────────────────────────────────────────
-
+// ─── Export Buttons ───────────────────────────────────────────────────────────
 interface ExportButtonsProps {
   onExportCSV: () => void;
   onExportPDF: () => void;
@@ -164,18 +185,20 @@ function FacultyActivityContent() {
   const analyticsRef = useRef<HTMLDivElement>(null);
 
   function handleExportCSV() {
-    const rows = [
+    exportAnalyticsCSV("Faculty Activity", [
       ["Metric", "Value"],
       ...Object.entries(MOCK_STATUS_DATA).map(([k, v]) => [k, String(v)]),
       ["---", "---"],
       ["Faculty Name", "Strand", "Status", "Last Updated", "Recency"],
-      ...MOCK_RECENCY_LOG.map((e) => [e.facultyName, e.strand, e.currentStatus, e.lastUpdated, e.recency]),
-    ];
-    exportAnalyticsCSV("Faculty Activity", rows);
+      ...MOCK_RECENCY_LOG.map((e) => [
+        e.facultyName, e.strand, e.currentStatus, e.lastUpdated, e.recency,
+      ]),
+    ]);
   }
 
   function handleExportPDF() {
-    if (analyticsRef.current) printElement(analyticsRef.current, "Faculty Activity Analytics");
+    if (analyticsRef.current)
+      printElement(analyticsRef.current, "Faculty Activity Analytics");
   }
 
   return (
@@ -185,15 +208,11 @@ function FacultyActivityContent() {
         description="Overview of current faculty statuses, consultation windows, and recency updates."
         actions={<ExportButtons onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} />}
       />
-
       <div ref={analyticsRef} className="flex flex-col gap-6">
-        {/* Row 1: Status + Consultation Window */}
         <div className="grid grid-cols-2 gap-6">
           <StatusDistributionChart data={MOCK_STATUS_DATA} />
           <ConsultationWindowChart {...MOCK_CONSULTATION_WINDOW} />
         </div>
-
-        {/* Row 2: Recency Log + Manual Override */}
         <div className="grid grid-cols-3 gap-6">
           <div className="col-span-2">
             <RecencyLogTable entries={MOCK_RECENCY_LOG} />
@@ -209,22 +228,22 @@ function ConsultationContent() {
   const analyticsRef = useRef<HTMLDivElement>(null);
 
   function handleExportCSV() {
-    const rows = [
+    exportAnalyticsCSV("Consultation", [
       ["Metric", "Value"],
-      ["Quick Consultations", String(MOCK_CONSULTATION_EFFICIENCY.quickConsultations)],
-      ["Consultation Room",   String(MOCK_CONSULTATION_EFFICIENCY.consultationRoom)],
-      ["Avg Queue Wait (min)",String(MOCK_CONSULTATION_EFFICIENCY.avgQueueWaitMin)],
-      ["Resolved (%)",        String(MOCK_CANCELLATION_RATE.resolved)],
-      ["Schedule Conflict (%)",String(MOCK_CANCELLATION_RATE.scheduleConflict)],
-      ["Long Wait Time (%)",  String(MOCK_CANCELLATION_RATE.longWaitTime)],
-      ["Faculty Approval (min)",   String(MOCK_APPROVAL_BOTTLENECK.facultyApprovalMin)],
-      ["Strand Head Approval (min)",String(MOCK_APPROVAL_BOTTLENECK.strandHeadApprovalMin)],
-    ];
-    exportAnalyticsCSV("Consultation", rows);
+      ["Quick Consultations",    String(MOCK_CONSULTATION_EFFICIENCY.quickConsultations)],
+      ["Consultation Room",      String(MOCK_CONSULTATION_EFFICIENCY.consultationRoom)],
+      ["Avg Queue Wait (min)",   String(MOCK_CONSULTATION_EFFICIENCY.avgQueueWaitMin)],
+      ["Resolved (%)",           String(MOCK_CANCELLATION_RATE.resolved)],
+      ["Schedule Conflict (%)",  String(MOCK_CANCELLATION_RATE.scheduleConflict)],
+      ["Long Wait Time (%)",     String(MOCK_CANCELLATION_RATE.longWaitTime)],
+      ["Faculty Approval (min)", String(MOCK_APPROVAL_BOTTLENECK.facultyApprovalMin)],
+      ["Strand Head Approval (min)", String(MOCK_APPROVAL_BOTTLENECK.strandHeadApprovalMin)],
+    ]);
   }
 
   function handleExportPDF() {
-    if (analyticsRef.current) printElement(analyticsRef.current, "Consultation Analytics");
+    if (analyticsRef.current)
+      printElement(analyticsRef.current, "Consultation Analytics");
   }
 
   return (
@@ -234,22 +253,18 @@ function ConsultationContent() {
         description="Demand metrics, cancellation trends, approval bottlenecks, and participant records."
         actions={<ExportButtons onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} />}
       />
-
       <div ref={analyticsRef} className="flex flex-col gap-6">
-        {/* Row 1: Efficiency + Cancellation */}
         <div className="grid gap-6" style={{ gridTemplateColumns: "3fr 2fr" }}>
           <ConsultationEfficiencyCard {...MOCK_CONSULTATION_EFFICIENCY} />
           <CancellationRateChart {...MOCK_CANCELLATION_RATE} />
         </div>
-
-        {/* Row 2: Approval Bottleneck + Urgency Analysis */}
         <div className="grid gap-6" style={{ gridTemplateColumns: "3fr 2fr" }}>
           <ApprovalBottleneckCard {...MOCK_APPROVAL_BOTTLENECK} />
           <UrgencyPurposeAnalysis />
         </div>
       </div>
 
-      {/* Consultation participants data component not available */}
+      {/* Participants table has its own export buttons inside the component */}
       <ConsultationParticipantsTable participants={MOCK_CONSULTATION_PARTICIPANTS} />
     </div>
   );
@@ -259,7 +274,7 @@ function ResourceCommunicationContent() {
   const analyticsRef = useRef<HTMLDivElement>(null);
 
   function handleExportCSV() {
-    const rows = [
+    exportAnalyticsCSV("Resource Communication", [
       ["Month", "Strand-Specific Reach", "School-Wide Reach"],
       ...MOCK_ANNOUNCEMENT_LABELS.map((label, i) => [
         label,
@@ -276,12 +291,12 @@ function ResourceCommunicationContent() {
       ["---", "---", "---"],
       ["Room", "Used (%)", "Available (%)"],
       ...MOCK_ROOM_OCCUPANCY.map((r) => [r.room, String(r.used), String(r.available)]),
-    ];
-    exportAnalyticsCSV("Resource Communication", rows);
+    ]);
   }
 
   function handleExportPDF() {
-    if (analyticsRef.current) printElement(analyticsRef.current, "Resource & Communication Analytics");
+    if (analyticsRef.current)
+      printElement(analyticsRef.current, "Resource & Communication Analytics");
   }
 
   return (
@@ -291,9 +306,7 @@ function ResourceCommunicationContent() {
         description="Announcement reach, notification success rates, and room occupancy statistics."
         actions={<ExportButtons onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} />}
       />
-
       <div ref={analyticsRef} className="flex flex-col gap-6">
-        {/* Row 1: Notification + Announcement */}
         <div className="grid grid-cols-2 gap-6">
           <NotificationSuccessChart {...MOCK_NOTIFICATION_SUCCESS} />
           <AnnouncementReachChart
@@ -302,8 +315,6 @@ function ResourceCommunicationContent() {
             schoolWide={MOCK_SCHOOL_WIDE}
           />
         </div>
-
-        {/* Row 2: Room Occupancy */}
         <RoomOccupancyChart rooms={MOCK_ROOM_OCCUPANCY} />
       </div>
     </div>
@@ -369,11 +380,8 @@ export default function AdminDashboard() {
   const [activeNav, setActiveNav] = useState<ActiveNav>("faculty-activity");
 
   return (
-    <div
-      className="min-h-screen flex flex-col bg-white"
-      style={{ fontFamily: "Inter, sans-serif" }}
-    >
-      {/* ── Header — uses the shared Header component ── */}
+    <div className="min-h-screen flex flex-col bg-white" style={{ fontFamily: "Inter, sans-serif" }}>
+
       <Header
         variant="admin"
         adminName="Admin Account"
@@ -384,10 +392,7 @@ export default function AdminDashboard() {
         }}
       />
 
-      {/* ── Body ── */}
       <div className="flex flex-1 min-h-0">
-
-        {/* Sidebar */}
         <aside
           className="shrink-0 flex flex-col bg-white border-r border-[#cbd5e1]"
           style={{ width: "168px" }}
@@ -404,11 +409,9 @@ export default function AdminDashboard() {
           </nav>
         </aside>
 
-        {/* Main */}
         <main className="flex-1 min-h-0 overflow-y-auto bg-[#f8faff]">
           <MainContent activeNav={activeNav} />
         </main>
-
       </div>
     </div>
   );
