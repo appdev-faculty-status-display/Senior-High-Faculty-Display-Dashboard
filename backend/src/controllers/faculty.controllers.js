@@ -176,7 +176,7 @@ async function getFacultyById(req, res) {
 
 async function updateFacultyStatus(req, res) {
   const { id } = req.params;
-  const { status, expiresAt, setBy } = req.body || {};
+  const { status, expiresAt } = req.body || {};
 
   if (!isValidObjectId(id)) {
     const error = new Error('Invalid faculty id');
@@ -202,11 +202,38 @@ async function updateFacultyStatus(req, res) {
 
   assertCanEditFaculty(req, faculty);
 
+  let parsedExpires = null;
+
+  if (expiresAt) {
+    const d = new Date(expiresAt);
+
+    if (isNaN(d.getTime())) {
+      const error = new Error('Invalid expiresAt');
+      error.name = 'ValidationError';
+      error.errors = {
+        expiresAt: { message: 'expiresAt must be a valid date' }
+      };
+      throw error;
+    }
+
+    parsedExpires = d;
+  }
+
+  const setBy = req.user && req.user.id ? trimString(String(req.user.id)) : null;
+
+  /**
+   * NOTE: Status Redundancy (Design Concern)
+   * Currently storing status in both faculty.status and faculty.statusOverride.status.
+   * Future Improvement: Store only in statusOverride and compute current status via:
+   *   - Check if statusOverride exists and is still active (expiresAt > now)
+   *   - If yes, use statusOverride.status; otherwise use default 'available'
+   * This would eliminate the redundancy and prevent status mismatch bugs.
+   */
   faculty.status = status;
   faculty.statusOverride = {
     status,
-    expiresAt: expiresAt ? new Date(expiresAt) : null,
-    setBy: setBy ? trimString(setBy) : null
+    expiresAt: parsedExpires,
+    setBy: setBy
   };
 
   await faculty.save();

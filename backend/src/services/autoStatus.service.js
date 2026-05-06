@@ -5,21 +5,46 @@ const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 
 function getCurrentDayAndTime() {
     const now = new Date();
-    const day = DAYS[now.getDay()];
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const time = `${hours}:${minutes}`;
+    const formatter = new Intl.DateTimeFormat('en-PH', {
+        timeZone: 'Asia/Manila',
+        weekday: 'long',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+
+    const parts = formatter.formatToParts(now);
+    const day = parts.find(p => p.type === 'weekday')?.value;
+    const hour = parts.find(p => p.type === 'hour')?.value;
+    const minute = parts.find(p => p.type === 'minute')?.value;
+
+    // Ensure we have valid values from Manila timezone
+    if (!day || !hour || !minute) {
+        throw new Error('Failed to get current Manila time via Intl.DateTimeFormat');
+    }
+
+    const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+
     return { day, time };
 }
 
-function isWithinPeriod(startTime, endTime, currentTime) {
-    return currentTime >= startTime && currentTime < endTime;
+function timeToMinutes(t) {
+    const [h, m] = String(t).split(':').map(Number);
+    return (Number.isFinite(h) ? h : 0) * 60 + (Number.isFinite(m) ? m : 0);
 }
 
-function hasActivePeriod(schedule, day, currentTime) {
-    return schedule.some(function (entry) {
-        return entry.day === day && isWithinPeriod(entry.startTime, entry.endTime, currentTime);
-    });
+function isWithinPeriod(startTime, endTime, currentTime) {
+    const start = timeToMinutes(startTime);
+    const end = timeToMinutes(endTime);
+    const current = timeToMinutes(currentTime);
+
+    // Normal period (same day)
+    if (start <= end) {
+        return current >= start && current < end;
+    }
+
+    // Overnight period (e.g., 23:00 - 02:00) spans midnight
+    return current >= start || current < end;
 }
 
 function getActivePeriod(schedule, day, currentTime) {
@@ -30,33 +55,35 @@ function getActivePeriod(schedule, day, currentTime) {
 
 async function runAutoStatusCheck() {
     const { day, time } = getCurrentDayAndTime();
+    const cursor = Faculty.find({}).cursor();
 
-    const facultyList = await Faculty.find({});
-
-    for (const faculty of facultyList) {
-        // if there is a manual override that has not expired yet, skip this faculty
-        if (faculty.statusOverride && faculty.statusOverride.expiresAt) {
-            const overrideStillActive = new Date(faculty.statusOverride.expiresAt) > new Date();
-
-            if (overrideStillActive) {
+    for await (const faculty of cursor) {
+        // Check if status override is still active
+        if (faculty.statusOverride) {
+            if (faculty.statusOverride.expiresAt) {
+                const overrideStillActive = faculty.statusOverride.expiresAt > new Date();
+                if (overrideStillActive) {
+                    continue;  // Keep override active, skip schedule check
+                }
+            } else {
+                // Override has no expiry; preserve it indefinitely
                 continue;
             }
-
-            // override has expired, clear it
+            // Override has expired; clear it and proceed to schedule check
             faculty.statusOverride = null;
         }
 
         const activePeriod = getActivePeriod(faculty.schedule, day, time);
 
         if (activePeriod) {
-            // faculty has a class right now
+            // in-class faculty
             if (faculty.status !== 'in-class') {
                 faculty.status = 'in-class';
                 faculty.currentPeriod = `${activePeriod.subject} - ${activePeriod.room}`;
                 await faculty.save();
             }
         } else {
-            // no active class period, revert to available if they were in-class
+            // no active class period
             if (faculty.status === 'in-class') {
                 faculty.status = 'available';
                 faculty.currentPeriod = null;
@@ -73,6 +100,7 @@ function startAutoStatusCron() {
             await runAutoStatusCheck();
         } catch (err) {
             console.error('Auto status cron job failed:', err.message);
+            console.error(err);
         }
     });
 

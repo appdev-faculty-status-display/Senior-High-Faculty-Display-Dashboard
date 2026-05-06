@@ -1,6 +1,22 @@
 const XLSX = require('xlsx');
 const { Faculty, ScheduleImport } = require('../models');
 
+/**
+ * MEMORY CONSIDERATIONS FOR LARGE FILE IMPORTS:
+ * 
+ * Current Implementation Limits:
+ * - XLSX parser loads the entire file into memory before processing
+ * - multer limits file size to 5MB in schedImport.route.js
+ * - Faculty.find().cursor() uses streaming to avoid loading all faculty into memory
+ * 
+ * Scaling Recommendations:
+ * 1. For files >10MB: Implement streaming XLSX parsing with 'xlsx-stream' or similar
+ * 2. Consider processing files in chunks (e.g., 1000 rows at a time)
+ * 3. For very large operations: Use a background job queue (Bull, RabbitMQ, etc.)
+ * 4. Monitor memory usage in production and adjust limits based on server capacity
+ * 5. Consider compression for API requests if import frequency is high
+ */
+
 const REQUIRED_COLUMNS = ['facultyId', 'day', 'startTime', 'endTime', 'subject', 'room'];
 
 const VALID_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -40,6 +56,16 @@ function validateHeaders(rows) {
 function validateRow(row, rowIndex) {
     const errors = [];
     const rowNumber = rowIndex + 2; // account for header row and 1-based index
+
+    // Explicit check for empty facultyId (more specific error message)
+    if (!row.facultyId || String(row.facultyId).trim() === '') {
+        errors.push({
+            row: rowNumber,
+            message: 'Column "facultyId" is empty or invalid'
+        });
+        // Return early to avoid cascading errors
+        return errors;
+    }
 
     REQUIRED_COLUMNS.forEach(function (col) {
         if (!row[col] || String(row[col]).trim() === '') {
@@ -98,87 +124,137 @@ function groupRowsByFaculty(rows) {
     return grouped;
 }
 
-async function runImport(buffer, fileName, importedBy, replaceAll, requestingUser) {
-    const log = await ScheduleImport.create({
+async function createImportLog(importedBy, fileName) {
+    return ScheduleImport.create({
         importedBy,
-        fileName,
+        filename: fileName,
         status: 'processing',
         startedAt: new Date(),
         recordsProcessed: 0,
         recordsApplied: 0,
         errors: []
     });
+}
+
+function parseAndValidateRows(buffer) {
+    const rows = parseSheet(buffer);
+    validateHeaders(rows);
+
+    const rowErrors = [];
+    rows.forEach(function (row, index) {
+        const errors = validateRow(row, index);
+        rowErrors.push(...errors);
+    });
+
+    return { rows, rowErrors };
+}
+
+function getValidRows(rows, rowErrors) {
+    const errorRows = new Set(rowErrors.map(e => e.row));
+    return rows.filter((_, index) => !errorRows.has(index + 2));
+}
+
+function computeRowCounts(rows, grouped) {
+    const attemptedCounts = {};
+    rows.forEach(function (row) {
+        const facultyId = String(row.facultyId).trim();
+        
+        // Skip empty facultyIds to avoid polluting the counts object
+        if (facultyId === '') {
+            return;
+        }
+        
+        attemptedCounts[facultyId] = (attemptedCounts[facultyId] || 0) + 1;
+    });
+
+    const validCounts = {};
+    Object.keys(grouped).forEach(function (fid) {
+        validCounts[fid] = grouped[fid].length;
+    });
+
+    return { attemptedCounts, validCounts };
+}
+
+async function applyGroupedSchedules(grouped, requestingUser, replaceAll) {
+    const facultyIds = Object.keys(grouped);
+    let recordsApplied = 0;
+    const applyErrors = [];
+
+    for (const facultyId of facultyIds) {
+        const faculty = await Faculty.findOne({ facultyId });
+
+        if (!faculty) {
+            applyErrors.push({
+                row: 0,
+                message: `Faculty with facultyId "${facultyId}" not found and was skipped`
+            });
+            continue;
+        }
+
+        if (
+            requestingUser.role === 'strand_head' &&
+            faculty.strand !== requestingUser.strand
+        ) {
+            applyErrors.push({
+                row: 0,
+                message: `Faculty "${facultyId}" belongs to a different strand and was skipped`
+            });
+            continue;
+        }
+
+        if (replaceAll) {
+            faculty.schedule = grouped[facultyId];
+        } else {
+            const incoming = grouped[facultyId];
+
+            incoming.forEach(function (newEntry) {
+                const exists = faculty.schedule.some(function (existing) {
+                    return (
+                        existing.day === newEntry.day &&
+                        existing.startTime === newEntry.startTime &&
+                        existing.endTime === newEntry.endTime
+                    );
+                });
+
+                if (!exists) {
+                    faculty.schedule.push(newEntry);
+                }
+            });
+        }
+
+        await faculty.save();
+        recordsApplied += grouped[facultyId].length;
+    }
+
+    return { recordsApplied, applyErrors };
+}
+
+async function finalizeLog(log, finalStatus, totalProcessed, recordsApplied, allErrors) {
+    log.status = finalStatus;
+    log.finishedAt = new Date();
+    log.recordsProcessed = totalProcessed;
+    log.recordsApplied = recordsApplied;
+    log.errors = allErrors;
+    await log.save();
+}
+
+async function runImport(buffer, fileName, importedBy, replaceAll, requestingUser) {
+    const log = await createImportLog(importedBy, fileName);
 
     try {
-        const rows = parseSheet(buffer);
-        validateHeaders(rows);
+        const { rows, rowErrors } = parseAndValidateRows(buffer);
 
-        const rowErrors = [];
-
-        rows.forEach(function (row, index) {
-            const errors = validateRow(row, index);
-            rowErrors.push(...errors);
-        });
-
-        const validRows = rows.filter(function (row, index) {
-            const rowNumber = index + 2;
-            return !rowErrors.some(function (e) {
-                return e.row === rowNumber;
-            });
-        });
+        const validRows = getValidRows(rows, rowErrors);
 
         const grouped = groupRowsByFaculty(validRows);
-        const facultyIds = Object.keys(grouped);
 
-        let recordsApplied = 0;
-        const applyErrors = [];
+        const { attemptedCounts, validCounts } = computeRowCounts(rows, grouped);
 
-        for (const facultyId of facultyIds) {
-            const faculty = await Faculty.findOne({ facultyId });
-
-            if (!faculty) {
-                applyErrors.push({
-                    row: 0,
-                    message: `Faculty with facultyId "${facultyId}" not found and was skipped`
-                });
-                continue;
-            }
-
-            // strand heads can only import schedules for faculty in their own strand
-            if (
-                requestingUser.role === 'strand_head' &&
-                faculty.strand !== requestingUser.strand
-            ) {
-                applyErrors.push({
-                    row: 0,
-                    message: `Faculty "${facultyId}" belongs to a different strand and was skipped`
-                });
-                continue;
-            }
-
-            if (replaceAll) {
-                faculty.schedule = grouped[facultyId];
-            } else {
-                const incoming = grouped[facultyId];
-
-                incoming.forEach(function (newEntry) {
-                    const exists = faculty.schedule.some(function (existing) {
-                        return (
-                            existing.day === newEntry.day &&
-                            existing.startTime === newEntry.startTime &&
-                            existing.endTime === newEntry.endTime
-                        );
-                    });
-
-                    if (!exists) {
-                        faculty.schedule.push(newEntry);
-                    }
-                });
-            }
-
-            await faculty.save();
-            recordsApplied += grouped[facultyId].length;
-        }
+        const { recordsApplied, applyErrors } = await applyGroupedSchedules(
+            grouped,
+            requestingUser,
+            replaceAll
+        );
 
         const allErrors = [...rowErrors, ...applyErrors];
         const totalProcessed = rows.length;
@@ -191,20 +267,22 @@ async function runImport(buffer, fileName, importedBy, replaceAll, requestingUse
             finalStatus = 'partial';
         }
 
-        log.status = finalStatus;
-        log.finishedAt = new Date();
-        log.recordsProcessed = totalProcessed;
-        log.recordsApplied = recordsApplied;
-        log.errors = allErrors;
-
-        await log.save();
+        await finalizeLog(log, finalStatus, totalProcessed, recordsApplied, allErrors);
 
         return {
             importId: log._id.toString(),
             status: finalStatus,
             recordsProcessed: totalProcessed,
             recordsApplied: recordsApplied,
-            errors: allErrors
+            errors: allErrors,
+            perFacultyRowCounts: Object.keys(attemptedCounts)
+                .reduce(function (acc, fid) {
+                    acc[fid] = {
+                        attempted: attemptedCounts[fid] || 0,
+                        valid: validCounts[fid] || 0
+                    };
+                    return acc;
+                }, {})
         };
     } catch (err) {
         log.status = 'failed';

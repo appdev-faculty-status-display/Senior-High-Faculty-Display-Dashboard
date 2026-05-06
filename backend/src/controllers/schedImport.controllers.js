@@ -15,7 +15,7 @@ async function importSchedule(req, res) {
     const result = await runImport(
         req.file.buffer,
         req.file.originalname,
-        req.user._id,
+        req.user.id,
         replaceAll,
         req.user
     );

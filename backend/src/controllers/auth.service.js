@@ -16,13 +16,8 @@ async function loginUser(credentials) {
         throw createAuthError('MISSING_CREDENTIALS');
     }
 
-    const facultyCandidates = await Faculty.find({ userId: email })
-        .select('+passwordHash')
-        .sort({ updatedAt: -1 });
-
-    const faculty = facultyCandidates.find(function (candidate) {
-        return Boolean(candidate.facultyId);
-    });
+    const faculty = await Faculty.findOne({ userId: email, facultyId: { $exists: true } })
+        .select('+passwordHash');
     const passwordToCheck = faculty ? faculty.passwordHash : TIMING_SAFE_DUMMY_HASH;
     const passwordMatch = await bcrypt.compare(password, passwordToCheck);
 
@@ -83,6 +78,7 @@ async function refreshTokens(payload) {
 
     const tokenPayload = {
         id: faculty._id,
+        name: faculty.name,
         role: faculty.role,
         strand: faculty.strand
     };
@@ -126,15 +122,17 @@ async function logoutUser(payload) {
     }
 
     if (authorizationHeader && authorizationHeader.startsWith('Bearer ')) {
-    const accessToken = authorizationHeader.split(' ')[1];
-    try {
-        const decodedAccessToken = verifyAccessToken(accessToken);
-        if (decodedAccessToken.id !== decodedRefreshToken.id) {
-            throw createAuthError('INVALID_REFRESH_TOKEN');
-        }
-    } catch (err) {
-        // Only re-throw if it's our own auth error (token mismatch), not an expiry error
-        if (err.name === 'AuthError') throw err;
+        const accessToken = authorizationHeader.split(' ')[1];
+        try {
+            const decodedAccessToken = verifyAccessToken(accessToken);
+            if (decodedAccessToken.id !== decodedRefreshToken.id) {
+                throw createAuthError('INVALID_REFRESH_TOKEN');
+            }
+        } catch (err) {
+            // Only re-throw if it's our own auth error (token mismatch), not an expiry error
+            if (err.name === 'AuthError') throw err;
+            // Log unexpected errors for debugging
+            console.warn('Unexpected error during access token verification in logout:', err.message);
         }
     }
 
