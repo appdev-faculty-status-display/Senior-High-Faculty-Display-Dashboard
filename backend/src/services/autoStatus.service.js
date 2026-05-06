@@ -2,30 +2,24 @@ const cron = require('node-cron');
 const { Faculty } = require('../models');
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const { DateTime } = require('luxon');
 
 function getCurrentDayAndTime() {
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('en-PH', {
+    const now = DateTime.now().setZone('Asia/Manila');
+    const parts = new Intl.DateTimeFormat('en-PH', {
         timeZone: 'Asia/Manila',
         weekday: 'long',
         hour: '2-digit',
         minute: '2-digit',
         hour12: false
-    });
+    }).formatToParts(now);
 
-    const parts = formatter.formatToParts(now);
-    const day = parts.find(p => p.type === 'weekday')?.value;
-    const hour = parts.find(p => p.type === 'hour')?.value;
-    const minute = parts.find(p => p.type === 'minute')?.value;
+    const get = (type) => parts.find(p => p.type === type)?.value;
 
-    // Ensure we have valid values from Manila timezone
-    if (!day || !hour || !minute) {
-        throw new Error('Failed to get current Manila time via Intl.DateTimeFormat');
-    }
-
-    const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-
-    return { day, time };
+    return {
+        day: now.toFormat('cccc'),      // "Monday", "Tuesday", etc.
+        time: now.toFormat('HH:mm')     // always zero-padded, no midnight quirk
+    };
 }
 
 function timeToMinutes(t) {

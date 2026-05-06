@@ -18,7 +18,6 @@ const { Faculty, ScheduleImport } = require('../models');
  */
 
 const REQUIRED_COLUMNS = ['facultyId', 'day', 'startTime', 'endTime', 'subject', 'room'];
-
 const VALID_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function parseSheet(buffer) {
@@ -67,7 +66,9 @@ function validateRow(row, rowIndex) {
         return errors;
     }
 
-    REQUIRED_COLUMNS.forEach(function (col) {
+    REQUIRED_COLUMNS.filter(function (col) {
+        return col !== 'facultyId';
+    }).forEach(function (col) {
         if (!row[col] || String(row[col]).trim() === '') {
             errors.push({
                 row: rowNumber,
@@ -158,12 +159,11 @@ function computeRowCounts(rows, grouped) {
     const attemptedCounts = {};
     rows.forEach(function (row) {
         const facultyId = String(row.facultyId).trim();
-        
-        // Skip empty facultyIds to avoid polluting the counts object
+
         if (facultyId === '') {
             return;
         }
-        
+
         attemptedCounts[facultyId] = (attemptedCounts[facultyId] || 0) + 1;
     });
 
@@ -240,16 +240,13 @@ async function finalizeLog(log, finalStatus, totalProcessed, recordsApplied, all
 
 async function runImport(buffer, fileName, importedBy, replaceAll, requestingUser) {
     const log = await createImportLog(importedBy, fileName);
-
+    let rows;
     try {
-        const { rows, rowErrors } = parseAndValidateRows(buffer);
-
+        const { rows: parsedRows, rowErrors } = parseAndValidateRows(buffer);
+        rows = parsedRows;
         const validRows = getValidRows(rows, rowErrors);
-
         const grouped = groupRowsByFaculty(validRows);
-
         const { attemptedCounts, validCounts } = computeRowCounts(rows, grouped);
-
         const { recordsApplied, applyErrors } = await applyGroupedSchedules(
             grouped,
             requestingUser,
@@ -285,10 +282,7 @@ async function runImport(buffer, fileName, importedBy, replaceAll, requestingUse
                 }, {})
         };
     } catch (err) {
-        log.status = 'failed';
-        log.finishedAt = new Date();
-        log.errors = [{ row: 0, message: err.message }];
-        await log.save();
+        await finalizeLog(log, 'failed', 0, 0, [{ row: 0, message: err.stack || err.message }]);
         throw err;
     }
 }
