@@ -1,6 +1,6 @@
 // frontend/src/types/adminDashboard.types.ts
 
-// ─── Navigation ───────────────────────────────────────────────────────────────
+// Navigation
 
 export type NavItem = {
   id: string;
@@ -10,7 +10,7 @@ export type NavItem = {
 
 export type ActiveNav = string;
 
-// ─── RecencyLogTable ──────────────────────────────────────────────────────────
+// RecencyLogTable
 
 export interface RecencyLogEntry {
   facultyName: string;
@@ -20,7 +20,7 @@ export interface RecencyLogEntry {
   recency: string;
 }
 
-// ─── RoomOccupancyChart ───────────────────────────────────────────────────────
+// RoomOccupancyChart
 
 export interface RoomData {
   room: string;
@@ -28,7 +28,20 @@ export interface RoomData {
   available: number;
 }
 
-// ─── Chart Component Props ────────────────────────────────────────────────────
+// ConsultationParticipantsTable
+
+export interface ConsultationParticipant {
+  id: number;
+  hashedStudentId: string;
+  facultyName: string;
+  strand: string;
+  consultationUsed: boolean;
+  date: string;
+  time: string;
+  status: "Completed" | "Cancelled" | "No-show";
+}
+
+// Chart Component Props 
 
 export interface AnnouncementReachChartProps {
   labels: string[];
@@ -99,15 +112,4 @@ export interface SidebarNavItemProps {
 
 export interface MainContentProps {
   activeNav: ActiveNav;
-}
-
-export interface ConsultationParticipant {
-  id: number;
-  hashedStudentId: string;
-  facultyName: string;
-  reason: string;
-  consultationUsed: boolean;
-  date: string;
-  time: string;
-  status: "Completed" | "Cancelled" | "No-show";
 }
