@@ -3,6 +3,7 @@ import { useState, useRef, type ReactNode } from "react";
 import AddSchedule    from "@/components/ui/admin-dashboard/addSchedule";
 import Header         from "@/components/ui/header/header";
 import AddAnnouncement from "@/pages/admin/announcementPage";
+import { DateRangePicker } from "@/components/ui/admin-dashboard/DatePicker";
 
 // Chart Components
 import StatusDistributionChart       from "@/components/ui/admin-dashboard/StatusDistributionChart";
@@ -39,7 +40,7 @@ import {
   MOCK_CONSULTATION_PARTICIPANTS,
 } from "@/data/mockAdminDashboardData";
 
-// Utils 
+// Utils
 import { downloadCSV }  from "@/utils/csvEscapeHelper";
 import { printElement } from "@/utils/pdfExportHelper";
 
@@ -78,27 +79,24 @@ function ExportButtons({ onExportCSV, onExportPDF }: ExportButtonsProps) {
   );
 }
 
-// ─── Shared: Page Header (title + description + global filters + export) ──────
+// Shared: Page Header
 
 interface PageHeaderProps {
   title: string;
   description: string;
-  filters?: ReactNode;   // global filter controls
-  actions?: ReactNode;   // export buttons
+  filters?: ReactNode;
+  actions?: ReactNode;
 }
 
 function PageHeader({ title, description, filters, actions }: PageHeaderProps) {
   return (
     <div className="flex items-center justify-between gap-4 flex-wrap mb-6">
-      {/* Left: title + description */}
       <div className="shrink-0">
         <h2 className="text-2xl font-extrabold text-[#002f73] tracking-tight uppercase leading-tight">
           {title}
         </h2>
         <p className="text-sm text-gray-500 mt-0.5">{description}</p>
       </div>
-
-      {/* Right: global filters + export buttons on same line */}
       <div className="flex items-center gap-2 flex-wrap">
         {filters}
         {actions && <div className="flex items-center gap-2">{actions}</div>}
@@ -107,43 +105,11 @@ function PageHeader({ title, description, filters, actions }: PageHeaderProps) {
   );
 }
 
-// Shared: Date range input pair
-
-interface DateRangeProps {
-  from: string;
-  to: string;
-  onFromChange: (v: string) => void;
-  onToChange: (v: string) => void;
-}
-
-function DateRangeFilter({ from, to, onFromChange, onToChange }: DateRangeProps) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <input
-        type="date"
-        value={from}
-        onChange={(e) => onFromChange(e.target.value)}
-        className="py-1.5 px-2 text-xs border border-[#cbd5e1] bg-white text-[#1a1a1a] focus:outline-none focus:border-[#064db6]"
-      />
-      <span className="text-xs text-[#4f4f4f] font-semibold shrink-0">to</span>
-      <input
-        type="date"
-        value={to}
-        onChange={(e) => onToChange(e.target.value)}
-        className="py-1.5 px-2 text-xs border border-[#cbd5e1] bg-white text-[#1a1a1a] focus:outline-none focus:border-[#064db6]"
-      />
-    </div>
-  );
-}
-
-// Page: Faculty Activity
+// Page: Faculty Activity 
 // Global filter: date range only
-// Layout: Status + ConsultationWindow + ManualOverride in one row, RecencyLog below
 
 function FacultyActivityContent() {
   const analyticsRef = useRef<HTMLDivElement>(null);
-
-  // Global filter state
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo,   setDateTo]   = useState("");
 
@@ -170,7 +136,7 @@ function FacultyActivityContent() {
         title="Faculty Activity"
         description="Overview of faculty statuses, consultation windows, and recency updates."
         filters={
-          <DateRangeFilter
+          <DateRangePicker
             from={dateFrom} to={dateTo}
             onFromChange={setDateFrom} onToChange={setDateTo}
           />
@@ -179,14 +145,14 @@ function FacultyActivityContent() {
       />
 
       <div ref={analyticsRef} className="flex flex-col gap-6">
-        {/* Row 1: Status + Consultation Window + Manual Override — all 3 in one line */}
+        {/* Row 1: Status + Consultation Window + Manual Override in one line */}
         <div className="grid grid-cols-3 gap-6">
           <StatusDistributionChart data={MOCK_STATUS_DATA} />
           <ConsultationWindowChart {...MOCK_CONSULTATION_WINDOW} />
           <ManualOverrideChart {...MOCK_MANUAL_OVERRIDE} />
         </div>
 
-        {/* Row 2: Recency Log (full width) with pagination + local filters */}
+        {/* Row 2: Recency Log full width — local filters: faculty, strand, status */}
         <RecencyLogTable
           entries={MOCK_RECENCY_LOG}
           globalTimeFrom={dateFrom}
@@ -198,27 +164,25 @@ function FacultyActivityContent() {
 }
 
 // Page: Consultation
-// Global filter: date range + faculty name
+// Global filter: date range + faculty name search
 
 function ConsultationContent() {
   const analyticsRef = useRef<HTMLDivElement>(null);
-
-  // Global filter state
-  const [dateFrom,     setDateFrom]     = useState("");
-  const [dateTo,       setDateTo]       = useState("");
+  const [dateFrom,      setDateFrom]      = useState("");
+  const [dateTo,        setDateTo]        = useState("");
   const [facultySearch, setFacultySearch] = useState("");
 
   function handleExportCSV() {
     downloadCSV(
       [
         ["Metric", "Value"],
-        ["Quick Consultations",      String(MOCK_CONSULTATION_EFFICIENCY.quickConsultations)],
-        ["Consultation Room",        String(MOCK_CONSULTATION_EFFICIENCY.consultationRoom)],
-        ["Avg Queue Wait (min)",     String(MOCK_CONSULTATION_EFFICIENCY.avgQueueWaitMin)],
-        ["Resolved (%)",             String(MOCK_CANCELLATION_RATE.resolved)],
-        ["Schedule Conflict (%)",    String(MOCK_CANCELLATION_RATE.scheduleConflict)],
-        ["Long Wait Time (%)",       String(MOCK_CANCELLATION_RATE.longWaitTime)],
-        ["Faculty Approval (min)",   String(MOCK_APPROVAL_BOTTLENECK.facultyApprovalMin)],
+        ["Quick Consultations",        String(MOCK_CONSULTATION_EFFICIENCY.quickConsultations)],
+        ["Consultation Room",          String(MOCK_CONSULTATION_EFFICIENCY.consultationRoom)],
+        ["Avg Queue Wait (min)",       String(MOCK_CONSULTATION_EFFICIENCY.avgQueueWaitMin)],
+        ["Resolved (%)",               String(MOCK_CANCELLATION_RATE.resolved)],
+        ["Schedule Conflict (%)",      String(MOCK_CANCELLATION_RATE.scheduleConflict)],
+        ["Long Wait Time (%)",         String(MOCK_CANCELLATION_RATE.longWaitTime)],
+        ["Faculty Approval (min)",     String(MOCK_APPROVAL_BOTTLENECK.facultyApprovalMin)],
         ["Strand Head Approval (min)", String(MOCK_APPROVAL_BOTTLENECK.strandHeadApprovalMin)],
       ],
       "consultation_analytics"
@@ -236,14 +200,20 @@ function ConsultationContent() {
         description="Demand metrics, cancellation trends, approval bottlenecks, and participant records."
         filters={
           <div className="flex items-center gap-2">
-            <DateRangeFilter
+            <DateRangePicker
               from={dateFrom} to={dateTo}
               onFromChange={setDateFrom} onToChange={setDateTo}
             />
-            {/* Faculty search */}
+            {/* Faculty name global filter */}
             <div className="relative">
-              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#4f4f4f]" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <svg
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#4f4f4f]"
+                width="11" height="11" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" strokeWidth="2.5"
+                strokeLinecap="round" strokeLinejoin="round"
+              >
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
               <input
                 type="text"
@@ -269,7 +239,7 @@ function ConsultationContent() {
         </div>
       </div>
 
-      {/* Participants table — receives global filters, has its own local filters */}
+      {/* Participants table — global filters passed in, local filters inside */}
       <ConsultationParticipantsTable
         participants={MOCK_CONSULTATION_PARTICIPANTS}
         globalFaculty={facultySearch}
@@ -282,12 +252,9 @@ function ConsultationContent() {
 
 // Page: Resource & Communication
 // Global filter: date range + strand
-// Layout: AnnouncementReach full width first, then Notification + RoomOccupancy
 
 function ResourceCommunicationContent() {
   const analyticsRef = useRef<HTMLDivElement>(null);
-
-  // Global filter state
   const [dateFrom,     setDateFrom]     = useState("");
   const [dateTo,       setDateTo]       = useState("");
   const [strandFilter, setStrandFilter] = useState("All");
@@ -327,7 +294,7 @@ function ResourceCommunicationContent() {
         description="Announcement reach, notification success rates, and room occupancy statistics."
         filters={
           <div className="flex items-center gap-2">
-            <DateRangeFilter
+            <DateRangePicker
               from={dateFrom} to={dateTo}
               onFromChange={setDateFrom} onToChange={setDateTo}
             />
@@ -346,14 +313,13 @@ function ResourceCommunicationContent() {
       />
 
       <div ref={analyticsRef} className="flex flex-col gap-6">
-        {/* Announcement Reach — full width, moved to top */}
+        {/* Announcement Reach — full width on top */}
         <AnnouncementReachChart
           labels={MOCK_ANNOUNCEMENT_LABELS}
           strandSpecific={MOCK_STRAND_SPECIFIC}
           schoolWide={MOCK_SCHOOL_WIDE}
         />
-
-        {/* Notification Success + Room Occupancy side by side */}
+        {/* Notification + Room Occupancy side by side */}
         <div className="grid grid-cols-2 gap-6">
           <NotificationSuccessChart {...MOCK_NOTIFICATION_SUCCESS} />
           <RoomOccupancyChart rooms={MOCK_ROOM_OCCUPANCY} />
@@ -373,7 +339,7 @@ function SidebarNavItem({ item, active, onSelect, depth = 0 }: SidebarNavItemPro
         onClick={() => onSelect(item.id)}
         className={`
           w-full text-left transition-all duration-150 select-none font-[Inter,sans-serif]
-          ${depth === 0 ? "px-4 py-3" : "px-6 py-2.5"}
+          ${depth === 0 ? "px-5 py-3" : "px-7 py-2.5"}
           ${isActive
             ? "font-extrabold text-white"
             : "font-semibold text-[#1a1a1a] hover:bg-[#f0f4ff] hover:text-[#064db6]"
@@ -416,7 +382,7 @@ function MainContent({ activeNav }: MainContentProps) {
   );
 }
 
-// Main Layout
+// Main Layout 
 
 export default function AdminDashboard() {
   const [activeNav, setActiveNav] = useState<ActiveNav>("faculty-activity");
@@ -424,18 +390,24 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen flex flex-col bg-white" style={{ fontFamily: "Inter, sans-serif" }}>
 
+      {/* Uses the existing shared Header component */}
       <Header
         variant="admin"
         adminName="Admin Account"
         adminRole="SSHS Principal"
         onLogout={() => {
-          // TODO: wire to auth logout
+          // TODO: wire to auth logout (e.g. navigate("/admin/login"), clear session)
           console.log("Logout clicked");
         }}
       />
 
       <div className="flex flex-1 min-h-0">
-        <aside className="shrink-0 flex flex-col bg-white border-r border-[#cbd5e1]" style={{ width: "168px" }}>
+
+        {/* Sidebar — wider at 220px */}
+        <aside
+          className="shrink-0 flex flex-col bg-white border-r border-[#cbd5e1]"
+          style={{ width: "220px" }}
+        >
           <nav className="flex flex-col pt-4">
             {NAV_ITEMS.map((item) => (
               <SidebarNavItem
@@ -451,6 +423,7 @@ export default function AdminDashboard() {
         <main className="flex-1 min-h-0 overflow-y-auto bg-[#f8faff]">
           <MainContent activeNav={activeNav} />
         </main>
+
       </div>
     </div>
   );

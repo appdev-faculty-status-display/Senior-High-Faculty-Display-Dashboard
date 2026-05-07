@@ -17,7 +17,6 @@ const STATUS_COLORS: Record<string, string> = {
 const ROWS_PER_PAGE = 5;
 
 interface RecencyLogTablePropsExtended extends RecencyLogTableProps {
-  /** Optional — passed from the page-level global filter */
   globalTimeFrom?: string;
   globalTimeTo?: string;
 }
@@ -27,13 +26,17 @@ export default function RecencyLogTable({
   globalTimeFrom = "",
   globalTimeTo   = "",
 }: RecencyLogTablePropsExtended) {
-  // ── Local filters (table-specific) ──
-  const [searchName,    setSearchName]    = useState("");
-  const [filterRecency, setFilterRecency] = useState<"All" | "Recent" | "Older">("All");
-  const [filterStatus,  setFilterStatus]  = useState("All");
 
-  // ── Pagination ──
-  const [page, setPage] = useState(1);
+  // ── Local filters: faculty search, strand, status ──
+  const [searchName,   setSearchName]   = useState("");
+  const [filterStrand, setFilterStrand] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [page,         setPage]         = useState(1);
+
+  const allStrands = useMemo(
+    () => ["All", ...Array.from(new Set(entries.map((e) => e.strand)))],
+    [entries]
+  );
 
   const allStatuses = useMemo(
     () => ["All", ...Array.from(new Set(entries.map((e) => e.currentStatus)))],
@@ -42,11 +45,11 @@ export default function RecencyLogTable({
 
   const filtered = useMemo(() => {
     return entries.filter((entry) => {
-      const nameMatch    = entry.facultyName.toLowerCase().includes(searchName.toLowerCase());
-      const recencyMatch = filterRecency === "All" || entry.recency === filterRecency;
-      const statusMatch  = filterStatus  === "All" || entry.currentStatus === filterStatus;
+      const nameMatch   = entry.facultyName.toLowerCase().includes(searchName.toLowerCase());
+      const strandMatch = filterStrand === "All" || entry.strand === filterStrand;
+      const statusMatch = filterStatus === "All" || entry.currentStatus === filterStatus;
 
-      // Time range — uses global filter if provided
+      // Time range from global filter
       const entryMin = timeToMinutes(entry.lastUpdated);
       const fromMin  = globalTimeFrom ? inputToMinutes(globalTimeFrom) : null;
       const toMin    = globalTimeTo   ? inputToMinutes(globalTimeTo)   : null;
@@ -54,24 +57,25 @@ export default function RecencyLogTable({
         (fromMin === null || entryMin >= fromMin) &&
         (toMin   === null || entryMin <= toMin);
 
-      return nameMatch && recencyMatch && statusMatch && timeMatch;
+      return nameMatch && strandMatch && statusMatch && timeMatch;
     });
-  }, [entries, searchName, filterRecency, filterStatus, globalTimeFrom, globalTimeTo]);
+  }, [entries, searchName, filterStrand, filterStatus, globalTimeFrom, globalTimeTo]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ROWS_PER_PAGE));
   const paginated  = filtered.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
 
-  const hasLocalFilters = searchName || filterRecency !== "All" || filterStatus !== "All";
+  const hasLocalFilters = searchName || filterStrand !== "All" || filterStatus !== "All";
 
   function clearLocalFilters() {
     setSearchName("");
-    setFilterRecency("All");
+    setFilterStrand("All");
     setFilterStatus("All");
     setPage(1);
   }
 
   return (
     <div className="bg-white border border-[#cbd5e1] shadow-sm flex flex-col gap-4 h-full font-[Inter,sans-serif]">
+
       {/* ── Header ── */}
       <div className="px-5 pt-5 flex items-start justify-between gap-3">
         <div>
@@ -92,12 +96,19 @@ export default function RecencyLogTable({
         )}
       </div>
 
-      {/* ── Local Filters ── */}
+      {/* ── Local Filters: faculty search | strand | status ── */}
       <div className="px-5 grid grid-cols-3 gap-2">
-        {/* Name search */}
+
+        {/* Faculty name search */}
         <div className="relative">
-          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#4f4f4f]" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          <svg
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#4f4f4f]"
+            width="11" height="11" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" strokeWidth="2.5"
+            strokeLinecap="round" strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <input
             type="text"
@@ -107,6 +118,17 @@ export default function RecencyLogTable({
             className="w-full pl-7 pr-2 py-1.5 text-[11px] border border-[#cbd5e1] bg-[#f8faff] text-[#1a1a1a] placeholder-[#9ca3af] focus:outline-none focus:border-[#064db6]"
           />
         </div>
+
+        {/* Strand filter */}
+        <select
+          value={filterStrand}
+          onChange={(e) => { setFilterStrand(e.target.value); setPage(1); }}
+          className="py-1.5 px-2 text-[11px] border border-[#cbd5e1] bg-[#f8faff] text-[#1a1a1a] focus:outline-none focus:border-[#064db6]"
+        >
+          {allStrands.map((s) => (
+            <option key={s} value={s}>{s === "All" ? "All Strands" : s}</option>
+          ))}
+        </select>
 
         {/* Status filter */}
         <select
@@ -119,16 +141,6 @@ export default function RecencyLogTable({
           ))}
         </select>
 
-        {/* Recency filter */}
-        <select
-          value={filterRecency}
-          onChange={(e) => { setFilterRecency(e.target.value as "All" | "Recent" | "Older"); setPage(1); }}
-          className="py-1.5 px-2 text-[11px] border border-[#cbd5e1] bg-[#f8faff] text-[#1a1a1a] focus:outline-none focus:border-[#064db6]"
-        >
-          <option value="All">All Recency</option>
-          <option value="Recent">Recent</option>
-          <option value="Older">Older</option>
-        </select>
       </div>
 
       {/* ── Table ── */}
@@ -138,7 +150,10 @@ export default function RecencyLogTable({
             <thead>
               <tr style={{ background: "#002f73" }}>
                 {["Faculty Name", "Strand", "Current Status", "Last Updated", "Recency"].map((h) => (
-                  <th key={h} className="text-left text-white font-bold px-4 py-2.5 whitespace-nowrap tracking-wide">
+                  <th
+                    key={h}
+                    className="text-left text-white font-bold px-4 py-2.5 whitespace-nowrap tracking-wide"
+                  >
                     {h}
                   </th>
                 ))}
@@ -188,9 +203,7 @@ export default function RecencyLogTable({
 
       {/* ── Pagination ── */}
       <div className="px-5 pb-5 flex items-center justify-between text-[11px] text-[#4f4f4f]">
-        <span>
-          Page {page} of {totalPages}
-        </span>
+        <span>Page {page} of {totalPages}</span>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -221,6 +234,7 @@ export default function RecencyLogTable({
           </button>
         </div>
       </div>
+
     </div>
   );
 }

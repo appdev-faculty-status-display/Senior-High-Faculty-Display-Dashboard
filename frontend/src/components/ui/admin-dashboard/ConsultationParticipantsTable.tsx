@@ -1,12 +1,11 @@
 // frontend/src/components/ui/admin-dashboard/ConsultationParticipantsTable.tsx
 import { useState, useMemo } from "react";
 import type { ConsultationParticipant } from "@/types/adminDashboard.types";
-import { csvCell, downloadCSV } from "@/utils/csvEscapeHelper";
+import { downloadCSV } from "@/utils/csvEscapeHelper";
 import { exportTablePDF } from "@/utils/pdfExportHelper";
 
 interface ConsultationParticipantsTableProps {
   participants: ConsultationParticipant[];
-  /** Optional — passed from the page-level global filter */
   globalFaculty?: string;
   globalDateFrom?: string;
   globalDateTo?: string;
@@ -21,8 +20,7 @@ const STATUS_STYLE: Record<ConsultationParticipant["status"], string> = {
 const ROWS_PER_PAGE = 6;
 
 const PDF_COLUMNS = [
-  "Student ID", "Faculty Name", "Strand",
-  "Room Used", "Date", "Time", "Status",
+  "Student ID", "Faculty Name", "Strand", "Room Used", "Date", "Time", "Status",
 ];
 
 export default function ConsultationParticipantsTable({
@@ -31,13 +29,12 @@ export default function ConsultationParticipantsTable({
   globalDateFrom = "",
   globalDateTo   = "",
 }: ConsultationParticipantsTableProps) {
-  // ── Local filters (table-specific) ──
-  const [filterStatus,  setFilterStatus]  = useState("All");
-  const [filterStrand,  setFilterStrand]  = useState("All");
-  const [filterRoomUsed, setFilterRoomUsed] = useState("All");
 
-  // ── Pagination ──
-  const [page, setPage] = useState(1);
+  // ── Local filters: faculty search, strand, status ──
+  const [searchFaculty, setSearchFaculty] = useState("");
+  const [filterStrand,  setFilterStrand]  = useState("All");
+  const [filterStatus,  setFilterStatus]  = useState("All");
+  const [page,          setPage]          = useState(1);
 
   const allStrands = useMemo(
     () => ["All", ...Array.from(new Set(participants.map((p) => p.strand)))],
@@ -46,38 +43,34 @@ export default function ConsultationParticipantsTable({
 
   const filtered = useMemo(() => {
     return participants.filter((p) => {
-      // Global filters applied from page level
-      const facultyMatch = globalFaculty
+      // Global filters from page level
+      const globalFacultyMatch = globalFaculty
         ? p.facultyName.toLowerCase().includes(globalFaculty.toLowerCase())
         : true;
-
-      // Simple date string match — compares "April 6, 2026" against range inputs
-      // When real API dates arrive, swap with proper Date comparison
       const dateMatch =
         (!globalDateFrom || p.date >= globalDateFrom) &&
         (!globalDateTo   || p.date <= globalDateTo);
 
-      // Local filters
-      const statusMatch  = filterStatus  === "All" || p.status === filterStatus;
-      const strandMatch  = filterStrand  === "All" || p.strand === filterStrand;
-      const roomMatch    =
-        filterRoomUsed === "All" ||
-        (filterRoomUsed === "Yes" ? p.consultationUsed : !p.consultationUsed);
+      // Local filters: faculty search, strand, status
+      const localFacultyMatch = searchFaculty
+        ? p.facultyName.toLowerCase().includes(searchFaculty.toLowerCase())
+        : true;
+      const strandMatch = filterStrand === "All" || p.strand === filterStrand;
+      const statusMatch = filterStatus === "All" || p.status === filterStatus;
 
-      return facultyMatch && dateMatch && statusMatch && strandMatch && roomMatch;
+      return globalFacultyMatch && dateMatch && localFacultyMatch && strandMatch && statusMatch;
     });
-  }, [participants, globalFaculty, globalDateFrom, globalDateTo, filterStatus, filterStrand, filterRoomUsed]);
+  }, [participants, globalFaculty, globalDateFrom, globalDateTo, searchFaculty, filterStrand, filterStatus]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ROWS_PER_PAGE));
   const paginated  = filtered.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
 
-  const hasLocalFilters =
-    filterStatus !== "All" || filterStrand !== "All" || filterRoomUsed !== "All";
+  const hasLocalFilters = searchFaculty || filterStrand !== "All" || filterStatus !== "All";
 
   function clearLocalFilters() {
-    setFilterStatus("All");
+    setSearchFaculty("");
     setFilterStrand("All");
-    setFilterRoomUsed("All");
+    setFilterStatus("All");
     setPage(1);
   }
 
@@ -109,12 +102,15 @@ export default function ConsultationParticipantsTable({
       PDF_COLUMNS,
       rows,
       "Consultation Participants",
-      `Exported on ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })} — Student names are hashed for privacy.`
+      `Exported on ${new Date().toLocaleDateString("en-US", {
+        month: "long", day: "numeric", year: "numeric",
+      })} — Student names are hashed for privacy.`
     );
   }
 
   return (
     <div className="bg-white border border-[#cbd5e1] shadow-sm flex flex-col gap-4 font-[Inter,sans-serif]">
+
       {/* ── Header ── */}
       <div className="px-5 pt-5 flex items-start justify-between gap-3 flex-wrap">
         <div>
@@ -132,7 +128,9 @@ export default function ConsultationParticipantsTable({
             className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
             Export CSV
           </button>
@@ -141,7 +139,8 @@ export default function ConsultationParticipantsTable({
             className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white border border-[#002f73] bg-[#002f73] hover:bg-[#064db6] transition-colors"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
             </svg>
             Export PDF
           </button>
@@ -156,8 +155,29 @@ export default function ConsultationParticipantsTable({
         </div>
       </div>
 
-      {/* ── Local Filters ── */}
+      {/* ── Local Filters: faculty search | strand | status ── */}
       <div className="px-5 grid grid-cols-3 gap-2">
+
+        {/* Faculty search */}
+        <div className="relative">
+          <svg
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#4f4f4f]"
+            width="11" height="11" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" strokeWidth="2.5"
+            strokeLinecap="round" strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            placeholder="Search faculty..."
+            value={searchFaculty}
+            onChange={(e) => { setSearchFaculty(e.target.value); setPage(1); }}
+            className="w-full pl-7 pr-2 py-1.5 text-[11px] border border-[#cbd5e1] bg-[#f8faff] text-[#1a1a1a] placeholder-[#9ca3af] focus:outline-none focus:border-[#064db6]"
+          />
+        </div>
+
         {/* Strand filter */}
         <select
           value={filterStrand}
@@ -181,16 +201,6 @@ export default function ConsultationParticipantsTable({
           <option value="No-show">No-show</option>
         </select>
 
-        {/* Room used filter */}
-        <select
-          value={filterRoomUsed}
-          onChange={(e) => { setFilterRoomUsed(e.target.value); setPage(1); }}
-          className="py-1.5 px-2 text-[11px] border border-[#cbd5e1] bg-[#f8faff] text-[#1a1a1a] focus:outline-none focus:border-[#064db6]"
-        >
-          <option value="All">Room Used: All</option>
-          <option value="Yes">Room Used: Yes</option>
-          <option value="No">Room Used: No</option>
-        </select>
       </div>
 
       {/* ── Table ── */}
@@ -200,7 +210,10 @@ export default function ConsultationParticipantsTable({
             <thead>
               <tr style={{ background: "#002f73" }}>
                 {["Student ID", "Faculty Name", "Strand", "Room Used", "Date", "Time", "Status"].map((h) => (
-                  <th key={h} className="text-left text-white font-bold px-4 py-2.5 whitespace-nowrap tracking-wide">
+                  <th
+                    key={h}
+                    className="text-left text-white font-bold px-4 py-2.5 whitespace-nowrap tracking-wide"
+                  >
                     {h}
                   </th>
                 ))}
@@ -228,7 +241,11 @@ export default function ConsultationParticipantsTable({
                     <td className="px-4 py-2.5 font-semibold text-[#1a1a1a] whitespace-nowrap">{p.facultyName}</td>
                     <td className="px-4 py-2.5 font-semibold text-[#002f73]">{p.strand}</td>
                     <td className="px-4 py-2.5">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 ${p.consultationUsed ? "bg-[#e6f9ec] text-[#31ac52]" : "bg-[#f5f5f5] text-[#4f4f4f]"}`}>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 ${
+                        p.consultationUsed
+                          ? "bg-[#e6f9ec] text-[#31ac52]"
+                          : "bg-[#f5f5f5] text-[#4f4f4f]"
+                      }`}>
                         {p.consultationUsed ? "Yes" : "No"}
                       </span>
                     </td>
@@ -280,6 +297,7 @@ export default function ConsultationParticipantsTable({
           </button>
         </div>
       </div>
+
     </div>
   );
 }
