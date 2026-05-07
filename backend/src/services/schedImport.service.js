@@ -240,10 +240,8 @@ async function finalizeLog(log, finalStatus, totalProcessed, recordsApplied, all
 
 async function runImport(buffer, fileName, importedBy, replaceAll, requestingUser) {
     const log = await createImportLog(importedBy, fileName);
-    let rows;
     try {
-        const { rows: parsedRows, rowErrors } = parseAndValidateRows(buffer);
-        rows = parsedRows;
+        const { rows, rowErrors } = parsedAndValidateRows(buffer);
         const validRows = getValidRows(rows, rowErrors);
         const grouped = groupRowsByFaculty(validRows);
         const { attemptedCounts, validCounts } = computeRowCounts(rows, grouped);

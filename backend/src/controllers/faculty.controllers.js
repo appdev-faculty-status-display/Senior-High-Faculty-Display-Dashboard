@@ -33,21 +33,7 @@ function ensureArray(value, fieldName) {
 }
 
 function normalizeSubjects(faculty) {
-  const subjects = new Set();
-
-  if (faculty.subject) {
-    subjects.add(faculty.subject);
-  }
-
-  if (Array.isArray(faculty.schedule)) {
-    faculty.schedule.forEach(function (entry) {
-      if (entry && entry.subject) {
-        subjects.add(entry.subject);
-      }
-    });
-  }
-
-  return Array.from(subjects);
+  return Array.isArray(faculty.subjects) ? faculty.subjects : [];
 }
 
 function normalizeFacultyCard(faculty) {
