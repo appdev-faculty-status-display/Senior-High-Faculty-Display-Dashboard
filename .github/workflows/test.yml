@@ -1,0 +1,77 @@
+name: Run Unit Tests
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # --- BACKEND TESTING ---
+  test_backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    env:
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+      NODE_ENV: test
+      PORT: 5000
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.13'
+          cache: 'npm'
+          cache-dependency-path: './backend/package-lock.json'
+      
+      - name: Install Backend Deps
+        run: npm ci
+      
+      - name: Run Backend Tests
+        run: npm test
+
+  # --- FRONTEND TESTING ---
+  test_frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    env:
+      VITE_API_URL: http://localhost:5000
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.13'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+      
+      - name: Install Frontend Deps
+        run: npm ci
+      
+      - name: Run Frontend Tests
+        run: npm test
+
+  # --- SHARED SECURITY AUDIT ---
+  security_audit:
+    runs-on: ubuntu-latest
+    needs: [test_backend, test_frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.13'
+      - name: Audit Backend
+        run: cd backend && npm audit --audit-level=high
+      - name: Audit Frontend
+        run: cd frontend && npm audit --audit-level=high
