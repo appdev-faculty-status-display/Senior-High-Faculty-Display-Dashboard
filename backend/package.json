@@ -13,8 +13,8 @@
   "jest": {
     "testEnvironment": "node",
     "testMatch": [
-      "**/__tests__/**/*.test.js",
-      "**/*.test.js"
+      "**/src/test/**/*.test.js",
+      "**/*.test.js"  
     ]
   },
   "dependencies": {
