@@ -1,4 +1,4 @@
-// Mongoose Filter objcet from validated query params
+// Mongoose Filter object from validated query params
 // function only no db, no http
 
 function buildAnnouncementFilter({ scope, strand, isActive }) {
@@ -50,7 +50,7 @@ function canDelete(userRole, userStrand, announcement) {
 
     if (userRole === 'strand_head') {
         return (
-            announcement.createdByRole == 'strand_head' &&
+            announcement.createdByRole === 'strand_head' &&
             announcement.strand === userStrand
         );
     }

@@ -9,8 +9,18 @@ const {
     removeAnnouncement
 } = require('../controllers/announcement.controller');
 
+const optionalAuthToken = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return next();
+    }
+
+    return authToken(req, res, next);
+};
+
 //GET /announcements
-router.get('/', getAnnouncements);
+router.get('/', optionalAuthToken, getAnnouncements);
 
 //POST - confirm exact role strings first then plug in here
 router.post('/', authToken, requireRole('principal', 'strand_head'), postAnnouncement);

@@ -1,4 +1,3 @@
-const { model } = require('mongoose');
 const Announcement = require('../models/announcement.model');
 const {
     buildAnnouncementFilter,
@@ -7,7 +6,7 @@ const {
     canDelete
 } = require('../utils/announcement.utils');
 
-async function listAnnouncements(query) {
+async function listAnnouncements(query, user) {
     if (query.isActive === 'false' && user?.role !== 'Principal') {
         const err = new Error('Admin auth required to view inactive announcements.');
         err.status = 403;
@@ -23,7 +22,7 @@ async function listAnnouncements(query) {
     } = parsePagination(query);
 
     const [ data, total ] = await Promise.all([
-        (await Announcement.find(filter)).toSorted({createdAt: -1}).skip(skip).limit(pageSize),
+        Announcement.find(filter).sort({ createdAt: -1 }).skip(skip).limit(pageSize),
         Announcement.countDocuments(filter),
     ])
 
@@ -38,9 +37,10 @@ async function createAnnouncement(body, user) {
     const {
         message,
         scope,
-        strand,
         expiresAt,
     } = body;
+
+    const strand = body.strand ? body.strand.toUpperCase() : null;
 
     //validate if scope + strand combination is valid for the user role
     if (scope === 'strand' && !strand) {
@@ -49,8 +49,6 @@ async function createAnnouncement(body, user) {
         throw err;
     }
 
-    const normalizedStrand = strand?.toUpperCase();
-
     //check access
     if (!canCreate(user.role, user.strand, scope, strand)) {
         const err = new Error('Unauthorized to create announcement with the specified scope and strand.');
@@ -58,7 +56,7 @@ async function createAnnouncement(body, user) {
         throw err;
     }
 
-    const announcement = new Announcement.create({
+    const announcement = await Announcement.create({
         message,
         scope,
         strand: scope === 'strand' ? strand : null,
