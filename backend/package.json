@@ -12,7 +12,10 @@
   "description": "",
   "jest": {
     "testEnvironment": "node",
-    "testMatch": ["**/__tests__/**/*.test.js", "**/*.test.js"]
+    "testMatch": [
+      "**/__tests__/**/*.test.js",
+      "**/*.test.js"
+    ]
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -26,7 +29,7 @@
     "mongoose": "^9.5.0",
     "multer": "^2.1.1",
     "node-cron": "^4.2.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "jest": "^30.4.1",
