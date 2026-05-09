@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Announcement } from "../types/announcement";
+import type { Announcement } from "@/types/announcement";
 import { mockAnnouncement } from "@/data/mockAnnouncement";
 import AnnouncementTable from "@/components/AnnouncementTable";
 
