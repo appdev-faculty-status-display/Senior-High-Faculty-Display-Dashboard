@@ -10,7 +10,7 @@ vi.mock('../pages/facultyDashboard', () => ({
 vi.mock('../pages/admin/admin-login', () => ({
   default: () => <div>Admin Login Page</div>,
 }));
-vi.mock('../pages/adminDashboard', () => ({
+vi.mock('@/pages/adminDashboard', () => ({
   default: () => <div>Admin Dashboard Page</div>,
 }));
 vi.mock('../pages/requestFormPage', () => ({
