@@ -7,18 +7,18 @@ jest.mock('../middleware/auth', () => ({
   authToken: (req, res, next) => next(),
 }));
 
-jest.mock('../services/announcementService');
+jest.mock('../services/announcement.service');
 const {
   listAnnouncements,
   createAnnouncement,
   deleteAnnouncement,
-} = require('../services/announcementService');
+} = require('../services/announcement.service');
 
 const {
   getAnnouncements,
   postAnnouncement,
   removeAnnouncement,
-} = require('../controllers/announcementController');
+} = require('../controllers/announcement.controller');
 
 const { authToken } = require('../middleware/auth');
 
