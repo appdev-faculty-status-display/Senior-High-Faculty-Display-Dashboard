@@ -120,7 +120,7 @@ describe('Announcement Routes', () => {
         .get('/announcements?isActive=false');
 
       expect(res.status).toBe(403);
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('error');
     });
 
     it('returns 200 when principal requests inactive announcements', async () => {
@@ -138,7 +138,7 @@ describe('Announcement Routes', () => {
       const res = await request(makeApp()).get('/announcements');
 
       expect(res.status).toBe(500);
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('error');
     });
   });
 
@@ -154,7 +154,7 @@ describe('Announcement Routes', () => {
 
       expect(res.status).toBe(201);
       expect(res.body).toHaveProperty('id');
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('error');
       expect(res.body).toHaveProperty('scope');
       expect(res.body).toHaveProperty('isActive');
       expect(res.body).toHaveProperty('createdAt');
@@ -184,7 +184,7 @@ describe('Announcement Routes', () => {
         .send({ message: 'Missing strand', scope: 'strand' });
 
       expect(res.status).toBe(400);
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('error');
     });
 
     it('returns 403 when strand head tries to post school_wide', async () => {
@@ -197,7 +197,7 @@ describe('Announcement Routes', () => {
         .send({ message: 'Overreach', scope: 'school_wide' });
 
       expect(res.status).toBe(403);
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('error');
     });
 
     it('returns 403 when strand head tries to post to a different strand', async () => {
@@ -210,7 +210,7 @@ describe('Announcement Routes', () => {
         .send({ message: 'Wrong strand', scope: 'strand', strand: 'ABM' });
 
       expect(res.status).toBe(403);
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('error');
     });
 
     it('returns 500 on unexpected service error', async () => {
@@ -221,7 +221,7 @@ describe('Announcement Routes', () => {
         .send({ message: 'Test', scope: 'school_wide' });
 
       expect(res.status).toBe(500);
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('error');
     });
   });
 
@@ -237,7 +237,7 @@ describe('Announcement Routes', () => {
       const res = await request(makeApp(principalUser)).delete('/announcements/ann-1');
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('error');
       expect(res.body).toHaveProperty('id');
     });
 
@@ -260,7 +260,7 @@ describe('Announcement Routes', () => {
       const res = await request(makeApp(strandHeadUser)).delete('/announcements/ann-3');
 
       expect(res.status).toBe(403);
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('error');
     });
 
     it('returns 404 when announcement does not exist', async () => {
@@ -271,7 +271,7 @@ describe('Announcement Routes', () => {
       const res = await request(makeApp(principalUser)).delete('/announcements/nonexistent-id');
 
       expect(res.status).toBe(404);
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('error');
     });
 
     it('returns 500 on unexpected service error', async () => {
@@ -280,7 +280,7 @@ describe('Announcement Routes', () => {
       const res = await request(makeApp(principalUser)).delete('/announcements/ann-1');
 
       expect(res.status).toBe(500);
-      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('error');
     });
   });
 });
