@@ -154,7 +154,7 @@ describe('Announcement Routes', () => {
 
       expect(res.status).toBe(201);
       expect(res.body).toHaveProperty('id');
-      expect(res.body).toHaveProperty('error');
+      expect(res.body).toHaveProperty('message');
       expect(res.body).toHaveProperty('scope');
       expect(res.body).toHaveProperty('isActive');
       expect(res.body).toHaveProperty('createdAt');
@@ -237,7 +237,7 @@ describe('Announcement Routes', () => {
       const res = await request(makeApp(principalUser)).delete('/announcements/ann-1');
 
       expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('error');
+      expect(res.body).toHaveProperty('message');
       expect(res.body).toHaveProperty('id');
     });
 
@@ -260,7 +260,7 @@ describe('Announcement Routes', () => {
       const res = await request(makeApp(strandHeadUser)).delete('/announcements/ann-3');
 
       expect(res.status).toBe(403);
-      expect(res.body).toHaveProperty('error');
+      expect(res.body).toHaveProperty('error'); 
     });
 
     it('returns 404 when announcement does not exist', async () => {
