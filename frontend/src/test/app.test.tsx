@@ -49,7 +49,7 @@ describe('App routing', () => {
 
   it('renders AdminBoard on /admin/dashboard', () => {
     renderWithRoute('/admin/dashboard');
-    expect(screen.getByText('Admin Dashboard Page')).toBeInTheDocument();
+    expect(screen.getByText('Faculty Activity')).toBeInTheDocument();
   });
 
   it('renders AddSchedule on /admin/add-schedule', () => {
