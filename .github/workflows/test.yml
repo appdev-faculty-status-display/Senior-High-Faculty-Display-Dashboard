@@ -61,10 +61,13 @@ jobs:
       - name: Run Frontend Tests
         run: npm test
 
+      - name: Run ESLint
+        run: npm run lint
+
   # --- SHARED SECURITY AUDIT ---
   security_audit:
     runs-on: ubuntu-latest
-    needs: [test_backend, test_frontend]
+    needs: [test_backend, test_frontend, lint_frontend]
     steps:
       - uses: actions/checkout@v4
       - name: Set up Node.js
