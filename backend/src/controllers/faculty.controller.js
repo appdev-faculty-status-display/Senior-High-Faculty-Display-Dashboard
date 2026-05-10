@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const { Faculty } = require('../models');
-const { createAuthError } = require('./auth.errors');
+const { createAuthError } = require('../utils/error');
 
 const allowedStatusValues = [
   'available',

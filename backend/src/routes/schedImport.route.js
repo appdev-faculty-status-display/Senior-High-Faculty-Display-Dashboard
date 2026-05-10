@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { importSchedule } = require('../controllers/schedImport.controllers');
+const { importSchedule } = require('../controllers/schedImport.controller');
 const { authToken } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
 const { asyncHandler } = require('../utils/asyncHandler');

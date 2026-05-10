@@ -4,5 +4,6 @@ module.exports = {
   Room: require('./Room'),
   Announcement: require('./Announcement'),
   Notification: require('./Notification'),
-  ScheduleImport: require('./ScheduleImport')
+  ScheduleImport: require('./ScheduleImport'),
+  ConsultationRoom: require('./consultation.model'),
 };

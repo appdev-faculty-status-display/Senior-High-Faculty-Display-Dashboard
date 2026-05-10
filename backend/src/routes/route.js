@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { login, refresh, logout } = require('../controllers/auth.controllers');
+const { login, refresh, logout } = require('../controllers/auth.controller');
 const {
     getFacultyList,
     getFacultyById,
     updateFacultyStatus,
     updateFacultySchedule,
     updateFacultyConsultationHours
-} = require('../controllers/faculty.controllers');
+} = require('../controllers/faculty.controller');
 const { authToken } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimit');
 const { asyncHandler } = require('../utils/asyncHandler');

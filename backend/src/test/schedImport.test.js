@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 jest.mock('../services/schedImport.service');
 const { runImport } = require('../services/schedImport.service');
 
-const { importSchedule } = require('../controllers/schedImport.controllers');
+const { importSchedule } = require('../controllers/schedImport.controller');
 const { asyncHandler } = require('../utils/asyncHandler');
 
 const upload = multer({ storage: multer.memoryStorage() });

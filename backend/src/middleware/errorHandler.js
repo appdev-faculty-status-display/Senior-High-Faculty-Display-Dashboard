@@ -1,4 +1,4 @@
-const { isAuthError, toErrorResponse } = require('../controllers/auth.errors');
+const { isAuthError, toErrorResponse } = require('../utils/error');
 
 function getValidationDetails(error) {
     return Object.keys(error.errors || {}).reduce(function (details, field) {
