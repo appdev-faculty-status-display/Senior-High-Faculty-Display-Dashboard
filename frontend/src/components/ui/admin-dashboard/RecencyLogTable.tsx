@@ -74,7 +74,7 @@ export default function RecencyLogTable({
   }
 
   return (
-    <div className="bg-white border border-[#cbd5e1] shadow-sm flex flex-col gap-4 h-full font-[Inter,sans-serif]">
+    <div className="bg-white border border-[#cbd5e1] shadow-sm flex flex-col gap-4 h-full font-sans">
 
       {/* ── Header ── */}
       <div className="px-5 pt-5 flex items-start justify-between gap-3">

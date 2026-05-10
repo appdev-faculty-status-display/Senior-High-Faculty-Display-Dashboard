@@ -20,7 +20,7 @@ export function exportTablePDF(
   <style>
     @page { margin: 20mm; }
     * { box-sizing: border-box; }
-    body  { font-family: Inter, sans-serif; font-size: 11px; color: #1a1a1a; }
+    body  { font-family: Inter Variable, sans-serif; font-size: 11px; color: #1a1a1a; }
     h1    { font-size: 15px; font-weight: 800; color: #002f73; margin-bottom: 4px; }
     p     { font-size: 10px; color: #4f4f4f; margin-bottom: 16px; }
     table { width: 100%; border-collapse: collapse; }
@@ -100,7 +100,7 @@ export async function printElement(el: HTMLElement, title: string): Promise<void
   <style>
     @page { margin: 10mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Inter, sans-serif; color: #1a1a1a; }
+    body { font-family:  Variab;e, sans-serif; color: #1a1a1a; }
     h1   { font-size: 13px; font-weight: 800; color: #002f73; margin-bottom: 2px; }
     p    { font-size: 9px; color: #4f4f4f; margin-bottom: 8px; }
     img  { width: 100%; height: auto; display: block; }
