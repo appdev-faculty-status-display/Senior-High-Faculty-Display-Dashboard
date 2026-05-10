@@ -12,47 +12,63 @@ async function seed() {
     console.log('Connected to MongoDB');
 
     try {
-        const hash = await bcrypt.hash('Test1234!', 10);
+        const passwordHash = await bcrypt.hash('Test1234!', 10);
 
-        await Faculty.updateOne(
-            { facultyId: 'FAC001' },
+        const facultyRecords = [
             {
-                $set: {
-                    facultyId: 'FAC001',
-                    userId: 'test.faculty@nu-laguna.edu.ph',
-                    name: 'Test Faculty',
-                    role: 'faculty',
-                    passwordHash: hash,
-                    strand: 'STEM',
-                    photoUrl: 'https://placeholder.com/photo.jpg',
-                    status: 'available',
-                    currentLocation: 'Room 101'
-                }
+                facultyId: 'FAC001',
+                userId: 'test.faculty@nu-laguna.edu.ph',
+                name: 'Test Faculty',
+                role: 'faculty',
+                strand: 'STEM',
+                currentLocation: 'Room 101'
             },
-            { upsert: true, runValidators: true, setDefaultsOnInsert: true }
-        );
-        console.log('Test faculty upserted successfully');
-
-        const adminHash = await bcrypt.hash('Admin1234!', 10);
-
-        await Faculty.updateOne(
-            { facultyId: 'ADM001' },
             {
-                $set: {
-                    facultyId: 'ADM001',
-                    userId: 'test.admin@nu-laguna.edu.ph',
-                    name: 'Test Admin',
-                    role: 'principal',
-                    passwordHash: adminHash,
-                    strand: 'STEM',
-                    photoUrl: 'https://placeholder.com/photo.jpg',
-                    status: 'available',
-                    currentLocation: 'Admin Office'
-                }
+                facultyId: 'FAC002',
+                userId: 'test.faculty2@nu-laguna.edu.ph',
+                name: 'Test Faculty Two',
+                role: 'faculty',
+                strand: 'STEM',
+                currentLocation: 'Room 102'
             },
-            { upsert: true, runValidators: true, setDefaultsOnInsert: true }
-        );
-        console.log('Test admin upserted successfully');
+            {
+                facultyId: 'SHD001',
+                userId: 'test.strandhead@nu-laguna.edu.ph',
+                name: 'Test Strand Head',
+                role: 'strand_head',
+                strand: 'STEM',
+                currentLocation: 'Room 201'
+            },
+            {
+                facultyId: 'ADM001',
+                userId: 'test.principal@nu-laguna.edu.ph',
+                name: 'Test Principal',
+                role: 'principal',
+                strand: 'STEM',
+                currentLocation: 'Admin Office'
+            }
+        ];
+
+        for (const record of facultyRecords) {
+            await Faculty.updateOne(
+                { facultyId: record.facultyId },
+                {
+                    $set: {
+                        facultyId: record.facultyId,
+                        userId: record.userId,
+                        name: record.name,
+                        role: record.role,
+                        passwordHash,
+                        strand: record.strand,
+                        photoUrl: 'https://placeholder.com/photo.jpg',
+                        status: 'available',
+                        currentLocation: record.currentLocation
+                    }
+                },
+                { upsert: true, runValidators: true, setDefaultsOnInsert: true }
+            );
+            console.log(`${record.name} upserted successfully`);
+        }
 
     } catch (error) {
         console.error('Error during seed operation:', error);

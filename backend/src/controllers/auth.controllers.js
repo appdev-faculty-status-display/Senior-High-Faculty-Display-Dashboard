@@ -1,4 +1,4 @@
-const { loginUser, refreshTokens, logoutUser } = require('./auth.service');
+const { loginUser, refreshTokens, logoutUser } = require('../services/auth.service');
 const { isAuthError, toErrorResponse } = require('./auth.errors');
 
 function sendError(res, error) {
