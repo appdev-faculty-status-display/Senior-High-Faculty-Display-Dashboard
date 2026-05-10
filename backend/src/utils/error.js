@@ -53,6 +53,21 @@ const AUTH_ERROR_DEFINITIONS = {
         status: 404,
         error: 'The requested resource was not found',
         code: 'NOT_FOUND'
+    },
+    DUPLICATE_QUEUE: {
+        status: 409,
+        error: 'Duplicate queue entry',
+        code: 'DUPLICATE_QUEUE'
+    },
+    INVALID_TRANSITION: {
+        status: 409,
+        error: 'Invalid status transition',
+        code: 'INVALID_TRANSITION'
+    },
+    INVALID_ACCESS_KEY: {
+        status: 401,
+        error: 'Invalid access key',
+        code: 'UNAUTHORIZED'
     }
 };
 

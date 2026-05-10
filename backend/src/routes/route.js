@@ -8,8 +8,16 @@ const {
     updateFacultySchedule,
     updateFacultyConsultationHours
 } = require('../controllers/faculty.controller');
+const {
+    getQueue,
+    createQueue,
+    cancelQueue,
+    updateQueue,
+    assignRoom
+} = require('../controllers/queue.controller');
 const { authToken } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimit');
+const { requireRole } = require('../middleware/roles');
 const { asyncHandler } = require('../utils/asyncHandler');
 const scheduleImportRouter = require('./schedImport.route');
 
@@ -22,5 +30,20 @@ router.get('/faculty/:id', asyncHandler(getFacultyById));
 router.patch('/faculty/:id/status', authToken, asyncHandler(updateFacultyStatus));
 router.patch('/faculty/:id/schedule', authToken, asyncHandler(updateFacultySchedule));
 router.patch('/faculty/:id/consultation-hours', authToken, asyncHandler(updateFacultyConsultationHours));
+router.get('/faculty/:id/queue', asyncHandler(getQueue));
+router.post('/faculty/:id/queue', asyncHandler(createQueue));
+router.patch('/faculty/:facultyId/queue/:queueId/cancel', asyncHandler(cancelQueue));
+router.patch(
+    '/faculty/:facultyId/queue/:queueId/status',
+    authToken,
+    requireRole('faculty', 'strand_head', 'principal'),
+    asyncHandler(updateQueue)
+);
+router.patch(
+    '/faculty/:facultyId/queue/:queueId/room',
+    authToken,
+    requireRole('faculty', 'strand_head', 'principal'),
+    asyncHandler(assignRoom)
+);
 
 module.exports = router;
