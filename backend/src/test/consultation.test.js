@@ -2,6 +2,7 @@ const request = require('supertest');
 const express = require('express');
 const mongoose = require('mongoose');
 const { createAuthError } = require('../utils/error');
+const { errorHandler } = require('../middleware/errorHandler');
 
 jest.mock('../services/consultation.service');
 const { getAllConsultRooms, getConsultRoomById } = require('../services/consultation.service');
@@ -12,6 +13,7 @@ const app = express();
 app.use(express.json());
 app.get('/rooms', getRooms);
 app.get('/rooms/:id', getRoomById);
+app.use(errorHandler);
 
 const mockOccupant = {
     id: new mongoose.Types.ObjectId().toString(),
