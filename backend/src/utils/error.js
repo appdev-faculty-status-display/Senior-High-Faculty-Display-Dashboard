@@ -59,6 +59,11 @@ const AUTH_ERROR_DEFINITIONS = {
         error: 'Duplicate queue entry',
         code: 'DUPLICATE_QUEUE'
     },
+    DUPLICATE_FACULTY: {
+        status: 409,
+        error: 'Faculty already exists',
+        code: 'DUPLICATE_FACULTY'
+    },
     INVALID_TRANSITION: {
         status: 409,
         error: 'Invalid status transition',
