@@ -1,5 +1,5 @@
 const { Faculty } = require('../models');
-const { createAuthError } = require('../controllers/auth.errors');
+const { createAuthError } = require('../utils/error');
 
 function reqSameStrand(paramName = 'id') {
     return async function (req, res, next) {

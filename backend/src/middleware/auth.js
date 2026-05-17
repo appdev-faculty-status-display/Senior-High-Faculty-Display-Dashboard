@@ -1,5 +1,5 @@
-const { verifyAccessToken } = require('../controllers/auth.token');
-const { createAuthError } = require('../controllers/auth.errors');
+const { verifyAccessToken } = require('../utils/authToken');
+const { createAuthError } = require('../utils/error');
 
 function authToken(req, res, next) {
 

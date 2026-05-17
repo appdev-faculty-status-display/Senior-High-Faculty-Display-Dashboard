@@ -4,7 +4,7 @@ const express = require('express');
 jest.mock('../services/auth.service');
 const { loginUser, refreshTokens, logoutUser } = require('../services/auth.service');
 
-const { login, refresh, logout } = require('../controllers/auth.controllers');
+const { login, refresh, logout } = require('../controllers/auth.controller');
 
 const app = express();
 app.use(express.json());

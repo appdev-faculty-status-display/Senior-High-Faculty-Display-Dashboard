@@ -9,7 +9,7 @@ const {
   getFacultyList,
   getFacultyById,
   updateFacultyStatus,
-} = require('../controllers/faculty.controllers');
+} = require('../controllers/faculty.controller');
 const { asyncHandler } = require('../utils/asyncHandler');
 
 const app = express();
