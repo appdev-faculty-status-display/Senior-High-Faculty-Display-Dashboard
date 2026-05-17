@@ -131,7 +131,7 @@ function FacultyActivityContent() {
   }
 
   return (
-    <div className="p-6 flex flex-col gap-6 font-[Inter,sans-serif]">
+    <div className="p-6 flex flex-col gap-6 font-sans">
       <PageHeader
         title="Faculty Activity"
         description="Overview of faculty statuses, consultation windows, and recency updates."
@@ -194,7 +194,7 @@ function ConsultationContent() {
   }
 
   return (
-    <div className="p-6 flex flex-col gap-6 font-[Inter,sans-serif]">
+    <div className="p-6 flex flex-col gap-6 font-sans">
       <PageHeader
         title="Consultation"
         description="Demand metrics, cancellation trends, approval bottlenecks, and participant records."
@@ -288,7 +288,7 @@ function ResourceCommunicationContent() {
   }
 
   return (
-    <div className="p-6 flex flex-col gap-6 font-[Inter,sans-serif]">
+    <div className="p-6 flex flex-col gap-6 font-sans">
       <PageHeader
         title="Resource & Communication"
         description="Announcement reach, notification success rates, and room occupancy statistics."
@@ -338,7 +338,7 @@ function SidebarNavItem({ item, active, onSelect, depth = 0 }: SidebarNavItemPro
       <button
         onClick={() => onSelect(item.id)}
         className={`
-          w-full text-left transition-all duration-150 select-none font-[Inter,sans-serif]
+          w-full text-left transition-all duration-150 select-none font-sans
           ${depth === 0 ? "px-5 py-3" : "px-7 py-2.5"}
           ${isActive
             ? "font-extrabold text-white"
@@ -388,7 +388,7 @@ export default function AdminDashboard() {
   const [activeNav, setActiveNav] = useState<ActiveNav>("faculty-activity");
 
   return (
-    <div className="min-h-screen flex flex-col bg-white" style={{ fontFamily: "Inter, sans-serif" }}>
+    <div className="min-h-screen flex flex-col bg-white" style={{ fontFamily: "Inter Variable, sans-serif" }}>
 
       {/* Uses the existing shared Header component */}
       <Header
