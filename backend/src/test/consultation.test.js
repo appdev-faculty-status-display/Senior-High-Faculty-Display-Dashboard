@@ -3,14 +3,17 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 jest.mock('../services/consultation.service');
-const { getAllRooms, getRoomById } = require('../services/consultation.service');
+const {
+    getAllConsultRooms,
+    getConsultRoomById,
+} = require('../services/consultation.service');
 
-const { getRooms, getRoom } = require('../controllers/consultation.controller');
+const { getRooms, getRoomById } = require('../controllers/consultation.controller');
 
 const app = express();
 app.use(express.json());
 app.get('/rooms', getRooms);
-app.get('/rooms/:id', getRoom);
+app.get('/rooms/:id', getRoomById);
 
 const mockOccupant = {
     id: new mongoose.Types.ObjectId().toString(),
@@ -49,7 +52,7 @@ describe('Consultation Room Routes', () => {
 
     describe('GET /rooms', () => {
         it('returns 200 with all rooms, total, and available count', async () => {
-            getAllRooms.mockResolvedValue({
+            getAllConsultRooms.mockResolvedValue({
                 data: mockRooms,
                 total: mockRooms.length,
                 available: 1,
@@ -63,7 +66,7 @@ describe('Consultation Room Routes', () => {
         });
 
         it('does not count inactive rooms as available', async () => {
-            getAllRooms.mockResolvedValue({
+            getAllConsultRooms.mockResolvedValue({
                 data: mockRooms,
                 total: mockRooms.length,
                 available: 1,
@@ -74,7 +77,7 @@ describe('Consultation Room Routes', () => {
         });
 
         it('does not count occupied rooms as available', async () => {
-            getAllRooms.mockResolvedValue({
+            getAllConsultRooms.mockResolvedValue({
                 data: mockRooms,
                 total: mockRooms.length,
                 available: 1,
@@ -88,7 +91,7 @@ describe('Consultation Room Routes', () => {
         });
 
         it('returns empty data array when no rooms exist', async () => {
-            getAllRooms.mockResolvedValue({ data: [], total: 0, available: 0 });
+            getAllConsultRooms.mockResolvedValue({ data: [], total: 0, available: 0 });
             const res = await request(app).get('/rooms');
             expect(res.status).toBe(200);
             expect(res.body.data).toHaveLength(0);
@@ -99,7 +102,7 @@ describe('Consultation Room Routes', () => {
         it('returns error on service failure', async () => {
             const error = new Error('Database error');
             error.code = 'INTERNAL_ERROR';
-            getAllRooms.mockRejectedValue(error);
+            getAllConsultRooms.mockRejectedValue(error);
             const res = await request(app).get('/rooms');
             expect(res.status).toBeGreaterThanOrEqual(500);
         });
@@ -108,7 +111,7 @@ describe('Consultation Room Routes', () => {
     describe('GET /rooms/:id', () => {
         it('returns 200 with room data for a valid id', async () => {
             const room = mockRooms[0];
-            getRoomById.mockResolvedValue(room);
+            getConsultRoomById.mockResolvedValue(room);
             const res = await request(app).get(`/rooms/${room.id}`);
             expect(res.status).toBe(200);
             expect(res.body).toHaveProperty('id');
@@ -120,7 +123,7 @@ describe('Consultation Room Routes', () => {
 
         it('returns occupant details when room is occupied', async () => {
             const room = mockRooms[1];
-            getRoomById.mockResolvedValue(room);
+            getConsultRoomById.mockResolvedValue(room);
             const res = await request(app).get(`/rooms/${room.id}`);
             expect(res.status).toBe(200);
             expect(res.body.currentOccupant).not.toBeNull();
@@ -130,7 +133,7 @@ describe('Consultation Room Routes', () => {
 
         it('returns null occupant when room is vacant', async () => {
             const room = mockRooms[0];
-            getRoomById.mockResolvedValue(room);
+            getConsultRoomById.mockResolvedValue(room);
             const res = await request(app).get(`/rooms/${room.id}`);
             expect(res.status).toBe(200);
             expect(res.body.currentOccupant).toBeNull();
@@ -139,7 +142,7 @@ describe('Consultation Room Routes', () => {
 
         it('returns correct data for an inactive room', async () => {
             const room = mockRooms[2];
-            getRoomById.mockResolvedValue(room);
+            getConsultRoomById.mockResolvedValue(room);
             const res = await request(app).get(`/rooms/${room.id}`);
             expect(res.status).toBe(200);
             expect(res.body.isActive).toBe(false);
@@ -149,7 +152,7 @@ describe('Consultation Room Routes', () => {
             const error = new Error('Not found');
             error.statusCode = 404;
             error.code = 'NOT_FOUND';
-            getRoomById.mockRejectedValue(error);
+            getConsultRoomById.mockRejectedValue(error);
             const res = await request(app).get(
                 `/rooms/${new mongoose.Types.ObjectId()}`
             );
@@ -160,7 +163,7 @@ describe('Consultation Room Routes', () => {
             const error = new Error('Not found');
             error.statusCode = 404;
             error.code = 'NOT_FOUND';
-            getRoomById.mockRejectedValue(error);
+            getConsultRoomById.mockRejectedValue(error);
             const res = await request(app).get('/rooms/not_a_valid_id');
             expect(res.status).toBeGreaterThanOrEqual(400);
         });
