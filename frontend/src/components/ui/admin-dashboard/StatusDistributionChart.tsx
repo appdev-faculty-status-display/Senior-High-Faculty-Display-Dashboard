@@ -1,6 +1,6 @@
 // frontend/src/components/ui/admin-dashboard/StatusDistributionChart.tsx
-import { Doughnut } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import { Doughnut } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import type { StatusDistributionChartProps } from "@/types/adminDashboard.types";
 
 ChartJS.register(ArcElement, Tooltip, Legend);

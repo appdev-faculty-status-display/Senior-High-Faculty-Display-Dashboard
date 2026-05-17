@@ -1,9 +1,10 @@
+// announcementPage.tsx
 import { useState } from "react";
 import type { Announcement } from "@/types/announcement";
 import { mockAnnouncement } from "@/data/mockAnnouncement";
 import AnnouncementTable from "@/components/AnnouncementTable";
 
-export default function announcementPage() {
+export default function AnnouncementPage() {   // <-- uppercase A
     const [announcements, setAnnouncements] = useState<Announcement[]>(mockAnnouncement);
 
     const handleDelete = (id: number) =>
@@ -17,12 +18,12 @@ export default function announcementPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
-        <AnnouncementTable
-            announcements={announcements}
-            onDelete={handleDelete}
-            onAdd={handleAdd}
-            onEdit={handleEdit}
-        />
+            <AnnouncementTable
+                announcements={announcements}
+                onDelete={handleDelete}
+                onAdd={handleAdd}
+                onEdit={handleEdit}
+            />
         </div>
     );
 }
