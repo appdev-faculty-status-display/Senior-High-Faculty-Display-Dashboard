@@ -58,6 +58,7 @@ const facultySchema = new Schema(
     statusOverride: { type: statusOverrideSchema, default: null },
     currentLocation: { type: String, required: true, trim: true },
     subject: { type: String, default: null, trim: true },
+    subjects: { type: [{ type: String, trim: true }], default: [] },
     schedule: { type: [scheduleEntrySchema], default: [] },
     consultationHours: { type: [consultationHoursSchema], default: [] },
     meetingWith: { type: String, default: null, trim: true },

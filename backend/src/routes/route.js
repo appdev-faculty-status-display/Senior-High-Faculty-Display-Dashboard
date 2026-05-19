@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
 
-const { login, refresh, logout } = require('../controllers/auth.controllers');
+const { login, refresh, logout } = require('../controllers/auth.controller');
 const {
     getFacultyList,
     getFacultyById,
+    createFaculty,
     updateFacultyStatus,
     updateFacultySchedule,
     updateFacultyConsultationHours
-} = require('../controllers/faculty.controllers');
+} = require('../controllers/faculty.controller');
 
 const { authToken } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimit');
@@ -16,7 +17,10 @@ const { requireRole } = require('../middleware/roles');
 const { asyncHandler } = require('../utils/asyncHandler');
 
 const scheduleImportRouter = require('./schedImport.route');
+const facultyImportRouter = require('./facultyImport.route');
 const announcementsRouter = require('./announcements.route');
+
+const upload = multer();
 
 router.use('/schedule', scheduleImportRouter);
 router.use('/announcements', announcementsRouter);
@@ -24,9 +28,14 @@ router.use('/announcements', announcementsRouter);
 router.post('/auth/login', authLimiter, login);
 router.post('/auth/refresh', authLimiter, refresh);
 router.post('/auth/logout', logout);
-
+router.post(
+    '/faculty',
+    authToken,
+    requireRole('principal', 'strand_head'),
+    upload.none(),
+    asyncHandler(createFaculty)
+);
 router.use('/faculty/:id', authToken);
-
 router.get('/faculty', asyncHandler(getFacultyList));
 router.get('/faculty/:id', asyncHandler(getFacultyById));
 router.patch('/faculty/:id/status', authToken, asyncHandler(updateFacultyStatus));

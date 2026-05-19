@@ -16,13 +16,13 @@ app.get('/rooms/:id', getRoomById);
 app.use(errorHandler);
 
 const mockOccupant = {
-    id: new mongoose.Types.ObjectId().toString(),
-    name: 'Juan dela Cruz',
+    id: new mongoose.Types.ObjectId().toString(), 
+    name: 'Juan dela Cruz',                        
 };
 
 const mockRooms = [
     {
-        id: new mongoose.Types.ObjectId().toString(),
+        id: new mongoose.Types.ObjectId().toString(),  
         roomCode: 'CR-01',
         capacity: 4,
         isActive: true,

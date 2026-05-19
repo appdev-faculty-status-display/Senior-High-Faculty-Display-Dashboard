@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const { Faculty } = require('../models');
 const { createAuthError } = require('../utils/error');
 
@@ -11,12 +12,34 @@ const allowedStatusValues = [
   'do-not-disturb'
 ];
 
+const allowedRoleValues = ['faculty', 'strand_head', 'principal'];
+const DEFAULT_PASSWORD_FALLBACK = 'Test1234!';
+
 function isValidObjectId(id) {
   return mongoose.Types.ObjectId.isValid(id);
 }
 
 function trimString(value) {
   return typeof value === 'string' ? value.trim() : value;
+}
+
+function createValidationError(field, message) {
+  const error = new Error(message);
+  error.name = 'ValidationError';
+  error.errors = {
+    [field]: { message }
+  };
+  throw error;
+}
+
+function requireStringField(value, fieldName) {
+  const trimmed = trimString(value);
+
+  if (!trimmed) {
+    createValidationError(fieldName, `${fieldName} is required`);
+  }
+
+  return trimmed;
 }
 
 function ensureArray(value, fieldName) {
@@ -33,7 +56,36 @@ function ensureArray(value, fieldName) {
 }
 
 function normalizeSubjects(faculty) {
-  return Array.isArray(faculty.subjects) ? faculty.subjects : [];
+  if (Array.isArray(faculty.subjects)) {
+    return faculty.subjects;
+  }
+
+  if (faculty.subject) {
+    return [faculty.subject];
+  }
+
+  return [];
+}
+
+function parseSubjects(value) {
+  if (Array.isArray(value)) {
+    return value.map((subject) => trimString(subject)).filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (!Array.isArray(parsed)) {
+        createValidationError('subjects', 'subjects must be a JSON array');
+      }
+
+      return parsed.map((subject) => trimString(subject)).filter(Boolean);
+    } catch (error) {
+      createValidationError('subjects', 'subjects must be a JSON array');
+    }
+  }
+
+  createValidationError('subjects', 'subjects must be a JSON array');
 }
 
 function normalizeFacultyCard(faculty) {
@@ -111,6 +163,29 @@ function assertCanEditFaculty(req, faculty) {
   throw createAuthError('FORBIDDEN');
 }
 
+function assertCanCreateFaculty(req, strand) {
+  const user = req.user || {};
+
+  if (user.role === 'principal') {
+    return;
+  }
+
+  if (user.role === 'strand_head') {
+    if (!user.strand || strand !== user.strand) {
+      throw createAuthError('FORBIDDEN');
+    }
+
+    return;
+  }
+
+  throw createAuthError('FORBIDDEN');
+}
+
+function getDefaultPassword() {
+  const envPassword = trimString(process.env.DEFAULT_FACULTY_PASSWORD);
+  return envPassword || DEFAULT_PASSWORD_FALLBACK;
+}
+
 async function getFacultyList(req, res) {
   const filter = {};
 
@@ -158,6 +233,62 @@ async function getFacultyById(req, res) {
   }
 
   return res.status(200).json(normalizeFacultyCard(faculty));
+}
+
+async function createFaculty(req, res) {
+  const payload = req.body || {};
+  const name = requireStringField(payload.name, 'name');
+  const userId = requireStringField(payload.userId, 'userId');
+  const strand = requireStringField(payload.strand, 'strand');
+  const role = requireStringField(payload.role, 'role');
+  const currentRoom = requireStringField(payload.currentRoom, 'currentRoom');
+  const profilePhoto = requireStringField(payload.profilePhoto, 'profilePhoto');
+  const teamsWebhookUrl = requireStringField(payload.teamsWebhookUrl, 'teamsWebhookUrl');
+
+  if (!allowedRoleValues.includes(role)) {
+    createValidationError('role', 'role must be one of the allowed faculty roles');
+  }
+
+  const subjects = parseSubjects(payload.subjects);
+
+  if (!subjects.length) {
+    createValidationError('subjects', 'subjects must contain at least one value');
+  }
+
+  assertCanCreateFaculty(req, strand);
+
+  const existing = await Faculty.findOne({ userId });
+
+  if (existing) {
+    throw createAuthError('DUPLICATE_FACULTY');
+  }
+
+  const passwordHash = await bcrypt.hash(getDefaultPassword(), 10);
+
+  const faculty = await Faculty.create({
+    facultyId: userId,
+    userId,
+    name,
+    role,
+    strand,
+    passwordHash,
+    photoUrl: profilePhoto,
+    currentLocation: currentRoom,
+    subjects,
+    teamsWebhookUrl,
+    status: 'available'
+  });
+
+  return res.status(201).json({
+    id: faculty._id.toString(),
+    name: faculty.name,
+    userId: faculty.userId,
+    strand: faculty.strand,
+    role: faculty.role,
+    subjects: Array.isArray(faculty.subjects) ? faculty.subjects : [],
+    currentStatus: faculty.status,
+    createdAt: faculty.createdAt
+  });
 }
 
 async function updateFacultyStatus(req, res) {
@@ -293,6 +424,7 @@ async function updateFacultyConsultationHours(req, res) {
 module.exports = {
   getFacultyList,
   getFacultyById,
+  createFaculty,
   updateFacultyStatus,
   updateFacultySchedule,
   updateFacultyConsultationHours,
