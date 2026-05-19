@@ -43,7 +43,7 @@ export default function DatePicker({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           title={placeholder}
-          className="pl-7 pr-2 py-1.5 text-xs border border-[#cbd5e1] bg-white text-[#1a1a1a] focus:outline-none focus:border-[#064db6] focus:ring-1 focus:ring-[#064db6]/20 transition-colors w-[130px] cursor-pointer"
+          className="pl-7 pr-2 py-1.5 text-xs border border-[#cbd5e1] bg-white text-[#1a1a1a] focus:outline-none focus:border-[#064db6] focus:ring-1 focus:ring-[#064db6]/20 transition-colors w-32.5 cursor-pointer"
         />
         {/* Clear button — only shown when a value is set */}
         {value && (

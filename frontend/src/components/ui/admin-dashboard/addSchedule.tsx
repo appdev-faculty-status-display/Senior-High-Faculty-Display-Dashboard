@@ -12,10 +12,8 @@ import SelectFilter from "@/components/SelectFilter";
 import IconEdit from "@/components/icons/EditIcon";
 import IconTrash from "@/components/icons/TrashIcon";
 import IconSearch from "@/components/icons/SearchIcon";
-import IconPlus from "@/components/icons/PlusIcon";
 import EditScheduleModal from "@/components/modal/EditScheduleModal";
 import ImportScheduleModal from "@/components/modal/ImportScheduleModal";
-import { Button } from "@/components/ui/button"; 
 
 export default function ClassScheduleDashboard() {
     const [strandFilter, setStrandFilter] = useState("All Strands");
@@ -59,19 +57,33 @@ export default function ClassScheduleDashboard() {
         <section className="min-h-screen w-full bg-gray-50 p-6">
         <div className="flex items-start justify-between mb-5">
             <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-[#002f73]">
+            <h1 className="text-2xl font-extrabold tracking-tight text-[#002f73] uppercase">
                 Manage Class Schedules
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
                 Create, edit, and manage all class schedules.
             </p>
             </div>
-            <Button variant="active"
+            <button
             onClick={() => setIsImporting(true)}
+            className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white border border-[#002f73] bg-[#002f73] hover:bg-[#064db6] transition-colors"
             >
-            <IconPlus />
+            <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="inline-block"
+            >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
             Add Schedule
-            </Button>
+            </button>
         </div>
 
         <div className="bg-white shadow-sm border border-gray-100 overflow-hidden h-full">
@@ -111,7 +123,7 @@ export default function ClassScheduleDashboard() {
             <div className="overflow-x-auto">
             <table className="w-full text-sm">
                 <thead>
-                <tr className="bg-slate-100 text-gray-600 text-xs font-bold uppercase tracking-wider">
+                <tr className="bg-[#002f73] text-white text-xs font-bold uppercase tracking-wider">
                     <th className="text-left px-4 py-3">Faculty Member</th>
                     <th className="text-left px-4 py-3">Subject</th>
                     <th className="text-left px-4 py-3">Strand</th>
@@ -155,7 +167,7 @@ export default function ClassScheduleDashboard() {
                                 setSelectedSchedule(s);
                                 setIsEditing(true);
                             }}
-                            className="p-1.5 hover:bg-blue-100 text-blue-500 transition-colors">
+                            className="p-1.5 hover:bg-blue-100 text-[#002f73] transition-colors">
                             <IconEdit />
                             </button>
                             <button
@@ -194,7 +206,7 @@ export default function ClassScheduleDashboard() {
                     onClick={() => setSchedulePage(pg)}
                     className={`w-7 h-7 text-xs font-semibold transition-colors ${
                     pg === schedulePage
-                        ? "bg-yellow-400 text-white shadow-sm"
+                        ? "bg-[#002f73] text-white shadow-sm"
                         : "hover:bg-gray-100 text-gray-600"
                     }`}
                 >

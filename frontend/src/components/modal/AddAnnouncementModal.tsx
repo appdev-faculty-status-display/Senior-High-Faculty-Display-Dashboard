@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { Announcement } from "../../types/announcement";
-import { Button } from "@/components/ui/button"; 
 
     interface Props {
     onClose: () => void;
@@ -88,13 +87,19 @@ export default function AddAnnouncementModal({ onClose, onSubmit }: Props) {
             <div className="border-b border-gray-100 mt-6 mb-6" />
 
             <div className="flex items-center justify-end gap-3">
-            <Button variant="active" onClick={onClose}>
-                Cancel
-            </Button>
+            <button
+            onClick={onClose}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors"
+            >
+            Cancel
+            </button>
 
-            <Button variant="active" onClick={handleSubmit}>
-                Post Announcement
-            </Button>
+            <button
+            onClick={handleSubmit}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors"
+            >
+            Post Announcement
+            </button>
             </div>
         </div>
         </div>

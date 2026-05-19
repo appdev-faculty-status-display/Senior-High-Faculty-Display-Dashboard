@@ -10,17 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import StatusBadge from "@/components/StatusBadge";
 
 export type { RecencyLogEntry };
-
-const STATUS_COLORS: Record<string, string> = {
-  "In Meeting":     "#9440dd",
-  "In Class":       "#b8a000",
-  "On Break":       "#3b74fa",
-  "Available":      "#31ac52",
-  "Do Not Disturb": "#ed3a30",
-  "Off Campus":     "#ff914d",
-};
 
 const ROWS_PER_PAGE = 5;
 
@@ -147,7 +139,7 @@ export default function RecencyLogTable({
         <div className="border border-[#e8edf5]">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent border-0">
+              <TableRow className="hover:bg-transparent border-0 uppercase">
                 {["Faculty Name", "Strand", "Current Status", "Last Updated", "Recency"].map((h) => (
                   <TableHead
                     key={h}
@@ -180,12 +172,7 @@ export default function RecencyLogTable({
                       {entry.strand}
                     </TableCell>
                     <TableCell className="px-4 py-2.5">
-                      <span
-                        className="px-2.5 py-1 text-white text-[10px] font-bold whitespace-nowrap"
-                        style={{ background: STATUS_COLORS[entry.currentStatus] ?? "#cbd5e1" }}
-                      >
-                        {entry.currentStatus}
-                      </span>
+                      <StatusBadge status={entry.currentStatus} />
                     </TableCell>
                     <TableCell className="px-4 py-2.5 text-[#4f4f4f] text-xs">
                       {entry.lastUpdated}

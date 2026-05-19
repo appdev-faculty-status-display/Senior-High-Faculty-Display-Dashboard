@@ -211,7 +211,7 @@ export default function ConsultationParticipantsTable({
                 {TABLE_HEADERS.map((h) => (
                   <TableHead
                     key={h}
-                    className="text-white font-bold text-xs whitespace-nowrap tracking-wide py-2.5"
+                    className="text-white font-bold text-xs whitespace-nowrap tracking-wide py-2.5 uppercase"
                     style={{ background: "#002f73" }}
                   >
                     {h}
@@ -260,7 +260,7 @@ export default function ConsultationParticipantsTable({
                       {p.time}
                     </TableCell>
                     <TableCell className="px-4 py-2.5">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 ${STATUS_STYLE[p.status]}`}>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 uppercase ${STATUS_STYLE[p.status]}`}>
                         {p.status}
                       </span>
                     </TableCell>

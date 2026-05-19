@@ -1,6 +1,7 @@
 // frontend/src/types/adminDashboard.types.ts
 
 // Navigation
+import type { Status } from "@/types/schedule";
 
 export type NavItem = {
   id: string;
@@ -15,7 +16,7 @@ export type ActiveNav = string;
 export interface RecencyLogEntry {
   facultyName: string;
   strand: string;
-  currentStatus: string;
+  currentStatus: Status;
   lastUpdated: string;
   recency: string;
 }
