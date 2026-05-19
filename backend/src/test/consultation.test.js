@@ -100,11 +100,7 @@ describe('Consultation Room Routes', () => {
         });
 
         it('returns error on service failure', async () => {
-            getAllConsultRooms.mockRejectedValue({
-                status: 500,
-                code: 'INTERNAL_ERROR',
-                message: 'Database error'
-            });
+            getAllConsultRooms.mockRejectedValue(createAuthError('INTERNAL_ERROR'));
 
             const res = await request(app).get('/rooms');
 
@@ -154,11 +150,7 @@ describe('Consultation Room Routes', () => {
         });
 
         it('returns 404 when room is not found', async () => {
-            getConsultRoomById.mockRejectedValue({
-                status: 404,
-                code: 'NOT_FOUND',
-                message: 'The request resource was not found'
-            });
+            getConsultRoomById.mockRejectedValue(createAuthError('NOT_FOUND'));
 
             const res = await request(app).get(
                 `/rooms/${new mongoose.Types.ObjectId()}`
@@ -172,7 +164,7 @@ describe('Consultation Room Routes', () => {
             getConsultRoomById.mockRejectedValue(createAuthError('NOT_FOUND'));
             const res = await request(app).get('/rooms/not_a_valid_id');
             expect(res.status).toBeGreaterThanOrEqual(400);
-            expect(res.body).toHaveProperty('error');
+            expect(res.body).toHaveProperty('message');
         });
     });
 });
