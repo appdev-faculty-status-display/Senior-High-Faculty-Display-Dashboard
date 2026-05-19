@@ -2,6 +2,14 @@
 import { useState, useMemo } from "react";
 import type { RecencyLogEntry, RecencyLogTableProps } from "@/types/adminDashboard.types";
 import { timeToMinutes, inputToMinutes } from "@/utils/timeUtils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export type { RecencyLogEntry };
 
@@ -27,7 +35,6 @@ export default function RecencyLogTable({
   globalTimeTo   = "",
 }: RecencyLogTablePropsExtended) {
 
-  // ── Local filters: faculty search, strand, status ──
   const [searchName,   setSearchName]   = useState("");
   const [filterStrand, setFilterStrand] = useState("All");
   const [filterStatus, setFilterStatus] = useState("All");
@@ -49,7 +56,6 @@ export default function RecencyLogTable({
       const strandMatch = filterStrand === "All" || entry.strand === filterStrand;
       const statusMatch = filterStatus === "All" || entry.currentStatus === filterStatus;
 
-      // Time range from global filter
       const entryMin = timeToMinutes(entry.lastUpdated);
       const fromMin  = globalTimeFrom ? inputToMinutes(globalTimeFrom) : null;
       const toMin    = globalTimeTo   ? inputToMinutes(globalTimeTo)   : null;
@@ -74,9 +80,9 @@ export default function RecencyLogTable({
   }
 
   return (
-    <div className="bg-white border border-[#cbd5e1] shadow-sm flex flex-col gap-4 h-full font-[Inter,sans-serif]">
+    <div className="bg-white border border-[#cbd5e1] shadow-sm flex flex-col gap-4 h-full font-sans">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="px-5 pt-5 flex items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-extrabold text-[#002f73] uppercase tracking-wide">
@@ -96,10 +102,8 @@ export default function RecencyLogTable({
         )}
       </div>
 
-      {/* ── Local Filters: faculty search | strand | status ── */}
+      {/* Local Filters */}
       <div className="px-5 grid grid-cols-3 gap-2">
-
-        {/* Faculty name search */}
         <div className="relative">
           <svg
             className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#4f4f4f]"
@@ -118,8 +122,6 @@ export default function RecencyLogTable({
             className="w-full pl-7 pr-2 py-1.5 text-[11px] border border-[#cbd5e1] bg-[#f8faff] text-[#1a1a1a] placeholder-[#9ca3af] focus:outline-none focus:border-[#064db6]"
           />
         </div>
-
-        {/* Strand filter */}
         <select
           value={filterStrand}
           onChange={(e) => { setFilterStrand(e.target.value); setPage(1); }}
@@ -129,8 +131,6 @@ export default function RecencyLogTable({
             <option key={s} value={s}>{s === "All" ? "All Strands" : s}</option>
           ))}
         </select>
-
-        {/* Status filter */}
         <select
           value={filterStatus}
           onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
@@ -140,51 +140,57 @@ export default function RecencyLogTable({
             <option key={s} value={s}>{s === "All" ? "All Statuses" : s}</option>
           ))}
         </select>
-
       </div>
 
-      {/* ── Table ── */}
+      {/* shadcn Table */}
       <div className="px-5 overflow-x-auto">
         <div className="border border-[#e8edf5]">
-          <table className="w-full text-xs border-collapse">
-            <thead>
-              <tr style={{ background: "#002f73" }}>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-0">
                 {["Faculty Name", "Strand", "Current Status", "Last Updated", "Recency"].map((h) => (
-                  <th
+                  <TableHead
                     key={h}
-                    className="text-left text-white font-bold px-4 py-2.5 whitespace-nowrap tracking-wide"
+                    className="text-white font-bold text-xs whitespace-nowrap tracking-wide py-2.5"
+                    style={{ background: "#002f73" }}
                   >
                     {h}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {paginated.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-center py-8 text-[#9ca3af] text-xs">
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8 text-[#9ca3af] text-xs">
                     No entries match the current filters.
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 paginated.map((entry, i) => (
-                  <tr
+                  <TableRow
                     key={i}
-                    className="border-b border-[#f0f4ff] last:border-0"
+                    className="border-b border-[#f0f4ff] last:border-0 hover:bg-[#f0f4ff]/60"
                     style={{ background: i % 2 === 0 ? "#ffffff" : "#f8faff" }}
                   >
-                    <td className="px-4 py-2.5 font-semibold text-[#1a1a1a]">{entry.facultyName}</td>
-                    <td className="px-4 py-2.5 text-[#4f4f4f]">{entry.strand}</td>
-                    <td className="px-4 py-2.5">
+                    <TableCell className="px-4 py-2.5 font-semibold text-[#1a1a1a] text-xs">
+                      {entry.facultyName}
+                    </TableCell>
+                    <TableCell className="px-4 py-2.5 text-[#4f4f4f] text-xs">
+                      {entry.strand}
+                    </TableCell>
+                    <TableCell className="px-4 py-2.5">
                       <span
                         className="px-2.5 py-1 text-white text-[10px] font-bold whitespace-nowrap"
                         style={{ background: STATUS_COLORS[entry.currentStatus] ?? "#cbd5e1" }}
                       >
                         {entry.currentStatus}
                       </span>
-                    </td>
-                    <td className="px-4 py-2.5 text-[#4f4f4f]">{entry.lastUpdated}</td>
-                    <td className="px-4 py-2.5">
+                    </TableCell>
+                    <TableCell className="px-4 py-2.5 text-[#4f4f4f] text-xs">
+                      {entry.lastUpdated}
+                    </TableCell>
+                    <TableCell className="px-4 py-2.5">
                       <span className={`text-[10px] font-bold px-2 py-0.5 ${
                         entry.recency === "Recent"
                           ? "bg-[#e6f9ec] text-[#31ac52]"
@@ -192,16 +198,16 @@ export default function RecencyLogTable({
                       }`}>
                         {entry.recency}
                       </span>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </div>
 
-      {/* ── Pagination ── */}
+      {/* Pagination */}
       <div className="px-5 pb-5 flex items-center justify-between text-[11px] text-[#4f4f4f]">
         <span>Page {page} of {totalPages}</span>
         <div className="flex items-center gap-1">
