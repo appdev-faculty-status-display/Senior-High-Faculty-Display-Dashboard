@@ -1,9 +1,8 @@
 class AuthError extends Error {
     constructor(definition) {
-        super(definition.error);
+        super(definition.message);
         this.name = 'AuthError';
         this.status = definition.status;
-        this.error = definition.error;
         this.code = definition.code;
     }
 }
@@ -11,52 +10,52 @@ class AuthError extends Error {
 const AUTH_ERROR_DEFINITIONS = {
     MISSING_CREDENTIALS: {
         status: 400,
-        error: 'Email and password are required',
+        message: 'Email and password are required',
         code: 'MISSING_CREDENTIALS'
     },
     MISSING_REFRESH_TOKEN: {
         status: 400,
-        error: 'Refresh token is required',
+        message: 'Refresh token is required',
         code: 'VALIDATION_ERROR'
     },
     INVALID_LOGIN: {
         status: 401,
-        error: 'Invalid email or password',
+        message: 'Invalid email or password',
         code: 'UNAUTHORIZED'
     },
     INVALID_OR_EXPIRED_REFRESH_TOKEN: {
         status: 401,
-        error: 'Invalid/Expired refresh token',
+        message: 'Invalid/Expired refresh token',
         code: 'UNAUTHORIZED'
     },
     INVALID_REFRESH_TOKEN: {
         status: 401,
-        error: 'Invalid refresh token',
+        message: 'Invalid refresh token',
         code: 'UNAUTHORIZED'
     },
     ACCESS_TOKEN_EXPIRED: {
         status: 401,
-        error: 'Access token expired, Please re-login',
+        message: 'Access token expired, Please re-login',
         code: 'UNAUTHORIZED'
     },
     INTERNAL_ERROR: {
         status: 500,
-        error: 'Something went wrong',
+        message: 'Something went wrong',
         code: 'INTERNAL_ERROR'
     },
     FORBIDDEN: {
         status: 403,
-        error: 'You do not have permission to perform this action',
+        message: 'You do not have permission to perform this action',
         code: 'FORBIDDEN'
     },
     NOT_FOUND: {
         status: 404,
-        error: 'The requested resource was not found',
+        message: 'The requested resource was not found',
         code: 'NOT_FOUND'
     },
     DUPLICATE_QUEUE: {
         status: 409,
-        error: 'Duplicate queue entry',
+        message: 'Duplicate queue entry',
         code: 'DUPLICATE_QUEUE'
     },
     DUPLICATE_FACULTY: {
@@ -66,12 +65,12 @@ const AUTH_ERROR_DEFINITIONS = {
     },
     INVALID_TRANSITION: {
         status: 409,
-        error: 'Invalid status transition',
+        message: 'Invalid status transition',
         code: 'INVALID_TRANSITION'
     },
     INVALID_ACCESS_KEY: {
         status: 401,
-        error: 'Invalid access key',
+        message: 'Invalid access key',
         code: 'UNAUTHORIZED'
     }
 };
@@ -95,7 +94,7 @@ function toErrorResponse(error) {
         return {
             status: error.status,
             body: {
-                error: error.error,
+                message: error.message,
                 code: error.code
             }
         };
@@ -106,7 +105,7 @@ function toErrorResponse(error) {
     return {
         status: internalError.status,
         body: {
-            error: internalError.error,
+            message: internalError.message,
             code: internalError.code
         }
     };

@@ -1,6 +1,11 @@
+@import "../node_modules/@fontsource-variable/inter/index.css";
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource-variable/inter";
+
+/* Force Inter font for all canvas elements (Chart.js) */
+canvas {
+  font-family: 'Inter Variable', sans-serif !important;
+}
 
 @custom-variant dark (&:is(.dark *));
 
@@ -313,4 +318,6 @@
 .animate-ticker {
   animation: ticker 40s linear infinite;
 }
+
+
 

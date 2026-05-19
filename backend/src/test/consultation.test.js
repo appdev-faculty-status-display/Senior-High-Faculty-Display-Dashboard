@@ -1,12 +1,11 @@
 const request = require('supertest');
 const express = require('express');
 const mongoose = require('mongoose');
+const { createAuthError } = require('../utils/error');
+const { errorHandler } = require('../middleware/errorHandler');
 
 jest.mock('../services/consultation.service');
-const {
-    getAllConsultRooms,
-    getConsultRoomById,
-} = require('../services/consultation.service');
+const { getAllConsultRooms, getConsultRoomById } = require('../services/consultation.service');
 
 const { getRooms, getRoomById } = require('../controllers/consultation.controller');
 
@@ -14,15 +13,16 @@ const app = express();
 app.use(express.json());
 app.get('/rooms', getRooms);
 app.get('/rooms/:id', getRoomById);
+app.use(errorHandler);
 
 const mockOccupant = {
-    id: new mongoose.Types.ObjectId().toString(),
-    name: 'Juan dela Cruz',
+    id: new mongoose.Types.ObjectId().toString(), 
+    name: 'Juan dela Cruz',                        
 };
 
 const mockRooms = [
     {
-        id: new mongoose.Types.ObjectId().toString(),
+        id: new mongoose.Types.ObjectId().toString(),  
         roomCode: 'CR-01',
         capacity: 4,
         isActive: true,
@@ -100,11 +100,12 @@ describe('Consultation Room Routes', () => {
         });
 
         it('returns error on service failure', async () => {
-            const error = new Error('Database error');
-            error.code = 'INTERNAL_ERROR';
-            getAllConsultRooms.mockRejectedValue(error);
+            getAllConsultRooms.mockRejectedValue(createAuthError('INTERNAL_ERROR'));
+
             const res = await request(app).get('/rooms');
-            expect(res.status).toBeGreaterThanOrEqual(500);
+
+            expect(res.body).toHaveProperty('code', 'INTERNAL_ERROR');
+            expect(res.body).toHaveProperty('message');
         });
     });
 
@@ -149,23 +150,21 @@ describe('Consultation Room Routes', () => {
         });
 
         it('returns 404 when room is not found', async () => {
-            const error = new Error('Not found');
-            error.statusCode = 404;
-            error.code = 'NOT_FOUND';
-            getConsultRoomById.mockRejectedValue(error);
+            getConsultRoomById.mockRejectedValue(createAuthError('NOT_FOUND'));
+
             const res = await request(app).get(
                 `/rooms/${new mongoose.Types.ObjectId()}`
             );
-            expect(res.status).toBeGreaterThanOrEqual(400);
+
+            expect(res.body).toHaveProperty('code', 'NOT_FOUND');
+            expect(res.body).toHaveProperty('message');
         });
 
         it('returns error on invalid ObjectId format', async () => {
-            const error = new Error('Not found');
-            error.statusCode = 404;
-            error.code = 'NOT_FOUND';
-            getConsultRoomById.mockRejectedValue(error);
+            getConsultRoomById.mockRejectedValue(createAuthError('NOT_FOUND'));
             const res = await request(app).get('/rooms/not_a_valid_id');
             expect(res.status).toBeGreaterThanOrEqual(400);
+            expect(res.body).toHaveProperty('message');
         });
     });
 });

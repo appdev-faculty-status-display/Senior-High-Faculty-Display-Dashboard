@@ -1,7 +1,11 @@
 const request = require('supertest');
 const express = require('express');
 
-jest.mock('../services/auth.service');
+jest.mock('../services/auth.service', () => ({
+  loginUser: jest.fn(),
+  refreshTokens: jest.fn(),
+  logoutUser: jest.fn()
+}));
 const { loginUser, refreshTokens, logoutUser } = require('../services/auth.service');
 
 const { login, refresh, logout } = require('../controllers/auth.controller');
