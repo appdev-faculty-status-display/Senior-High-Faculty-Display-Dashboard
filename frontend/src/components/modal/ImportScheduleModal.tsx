@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import type { FacultySchedule, Strand, Day, Status } from "../../types/schedule";
-import { Button } from "@/components/ui/button"; 
 
     interface Props {
     onClose: () => void;
@@ -118,17 +117,19 @@ import { Button } from "@/components/ui/button";
             <div className="border-b border-gray-100 mb-6" />
 
             <div className="flex items-center justify-end gap-3">
-            <Button variant="active"
+            <button
             onClick={onClose}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors"
             >
             Cancel
-            </Button>
+            </button>
 
-            <Button variant="active"
+            <button
             onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors"
             >
             Upload & Import
-            </Button>
+            </button>   
             </div>
         </div>
         </div>

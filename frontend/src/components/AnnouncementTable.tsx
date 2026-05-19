@@ -2,11 +2,9 @@ import { useState } from "react";
 import type { Announcement } from "../types/announcement";
 import EditIcon from "./icons/EditIcon";
 import TrashIcon from "./icons/TrashIcon";
-import PlusIcon from "./icons/PlusIcon";
 import AddAnnouncementModal from "./modal/AddAnnouncementModal";
 import EditAnnouncementModal from "./modal/EditAnnouncementModal";
 import { formatDateTime } from "@/lib/utils";
-import { Button } from "@/components/ui/button"; 
 
 interface Props {
     announcements: Announcement[];
@@ -45,19 +43,33 @@ interface Props {
                 Latest updates from the faculty and administration.
             </p>
             </div>
-            <Button variant="active"
+            <button
             onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white border border-[#002f73] bg-[#002f73] hover:bg-[#064db6] transition-colors"
             >
-            <PlusIcon />
+            <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="inline-block"
+            >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
             Add Announcement
-            </Button>
+            </button>
         </div>
 
         <div className="bg-white shadow-sm border border-gray-100 overflow-hidden">
             <div className="overflow-x-auto">
             <table className="w-full text-sm">
                 <thead>
-                <tr className="bg-yellow-400 text-white text-xs font-bold uppercase tracking-wider">
+                <tr className="bg-[#002f73] text-white text-xs font-bold uppercase tracking-wider">
                     <th className="text-left px-5 py-3">Title</th>
                     <th className="text-left px-5 py-3">Message</th>
                     <th className="text-left px-5 py-3 whitespace-nowrap">Date Posted</th>

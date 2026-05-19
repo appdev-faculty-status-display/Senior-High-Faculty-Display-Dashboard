@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { Announcement } from "../../types/announcement";
-import { Button } from "@/components/ui/button"; 
 
 interface Props {
     announcement: Announcement;
@@ -100,28 +99,33 @@ export default function EditAnnouncementModal({
             <div className="border-b border-gray-100 mt-6 mb-6" />
 
             <div className="flex items-center justify-end gap-3">
-            <Button variant="active"
-                onClick={() => {
+            <button
+            onClick={() => {
                 onDelete(announcement.id);
                 onClose();
-                }}
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors"
             >
-                Delete
-            </Button>
-            <Button variant="active"
-                onClick={onClose}
+            Delete
+            </button>
+
+            <button
+            onClick={onClose}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors"
             >
-                Cancel
-            </Button>
-            <Button variant="active"
-                onClick={() => {
+            Cancel
+            </button>
+
+            <button
+            onClick={() => {
                 const isoDate = date ? new Date(date).toISOString() : "";
                 onSave({ ...announcement, title, message, datePosted: isoDate });
                 onClose();
-                }}
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors"
             >
-                Save Changes
-            </Button>
+            Save Changes
+            </button>
             </div>
         </div>
         </div>

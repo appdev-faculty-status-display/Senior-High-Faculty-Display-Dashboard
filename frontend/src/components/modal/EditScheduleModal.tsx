@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { FacultySchedule, Strand, Status, Day } from "../../types/schedule";
 import { STRANDS, DAYS, ROOMS } from "../../data/mockAddSchedule";
-import { Button } from "@/components/ui/button"; 
 
 interface Props {
     schedule: FacultySchedule;
@@ -121,22 +120,33 @@ interface Props {
             <div className="border-b border-gray-100 mt-6 mb-6" />
 
             <div className="flex items-center justify-end gap-3">
-            <Button variant="active"
-                onClick={() => { onDelete(schedule.id); onClose(); }}
+            <button
+            onClick={() => { 
+                onDelete(schedule.id); 
+                onClose(); 
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors"
             >
-                Delete
-            </Button>
-            <Button variant="active" onClick={onClose}>
-                Cancel
-            </Button>
-            <Button variant="active"
-                onClick={() => {
+            Delete
+            </button>
+
+            <button
+            onClick={onClose}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors"
+            >
+            Cancel
+            </button>
+
+            <button
+            onClick={() => {
                 onSave({ ...schedule, name, subject, strand, room, status, time, day });
                 onClose();
-                }}
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors"
             >
-                Save Changes
-            </Button>
+            Save Changes
+            </button>
+
             </div>
         </div>
         </div>
