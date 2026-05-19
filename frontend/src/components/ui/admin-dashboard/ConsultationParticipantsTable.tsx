@@ -211,7 +211,7 @@ export default function ConsultationParticipantsTable({
                 {TABLE_HEADERS.map((h) => (
                   <TableHead
                     key={h}
-                    className="text-white font-bold text-xs whitespace-nowrap tracking-wide py-2.5"
+                    className="text-white font-bold text-xs whitespace-nowrap tracking-wide py-2.5 uppercase"
                     style={{ background: "#002f73" }}
                   >
                     {h}
