@@ -27,7 +27,7 @@ const Header = ({
   return (
     <header
       className={cn(
-        "w-full shadow-sm font-[Inter,sans-serif]",
+        "w-full shadow-sm font-sans",
         isAdmin ? "bg-white" : "bg-secondary-active"
       )}
     >

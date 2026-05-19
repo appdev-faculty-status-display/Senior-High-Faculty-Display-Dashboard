@@ -1,5 +1,5 @@
 const { getAllConsultRooms, getConsultRoomById } = require('../services/consultation.service');
-const {asyncHandler} = require('../utils/asyncHandler');
+const { asyncHandler } = require('../utils/asyncHandler');
 
 // GET /consultation/rooms
 const getRooms = asyncHandler(async (req, res) => {
