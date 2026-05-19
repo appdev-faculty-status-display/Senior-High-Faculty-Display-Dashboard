@@ -4,7 +4,7 @@ const { isAuthError, toErrorResponse } = require('../utils/error');
 function sendError(res, error) {
     const { status, body } = toErrorResponse(error);
     return res.status(status).json({
-        error: body.error,
+        message: body.message,
         code: body.code,
         details: body.details || {}
     });

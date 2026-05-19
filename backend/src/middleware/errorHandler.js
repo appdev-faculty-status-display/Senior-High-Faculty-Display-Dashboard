@@ -14,7 +14,7 @@ function mapError(error) {
         return {
             status,
             body: {
-                error: body.error,
+                message: body.message,
                 code: body.code,
                 details: body.details || {}
             }
@@ -25,9 +25,9 @@ function mapError(error) {
         return {
             status: 403,
             body: {
-                error: 'Origin is not allowed by CORS',
+                message: 'Origin is not allowed by CORS',
                 code: 'FORBIDDEN',
-                details: body.details || {}
+                details: {}
             }
         };
     }
@@ -36,7 +36,7 @@ function mapError(error) {
         return {
             status: 400,
             body: {
-                error: 'Validation failed',
+                message: 'Validation failed',
                 code: 'VALIDATION_ERROR',
                 details: getValidationDetails(error)
             }
@@ -47,7 +47,7 @@ function mapError(error) {
         return {
             status: 400,
             body: {
-                error: 'Invalid request parameter',
+                message: 'Invalid request parameter',
                 code: 'VALIDATION_ERROR',
                 details: {
                     path: error.path
@@ -59,9 +59,9 @@ function mapError(error) {
     return {
         status: 500,
         body: {
-            error: 'Something went wrong',
+            message: 'Something went wrong',
             code: 'INTERNAL_ERROR',
-            details: body.details || {}
+            details: {}
         }
     };
 }
