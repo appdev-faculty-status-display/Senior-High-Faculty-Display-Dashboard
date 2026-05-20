@@ -1,5 +1,4 @@
 // Notification Utilities
-const { not } = require("three/tsl");
 
 const VALID_TYPES = [
     'queue_update',
@@ -47,7 +46,8 @@ const buildNotificationPayload = ({
     message, 
     type, 
     channel, 
-    relatedQueueId = null
+    relatedQueueId = null,
+    strand = null,
 }) => {
     if(!recipientId) throw new Error('recipientId is required');
     
@@ -72,7 +72,8 @@ const buildNotificationPayload = ({
 
         // teams cards are never automatically read; emails are always marked as read 
         isRead: channel === 'email',
-        relatedQueueId: relatedQueueId || null
+        relatedQueueId: relatedQueueId || null,
+        strand,
     };
 };
 

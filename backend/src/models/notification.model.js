@@ -30,6 +30,10 @@ const notificationSchema = new Schema(
         'cancellation_confirmed'], 
       required: true
     },
+    strand: {
+      type: String,
+      default: null,
+    },
     channel: {
       type: String,
       enum: [
@@ -57,6 +61,7 @@ const notificationSchema = new Schema(
 //indexes for common query patterns
 notificationSchema.index({ recipientId: 1, createdAt: -1 });
 notificationSchema.index({ recipientType: 1, createdAt: -1 });
+notificationSchema.index({ strand: 1, createdAt: -1 });
 notificationSchema.index({ type: 1 });
 
 const Notification = mongoose.model('Notification', notificationSchema);
