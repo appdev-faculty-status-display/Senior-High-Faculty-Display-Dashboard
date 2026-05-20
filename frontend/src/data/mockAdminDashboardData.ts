@@ -23,14 +23,14 @@ export const MOCK_STATUS_DATA: Record<string, number> = {
 };
 
 export const MOCK_RECENCY_LOG: RecencyLogEntry[] = [
-  { facultyName: "Dela Cruz, Juan", strand: "STEM",  currentStatus: "Available",      lastUpdated: "08:30 AM", recency: "Recent" },
-  { facultyName: "Santos, Maria",   strand: "ABM",   currentStatus: "In Class",       lastUpdated: "08:45 AM", recency: "Recent" },
-  { facultyName: "Reyes, Carlo",    strand: "HUMSS", currentStatus: "On Break",       lastUpdated: "09:00 AM", recency: "Recent" },
-  { facultyName: "Garcia, Ana",     strand: "HUMSS", currentStatus: "In Meeting",     lastUpdated: "09:15 AM", recency: "Recent" },
-  { facultyName: "Lopez, Jose",     strand: "STEM",  currentStatus: "Off Campus",     lastUpdated: "07:50 AM", recency: "Older"  },
-  { facultyName: "Mendoza, Clara",  strand: "ABM",   currentStatus: "Do Not Disturb", lastUpdated: "09:10 AM", recency: "Recent" },
-  { facultyName: "Villanueva, Ed",  strand: "TVL",   currentStatus: "In Class",       lastUpdated: "07:30 AM", recency: "Older"  },
-  { facultyName: "Bautista, Liza",  strand: "GAS",   currentStatus: "Available",      lastUpdated: "09:20 AM", recency: "Recent" },
+  { facultyName: "Dela Cruz, Juan", strand: "STEM",  currentStatus: "AVAILABLE",      lastUpdated: "08:30 AM", recency: "Recent" },
+  { facultyName: "Santos, Maria",   strand: "ABM",   currentStatus: "IN CLASS",       lastUpdated: "08:45 AM", recency: "Recent" },
+  { facultyName: "Reyes, Carlo",    strand: "HUMSS", currentStatus: "ON BREAK",       lastUpdated: "09:00 AM", recency: "Recent" },
+  { facultyName: "Garcia, Ana",     strand: "HUMSS", currentStatus: "IN MEETING",     lastUpdated: "09:15 AM", recency: "Recent" },
+  { facultyName: "Lopez, Jose",     strand: "STEM",  currentStatus: "OFF CAMPUS",     lastUpdated: "07:50 AM", recency: "Older"  },
+  { facultyName: "Mendoza, Clara",  strand: "ABM",   currentStatus: "DO NOT DISTURB", lastUpdated: "09:10 AM", recency: "Recent" },
+  { facultyName: "Villanueva, Ed",  strand: "TVL",   currentStatus: "IN CLASS",       lastUpdated: "07:30 AM", recency: "Older"  },
+  { facultyName: "Bautista, Liza",  strand: "GAS",   currentStatus: "AVAILABLE",      lastUpdated: "09:20 AM", recency: "Recent" },
 ];
 
 // Resource & Communication
