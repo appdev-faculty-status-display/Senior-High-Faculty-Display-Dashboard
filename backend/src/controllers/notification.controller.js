@@ -5,7 +5,7 @@ const getNotifications = async (req, res) => {
         const { role, strand } = req.user;
 
         const scopeFilter =
-            role === 'strand_head' && strandId? { strandId } : {};
+            role === 'strand_head' && strand? { strand } : {};
         
         const result = await notificationService.getNotifications(req.query, scopeFilter);
 

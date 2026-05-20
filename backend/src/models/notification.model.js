@@ -24,10 +24,11 @@ const notificationSchema = new Schema(
       enum: [
         'queue_update', 
         'consultation_approved',
-        'consultaion_rejected',
+        'consultation_rejected',
         'room_assigned',
         'announcement',
-        'cancellation_confirmed'], 
+        'cancellation_confirmed',
+      ], 
       required: true
     },
     strand: {

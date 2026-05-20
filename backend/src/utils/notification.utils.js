@@ -3,10 +3,10 @@
 const VALID_TYPES = [
     'queue_update',
     'consultation_approved',
-    'consultaion_rejected',
+    'consultation_rejected',
     'room_assigned',
     'announcement',
-    'cancellation_confirmed'
+    'cancellation_confirmed',
 ];
 
 const VALID_RECIPIENT_TYPES = [
@@ -83,7 +83,7 @@ const buildNotificationPayload = ({
 // returns { page: number, pageSize: number, skip: number }
 const parsePagination = (query) => {
     const page = Math.max(1, parseInt(query.page, 10) || 1);
-    const pageSize = Math.min(100, Math.max(1, paraseInt(query.pageSize, 10) || 30));
+    const pageSize = Math.min(100, Math.max(1, parseInt(query.pageSize, 10) || 30));
     const skip = (page - 1) * pageSize;
     
     return { 
