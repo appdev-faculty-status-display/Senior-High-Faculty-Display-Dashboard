@@ -86,7 +86,17 @@ function createAuthError(key) {
 }
 
 function isAuthError(error) {
-    return error instanceof AuthError;
+    if (error instanceof AuthError) return true;
+
+    if (error && (
+        error.code === 'INVALID_TOKEN' ||
+        error.message === 'Invalid token' ||
+        error.name === 'JsonWebTokenError'
+    )) {
+        return true;
+    }
+    
+    return false;
 }
 
 function toErrorResponse(error) {
