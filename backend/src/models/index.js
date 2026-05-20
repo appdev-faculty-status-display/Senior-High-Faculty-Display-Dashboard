@@ -3,7 +3,7 @@ module.exports = {
   Queue: require('./Queue'),
   Room: require('./Room'),
   Announcement: require('./announcement.model'),
-  Notification: require('./Notification'),
+  Notification: require('./notification.model'),
   FacultyImport: require('./FacultyImport'),
   ScheduleImport: require('./ScheduleImport'),
   ConsultationRoom: require('./consultation.model'),

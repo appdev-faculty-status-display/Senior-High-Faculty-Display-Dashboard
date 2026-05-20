@@ -43,7 +43,7 @@ const notificationSchema = new Schema(
       default: false,  
     },
     relatedQueueId: {
-      type: Mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'Queue',
       default: null,
     }
