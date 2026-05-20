@@ -20,8 +20,8 @@ jest.mock('../middleware/auth', () => ({
   },
 }));
 
-const Notification = require('../models/Notification');
-const notificationRoutes = require('../routes/notificationRoutes');
+const Notification = require('../models/notification.model');
+const notificationRoutes = require('../routes/notification.route');
 
 // ── App setup ─────────────────────────────────────────────────────────────────
 const app = express();
@@ -48,7 +48,7 @@ afterEach(async () => {
 // ── Seed helper ───────────────────────────────────────────────────────────────
 const seed = (overrides = {}) =>
   Notification.create({
-    recipientId: 'student@shs.edu',
+    recipientId: '@student.nu-laguna.edu.ph',
     recipientType: 'student',
     message: 'Your queue position has been updated.',
     type: 'queue_update',
