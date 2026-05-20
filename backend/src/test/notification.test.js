@@ -206,7 +206,7 @@ const {
   buildFilter,
   isValidNotificationType,
   isValidRecipientType,
-} = require('../utils/notificationUtils');
+} = require('../utils/notification.utils');
 
 describe('notificationUtils', () => {
   describe('buildNotificationPayload', () => {
