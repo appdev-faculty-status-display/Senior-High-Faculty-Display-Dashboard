@@ -19,6 +19,7 @@ const { asyncHandler } = require('../utils/asyncHandler');
 const scheduleImportRouter = require('./schedImport.route');
 const facultyImportRouter = require('./facultyImport.route');
 const announcementsRouter = require('./announcements.route');
+const notificationRouter = require('./notification.route');
 
 const upload = multer();
 
@@ -56,5 +57,7 @@ router.patch(
     requireRole('faculty', 'strand_head', 'principal'),
     asyncHandler(assignRoom)
 );
+
+router.use('/notifications', notificationRouter);
 
 module.exports = router;
