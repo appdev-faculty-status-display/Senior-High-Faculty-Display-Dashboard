@@ -4,6 +4,11 @@ const { getNotifications } = require('../controllers/notification.controller');
 const { authToken } = require('../middleware/auth'); 
 const { requireRole } = require('../middleware/roles');
 
+// Add these lines temporarily
+console.log('getNotifications:', typeof getNotifications);
+console.log('authToken:', typeof authToken);
+console.log('requireRole:', typeof requireRole);
+
 router.get(
   '/',
   authToken,

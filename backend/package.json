@@ -15,7 +15,8 @@
     "testMatch": [
       "**/src/tests/**/*.test.js",
       "**/*.test.js"
-    ]
+    ],
+    "setupFiles": ["dotenv/config"]
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

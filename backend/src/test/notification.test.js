@@ -6,13 +6,15 @@ const express = require('express');
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 // Stub auth middleware so we can inject roles freely in tests
 jest.mock('../middleware/auth', () => ({
-  authenticate: (req, _res, next) => {
-    // Tests inject req.user via a custom header for simplicity
+  authToken: (req, _res, next) => {
     const raw = req.headers['x-test-user'];
     req.user = raw ? JSON.parse(raw) : { role: 'principal' };
     next();
   },
-  authorize: (roles) => (req, res, next) => {
+}));
+
+jest.mock('../middleware/roles', () => ({
+  requireRole: (...roles) => (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({ message: 'Forbidden' });
     }
