@@ -13,8 +13,17 @@ export const strands: string[] = [
 ];
 
 export const teachers: string[] = [
-  // Replace with your actual teacher names
-  "Mr. Santos",
-  "Ms. Reyes",
-  "Mr. Cruz",
+  "Mr. Robles",
+  "Mr. Pagaran",
+  "Mr. Legaspi",
+  "Mr. Jompilla",
+  "Mr. Cataag"
 ];
+
+export const teacherEmails: Record<string, string> = {
+  "Mr. Robles": "roblesky@nu-laguna.edu.ph",
+  "Mr. Pagaran": "pagaranag@nu-laguna.edu.ph",
+  "Mr. Legaspi": "legaspixx@nu-laguna.edu.ph",
+  "Mr. Jompilla": "jompillam@students.nu-laguna.edu.ph",
+  "Mr. Cataag": "cataagxx@nu-laguna.edu.ph"
+};
