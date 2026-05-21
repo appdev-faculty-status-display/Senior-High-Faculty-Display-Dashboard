@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 import { type Room } from "@/types/requestForm";
 import type { FormState, FormErrors, UrgencyLevel, RoomStatus } from "@/types/requestForm";
-import { mockRooms, strands, teachers } from "@/data/mockRequestForm";
+import { mockRooms, strands, teachers, teacherEmails } from "@/data/mockRequestForm";
 import { generateTimeSlots } from "@/utils/timeSlots";
 
 // Sub-components
@@ -16,8 +16,8 @@ interface ConsultationRoomPickerProps {
 function ConsultationRoomPicker({ rooms, selected, onChange }: ConsultationRoomPickerProps) {
   const statusStyles: Record<RoomStatus, string> = {
     available: "bg-white border border-[#31ac52] text-[#1a1a1a] cursor-pointer hover:border-[#064db6] hover:bg-[#064db6]/5 transition-all",
-    occupied:  "bg-[#ed3a30]/10 text-[#ed3a30] border border-[#ed3a30]/30 cursor-not-allowed opacity-60",
-    reserved:  "bg-[#ffef5f]/20 text-[#4f4f4f] border border-[#ffef5f]/60 cursor-not-allowed opacity-60",
+    occupied: "bg-[#ed3a30]/10 text-[#ed3a30] border border-[#ed3a30]/30 cursor-not-allowed opacity-60",
+    reserved: "bg-[#ffef5f]/20 text-[#4f4f4f] border border-[#ffef5f]/60 cursor-not-allowed opacity-60",
   };
   const selectedStyle = "bg-[#064db6] text-white border border-[#064db6] cursor-pointer";
 
@@ -62,9 +62,8 @@ function TimeSlotDropdown({ value, onChange }: TimeSlotDropdownProps) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full border border-[#cbd5e1] px-3 py-2.5 text-sm appearance-none bg-white focus:outline-none focus:border-[#064db6] focus:ring-1 focus:ring-[#064db6]/30 transition-all ${
-          value ? "text-[#1a1a1a]" : "text-[#d6d6d6]"
-        }`}
+        className={`w-full border border-[#cbd5e1] px-3 py-2.5 text-sm appearance-none bg-white focus:outline-none focus:border-[#064db6] focus:ring-1 focus:ring-[#064db6]/30 transition-all ${value ? "text-[#1a1a1a]" : "text-[#d6d6d6]"
+          }`}
       >
         <option value="" disabled>Select a time slot</option>
         {slots.map((s) => (
@@ -85,9 +84,9 @@ interface UrgencySelectorProps {
 
 function UrgencySelector({ selected, onChange }: UrgencySelectorProps) {
   const levels: { value: UrgencyLevel; label: string; color: string }[] = [
-    { value: "high",   label: "HIGH",   color: "#ed3a30" },
+    { value: "high", label: "HIGH", color: "#ed3a30" },
     { value: "medium", label: "MEDIUM", color: "#ff914d" },
-    { value: "low",    label: "LOW",    color: "#31ac52" },
+    { value: "low", label: "LOW", color: "#31ac52" },
   ];
   return (
     <div className="flex items-center gap-6" role="radiogroup">
@@ -129,25 +128,26 @@ function UrgencySelector({ selected, onChange }: UrgencySelectorProps) {
 export default function RequestForm() {
   const [searchParams] = useSearchParams();
   const prefillStudentId = searchParams.get("studentId") ?? "";
-  const prefillName      = searchParams.get("name") ?? "";
+  const prefillName = searchParams.get("name") ?? "";
 
   const rooms: Room[] = mockRooms;
 
   const [form, setForm] = useState<FormState>({
-    name:      prefillName,
+    name: prefillName,
     studentId: prefillStudentId,
-    strand:    "",
-    teacher:   "",
-    reason:    "",
-    room:      "",
-    time:      "",
-    urgency:   "",
+    studentEmail: "",
+    strand: "",
+    teacher: "",
+    reason: "",
+    room: "",
+    time: "",
+    urgency: "",
   });
 
-  const [submitted, setSubmitted]                         = useState<boolean>(false);
-  const [errors, setErrors]                               = useState<FormErrors>({});
-  const [teacherQuery, setTeacherQuery]                   = useState<string>("");
-  const [showTeacherDropdown, setShowTeacherDropdown]     = useState<boolean>(false);
+  const [submitted, setSubmitted] = useState<boolean>(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [teacherQuery, setTeacherQuery] = useState<string>("");
+  const [showTeacherDropdown, setShowTeacherDropdown] = useState<boolean>(false);
 
   const filteredTeachers = teachers.filter((t) =>
     t.toLowerCase().includes(teacherQuery.toLowerCase())
@@ -160,24 +160,58 @@ export default function RequestForm() {
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
-    if (!form.name.trim())      newErrors.name      = "Name is required.";
+    if (!form.name.trim()) newErrors.name = "Name is required.";
     if (!form.studentId.trim()) {
-        newErrors.studentId = "Student ID is required.";    
+      newErrors.studentId = "Student ID is required.";
     } else if (!/^\d{4}-\d{6}$/.test(form.studentId.trim())) {
-        newErrors.studentId = "Invalid format. Use: 2025-123456";
+      newErrors.studentId = "Invalid format. Use: 2025-123456";
     }
-    if (!form.strand)           newErrors.strand    = "Please select a strand.";
-    if (!form.teacher)          newErrors.teacher   = "Please select a teacher.";
-    if (!form.reason.trim())    newErrors.reason    = "Reason is required.";
-    if (!form.room)             newErrors.room      = "Please select a consultation room.";
-    if (!form.time)             newErrors.time      = "Please select a time slot.";
-    if (!form.urgency)          newErrors.urgency   = "Please select an urgency level.";
+    if (!form.studentEmail.trim()) {
+      newErrors.studentEmail = "Student email is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.studentEmail.trim())) {
+      newErrors.studentEmail = "Invalid email format.";
+    }
+    if (!form.strand) newErrors.strand = "Please select a strand.";
+    if (!form.teacher) newErrors.teacher = "Please select a teacher.";
+    if (!form.reason.trim()) newErrors.reason = "Reason is required.";
+    if (!form.room) newErrors.room = "Please select a consultation room.";
+    if (!form.time) newErrors.time = "Please select a time slot.";
+    if (!form.urgency) newErrors.urgency = "Please select an urgency level.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (validate()) setSubmitted(true);
+  const handleSubmit = async () => {
+    if (!validate()) return;
+
+    const teacherEmail = teacherEmails[form.teacher] ?? null;
+
+    const payload = {
+      studentName: form.name,
+      studentId: form.studentId,
+      studentEmail: form.studentEmail,
+      strand: form.strand,
+      teacherName: form.teacher,
+      teacherEmail: teacherEmail,
+      reason: form.reason,
+      room: form.room,
+      time: form.time,
+      urgency: form.urgency,
+    };
+
+    try {
+      const res = await fetch("YOUR_POWER_AUTOMATE_HTTP_TRIGGER_URL", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Flow trigger failed");
+
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Submission error:", err);
+    }
   };
 
   if (submitted) {
@@ -196,11 +230,11 @@ export default function RequestForm() {
           <button
             type="button"
             onClick={() => {
-                setSubmitted(false);
-                setForm({ name: "", studentId: "", strand: "", teacher: "", reason: "", room: "", time: "", urgency: "" });
-                setTeacherQuery("");
-                setShowTeacherDropdown(false);
-                setErrors({});
+              setSubmitted(false);
+              setForm({ name: "", studentId: "", strand: "", teacher: "", reason: "", room: "", time: "", urgency: "", studentEmail: "" });
+              setTeacherQuery("");
+              setShowTeacherDropdown(false);
+              setErrors({});
             }}
             className="mt-6 px-6 py-2.5 bg-[#064db6] text-white text-sm font-black tracking-widest hover:bg-[#002f73] transition-all"
           >
@@ -211,19 +245,19 @@ export default function RequestForm() {
     );
   }
 
-  const inputBase  = "w-full border px-3 py-2.5 text-sm text-[#1a1a1a] placeholder:text-[#d6d6d6] focus:outline-none focus:ring-1 focus:ring-[#064db6]/30 transition-all";
+  const inputBase = "w-full border px-3 py-2.5 text-sm text-[#1a1a1a] placeholder:text-[#d6d6d6] focus:outline-none focus:ring-1 focus:ring-[#064db6]/30 transition-all";
   const inputBorder = (field: keyof FormErrors) =>
     errors[field] ? "border-[#ed3a30] focus:border-[#ed3a30]" : "border-[#cbd5e1] focus:border-[#064db6]";
   const errorMsg = (field: keyof FormErrors) =>
     errors[field] ? <p className="text-xs text-[#ed3a30] mt-1">{errors[field]}</p> : null;
   const fieldLabel = (text: string, fieldId: string) => (
     <label
-        htmlFor={fieldId}
-        className="block text-xs font-black text-[#1a1a1a] uppercase tracking-widest mb-1.5"
+      htmlFor={fieldId}
+      className="block text-xs font-black text-[#1a1a1a] uppercase tracking-widest mb-1.5"
     >
-        {text}
+      {text}
     </label>
-    );
+  );
 
   return (
     <div className="min-h-screen bg-[#f5f6fa] flex items-center justify-center px-4 py-8">
@@ -260,6 +294,20 @@ export default function RequestForm() {
             {fieldLabel("Student ID:", "studentId")}
             <input id="studentId" type="text" placeholder="Ex. 2025-123456" value={form.studentId} onChange={(e) => set("studentId", e.target.value)} className={`${inputBase} ${inputBorder("studentId")}`} />
             {errorMsg("studentId")}
+          </div>
+
+          {/* Student Email */}
+          <div>
+            {fieldLabel("Student Email:", "studentEmail")}
+            <input
+              id="studentEmail"
+              type="email"
+              placeholder="Ex. delacruzj@students.nu-laguna.edu.ph"
+              value={form.studentEmail}
+              onChange={(e) => set("studentEmail", e.target.value)}
+              className={`${inputBase} ${inputBorder("studentEmail")}`}
+            />
+            {errorMsg("studentEmail")}
           </div>
 
           {/* Strand */}
