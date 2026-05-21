@@ -12,7 +12,7 @@ const defaultAnnouncements = [
     "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
   ];
 
-const requestURL = `{window.location.origin}/request`;
+const requestURL = new URL("/request", window.location.origin).toString();
 
 const Footer: React.FC<FooterProps> = ({ announcements = defaultAnnouncements }) => {
   return (
@@ -56,6 +56,9 @@ const Footer: React.FC<FooterProps> = ({ announcements = defaultAnnouncements })
             bgColor="#ffffff"
             fgColor="#000000"
             level="M"
+            role="img"
+            aria-label="QR Code for consultation request form"
+            title="QR Code for the consultation request form"
           />
         </div>
 
