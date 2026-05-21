@@ -9,6 +9,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "resource-communication", label: "Resource & Communication" },
   { id: "add-announcement",       label: "Add Announcement" },
   { id: "add-schedule",           label: "Add Schedule" },
+  { id: "manage-faculty",         label: "Manage Faculty" },
 ];
 
 // Faculty Activity
