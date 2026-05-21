@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 
 const { login, refresh, logout } = require('../controllers/auth.controller');
 const {
@@ -10,6 +11,14 @@ const {
     updateFacultySchedule,
     updateFacultyConsultationHours
 } = require('../controllers/faculty.controller');
+
+const {
+getQueue,
+  createQueue,
+  cancelQueue,
+  updateQueue,
+  assignRoom
+} = require('../controllers/queue.controller');
 
 const { authToken } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimit');
@@ -42,6 +51,7 @@ router.get('/faculty/:id', asyncHandler(getFacultyById));
 router.patch('/faculty/:id/status', authToken, asyncHandler(updateFacultyStatus));
 router.patch('/faculty/:id/schedule', authToken, asyncHandler(updateFacultySchedule));
 router.patch('/faculty/:id/consultation-hours', authToken, asyncHandler(updateFacultyConsultationHours));
+
 router.get('/faculty/:id/queue', asyncHandler(getQueue));
 router.post('/faculty/:id/queue', asyncHandler(createQueue));
 router.patch('/faculty/:facultyId/queue/:queueId/cancel', asyncHandler(cancelQueue));
