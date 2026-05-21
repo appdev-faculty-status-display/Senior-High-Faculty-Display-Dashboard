@@ -9,6 +9,7 @@ export interface Room {
 export interface FormState {
   name: string;
   studentId: string;
+  studentEmail: string;
   strand: string;
   teacher: string;
   reason: string;
@@ -20,6 +21,7 @@ export interface FormState {
 export interface FormErrors {
   name?: string;
   studentId?: string;
+  studentEmail?: string;
   strand?: string;
   teacher?: string;
   reason?: string;
