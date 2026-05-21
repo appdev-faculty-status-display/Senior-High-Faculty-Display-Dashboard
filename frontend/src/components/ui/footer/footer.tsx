@@ -1,4 +1,5 @@
 import React from "react";
+import { QRCodeSVG } from "qrcode.react";
 
 interface FooterProps {
   announcements?: string[];
@@ -10,6 +11,8 @@ const defaultAnnouncements = [
     "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
     "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
   ];
+
+const requestURL = `{window.location.origin}/request`;
 
 const Footer: React.FC<FooterProps> = ({ announcements = defaultAnnouncements }) => {
   return (
@@ -46,13 +49,16 @@ const Footer: React.FC<FooterProps> = ({ announcements = defaultAnnouncements })
           </p>
         </div>
 
-        <div>
-          <img
-            src="/qr/qr.png"
-            alt="QR code"
-            className="w-10 h-10 object-cover block"
+        <div className="w-10 h-10 shrink-0 bg-white p-0.5 rounded-none">
+          <QRCodeSVG
+            value={requestURL}
+            size={36}
+            bgColor="#ffffff"
+            fgColor="#000000"
+            level="M"
           />
         </div>
+
       </div>
     </footer>
   );
