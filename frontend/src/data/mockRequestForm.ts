@@ -21,9 +21,9 @@ export const teachers: string[] = [
 ];
 
 export const teacherEmails: Record<string, string> = {
-  "Mr. Robles": "roblesky@nu-laguna.edu.ph",
-  "Mr. Pagaran": "pagaranag@nu-laguna.edu.ph",
-  "Mr. Legaspi": "legaspixx@nu-laguna.edu.ph",
+  "Mr. Robles": "roblesk@students.nu-laguna.edu.ph",
+  "Mr. Pagaran": "pagaranag@students.nu-laguna.edu.ph",
+  "Mr. Legaspi": "mjlegaspi@nu-laguna.edu.ph",
   "Mr. Jompilla": "jompillam@students.nu-laguna.edu.ph",
-  "Mr. Cataag": "cataagxx@nu-laguna.edu.ph"
+  "Mr. Cataag": "cataagjl@students.nu-laguna.edu.ph"
 };
