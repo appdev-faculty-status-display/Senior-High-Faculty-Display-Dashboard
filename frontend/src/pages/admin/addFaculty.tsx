@@ -1,15 +1,16 @@
 // frontend/src/pages/admin/addFaculty.tsx
 import { useState, useEffect } from "react";
 import { getFacultyList } from "@/lib/facultyApi";
-import type { FacultyListResponse, FacultyRecord, ImportFacultyResult } from "@/lib/facultyApi";
-import type { FacultyStatus, Strands } from "@/types/faculty-states";
+import type { FacultyRecord, ImportFacultyResult } from "@/lib/facultyApi";
 import { MOCK_FACULTY } from "@/data/mockFaculty";
 import ImportFacultyModal from "@/components/modal/ImportfacultyModal";
+import EditFacultyModal from "@/components/modal/EditFacultyModal";
+import type { FacultyTableRow } from "@/components/modal/EditFacultyModal";
 import SelectFilter from "@/components/SelectFilter";
 import StatusBadge from "@/components/StatusBadge";
 import IconSearch from "@/components/icons/SearchIcon";
-import IconPlus from "@/components/icons/PlusIcon";
-
+import IconEdit from "@/components/icons/EditIcon";
+import IconTrash from "@/components/icons/TrashIcon";
 import {
   Table,
   TableBody,
@@ -24,27 +25,14 @@ import {
 const STRANDS = ["All Strands", "STEM", "ABM", "HUMSS"];
 const ROWS_PER_PAGE = 10;
 
-// Convert faculty-states status (kebab-case) → uppercase with spaces for StatusBadge
+// Convert faculty-states status (kebab-case) → StatusBadge format (uppercase with spaces)
 const STATUS_MAP: Record<string, string> = {
-  "available":       "AVAILABLE",
-  "in-class":        "IN CLASS",
-  "on-break":        "ON BREAK",
-  "off-campus":      "OFF CAMPUS",
-  "in-meeting":      "IN MEETING",
-  "do-not-disturb":  "DO NOT DISTURB",
-};
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type FacultyTableRow = {
-  id: string;
-  name: string;
-  strand: Strands;
-  role: string;
-  status: FacultyStatus;
-  location: string;
-  subjects: string;
-  consultationHours: string;
+  "available":      "AVAILABLE",
+  "in-class":       "IN CLASS",
+  "on-break":       "ON BREAK",
+  "off-campus":     "OFF CAMPUS",
+  "in-meeting":     "IN MEETING",
+  "do-not-disturb": "DO NOT DISTURB",
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -58,21 +46,20 @@ function toTableRow(f: FacultyRecord): FacultyTableRow {
     role:             f.role,
     status:           f.currentStatus,
     location:         f.currentRoom,
-    subjects:         f.subjects.join(', '),
+    subjects:         f.subjects.length > 0 ? f.subjects.join(', ') : '—',
     consultationHours: consult
       ? `${consult.day} ${consult.startTime}–${consult.endTime}`
       : '—',
   };
 }
 
-// Convert mockFaculty shape to table row shape (used as fallback)
 function mockToTableRow(f: typeof MOCK_FACULTY[number]): FacultyTableRow {
   const consult = f.consultationHours;
   return {
     id:               f.id,
     name:             f.name,
     strand:           f.strand,
-    role:             'faculty',
+    role:             'faculty' as const,
     status:           f.status,
     location:         f.currentLocation,
     subjects:         f.subject ?? '—',
@@ -85,17 +72,18 @@ function mockToTableRow(f: typeof MOCK_FACULTY[number]): FacultyTableRow {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function AddFaculty() {
-  const [rows, setRows]               = useState<FacultyTableRow[]>(MOCK_FACULTY.map(mockToTableRow));
+  const [rows, setRows]                 = useState<FacultyTableRow[]>(MOCK_FACULTY.map(mockToTableRow));
   const [strandFilter, setStrandFilter] = useState("All Strands");
-  const [search, setSearch]           = useState("");
-  const [page, setPage]               = useState(1);
-  const [isImporting, setIsImporting] = useState(false);
-  const [lastImport, setLastImport]   = useState<ImportFacultyResult | null>(null);
+  const [search, setSearch]             = useState("");
+  const [page, setPage]                 = useState(1);
+  const [isImporting, setIsImporting]   = useState(false);
+  const [lastImport, setLastImport]     = useState<ImportFacultyResult | null>(null);
+  const [editTarget, setEditTarget]     = useState<FacultyTableRow | null>(null);
 
   // ── Fetch from backend (replaces mock on success) ──────────────────────────
   useEffect(() => {
     getFacultyList()
-      .then((res: FacultyListResponse) => {
+      .then((res) => {
         if (res.data.length > 0) {
           setRows(res.data.map(toTableRow));
         }
@@ -104,7 +92,6 @@ export default function AddFaculty() {
         // Backend unreachable — keep mock data silently
       });
   }, []);
-
 
   // ── Filtering ──────────────────────────────────────────────────────────────
   const filtered = rows.filter((r) => {
@@ -125,12 +112,19 @@ export default function AddFaculty() {
 
   function handleImportSuccess(result: ImportFacultyResult) {
     setLastImport(result);
-    // Refresh list from backend after successful import
     if (result.status !== 'failed') {
       getFacultyList()
-        .then((res: FacultyListResponse) => { if (res.data.length > 0) setRows(res.data.map(toTableRow)); })
+        .then((res: { data: FacultyRecord[] }) => { if (res.data.length > 0) setRows(res.data.map(toTableRow)); })
         .catch(() => {});
     }
+  }
+
+  function handleSave(updated: FacultyTableRow) {
+    setRows((prev) => prev.map((r) => r.id === updated.id ? updated : r));
+  }
+
+  function handleDelete(id: string) {
+    setRows((prev) => prev.filter((r) => r.id !== id));
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -151,7 +145,10 @@ export default function AddFaculty() {
           onClick={() => setIsImporting(true)}
           className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white border border-[#002f73] bg-[#002f73] hover:bg-[#064db6] transition-colors"
         >
-          <IconPlus />
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="inline-block">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
           Import Faculty
         </button>
       </div>
@@ -206,7 +203,7 @@ export default function AddFaculty() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-0">
-                {["Faculty Name", "Strand", "Role", "Status", "Location", "Subjects", "Consultation Hours"].map((h) => (
+                {["Faculty Member", "Strand", "Role", "Status", "Location", "Subjects", "Consultation Hours", "Actions"].map((h) => (
                   <TableHead
                     key={h}
                     className="text-white font-bold text-xs uppercase tracking-wider whitespace-nowrap py-3 px-4"
@@ -220,7 +217,7 @@ export default function AddFaculty() {
             <TableBody>
               {paginated.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-400 text-sm">
+                  <TableCell colSpan={8} className="text-center py-8 text-gray-400 text-sm">
                     No faculty found.
                   </TableCell>
                 </TableRow>
@@ -275,6 +272,24 @@ export default function AddFaculty() {
                     <TableCell className="px-4 py-3 text-gray-600 text-sm whitespace-nowrap">
                       {f.consultationHours}
                     </TableCell>
+
+                    {/* Actions */}
+                    <TableCell className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setEditTarget(f)}
+                          className="p-1.5 hover:bg-blue-100 text-[#002f73] transition-colors"
+                        >
+                          <IconEdit />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(f.id)}
+                          className="p-1.5 hover:bg-red-100 text-red-400 transition-colors"
+                        >
+                          <IconTrash />
+                        </button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -325,9 +340,25 @@ export default function AddFaculty() {
       {isImporting && (
         <ImportFacultyModal
           onClose={() => setIsImporting(false)}
-          onSuccess={(result: ImportFacultyResult) => {
+          onSuccess={(result) => {
             handleImportSuccess(result);
             setIsImporting(false);
+          }}
+        />
+      )}
+
+      {/* Edit modal */}
+      {editTarget && (
+        <EditFacultyModal
+          faculty={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSave={(updated) => {
+            handleSave(updated);
+            setEditTarget(null);
+          }}
+          onDelete={(id) => {
+            handleDelete(id);
+            setEditTarget(null);
           }}
         />
       )}
