@@ -134,7 +134,7 @@ export default function AddFaculty() {
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-[#002f73]">
+          <h1 className="text-2xl font-extrabold tracking-tight text-[#002f73] uppercase">
             Manage Faculty
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
@@ -318,7 +318,7 @@ export default function AddFaculty() {
                 onClick={() => setPage(pg)}
                 className={`w-7 h-7 text-xs font-semibold transition-colors ${
                   pg === page
-                    ? "bg-yellow-400 text-white shadow-sm"
+                    ? "bg-[#002f73] text-white shadow-sm"
                     : "hover:bg-gray-100 text-gray-600"
                 }`}
               >
