@@ -2,6 +2,7 @@
 
 import type {
     Announcement,
+    AnnouncementScope,
     CreateAnnouncementBody,
     ListAnnouncementsParams,
     ListAnnouncementsResult,
@@ -14,8 +15,20 @@ export type {
     ListAnnouncementsResult,
 };
 
+type RawAnnouncement = {
+    _id?: string;
+    id: string;
+    message: string;
+    scope: AnnouncementScope;
+    strand?: string | null;
+    isActive: boolean;
+    createdAt: string;
+    expiresAt?: string | null;
+};
+
+
 // helper to normalize _id → id
-function normalizeAnnouncement(raw: any): Announcement {
+function normalizeAnnouncement(raw: RawAnnouncement): Announcement {
     return {
         id: raw._id ?? raw.id,
         message: raw.message,

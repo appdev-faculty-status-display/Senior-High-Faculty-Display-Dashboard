@@ -87,7 +87,6 @@ export function useAnnouncements(
             });
 
         return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [enabled, scope, strand, isActive, page, pageSize, refreshTick, token]);
 
     // add
