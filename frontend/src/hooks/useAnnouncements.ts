@@ -63,7 +63,6 @@ export function useAnnouncements(
     // fetch
     useEffect(() => {
         if (!enabled) return;
-
         let cancelled = false;
 
         const timer = setTimeout(() => {

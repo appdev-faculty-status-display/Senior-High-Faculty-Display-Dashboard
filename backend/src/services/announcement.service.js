@@ -7,7 +7,7 @@ const {
 } = require('../utils/announcement.utils');
 
 async function listAnnouncements(query, user) {
-    if (query.isActive === 'false' && user?.role !== 'Principal') {
+    if (query.isActive === 'false' && user?.role !== 'principal') {
         const err = new Error('Admin auth required to view inactive announcements.');
         err.status = 403;
         throw err;

@@ -205,7 +205,7 @@ export default function AnnouncementTable({
                             <span className="px-3 py-1">Page {page}</span>
                             <button
                                 onClick={() => onPageChange(page + 1)}
-                                disabled={announcements.length < 20}
+                                disabled={announcements.length === 0 || page * 20 >= total}
                                 className="px-3 py-1 border border-gray-200 disabled:opacity-40 hover:bg-gray-50 transition-colors"
                             >
                                 Next
