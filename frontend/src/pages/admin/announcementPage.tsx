@@ -12,6 +12,7 @@ export default function AnnouncementPage() {
         announcements,
         total,
         page,
+        pageSize,
         loading,
         error,
         add,
@@ -39,6 +40,7 @@ export default function AnnouncementPage() {
                 announcements={announcements}
                 total={total}
                 page={page}
+                pageSize={pageSize}
                 loading={loading}
                 error={error}
                 onDelete={handleDelete}

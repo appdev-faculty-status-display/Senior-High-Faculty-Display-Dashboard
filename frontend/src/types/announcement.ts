@@ -25,7 +25,7 @@ export interface ListAnnouncementsParams {
     page?: number;
     pageSize?: number;
     /** Only principal can pass false */
-    isActive?: true;
+    isActive?: boolean;
 }
 
 export interface ListAnnouncementsResult {

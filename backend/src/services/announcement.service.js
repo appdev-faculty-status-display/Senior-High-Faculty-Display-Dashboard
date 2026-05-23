@@ -8,7 +8,7 @@ const {
 
 async function listAnnouncements(query, user) {
     if (query.isActive === 'false' && user?.role !== 'principal') {
-        const err = new Error('Admin auth required to view inactive announcements.');
+        const err = new Error('Principal auth required to view inactive announcements.');
         err.status = 403;
         throw err;
     }
