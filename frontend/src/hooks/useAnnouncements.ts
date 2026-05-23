@@ -27,6 +27,7 @@ export interface UseAnnouncementsReturn {
     announcements: Announcement[];
     total: number;
     page: number;
+    pageSize: number;
     loading: boolean;
     error: string | null;
     add:     (body: CreateAnnouncementBody) => Promise<void>;
@@ -63,7 +64,6 @@ export function useAnnouncements(
     // fetch
     useEffect(() => {
         if (!enabled) return;
-
         let cancelled = false;
 
         const timer = setTimeout(() => {
@@ -128,6 +128,7 @@ export function useAnnouncements(
         announcements,
         total,
         page,
+        pageSize,
         loading,
         error,
         add,

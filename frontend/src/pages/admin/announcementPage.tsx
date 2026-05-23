@@ -12,6 +12,7 @@ export default function AnnouncementPage() {
         announcements,
         total,
         page,
+        pageSize,
         loading,
         error,
         add,
@@ -20,19 +21,11 @@ export default function AnnouncementPage() {
     } = useAnnouncements({ token, pageSize: 20 });
 
     async function handleAdd(draft: CreateAnnouncementBody) {
-        try {
-            await add(draft);
-        } catch (err) {
-            console.error((err as Error).message);
-        }
+        await add(draft);
     }
 
     async function handleDelete(id: string) {
-        try {
-            await remove(id);
-        } catch (err) {
-            console.error((err as Error).message);
-        }
+        await remove(id);
     }
 
 
@@ -47,6 +40,7 @@ export default function AnnouncementPage() {
                 announcements={announcements}
                 total={total}
                 page={page}
+                pageSize={pageSize}
                 loading={loading}
                 error={error}
                 onDelete={handleDelete}

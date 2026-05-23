@@ -25,7 +25,6 @@ export default function AddAnnouncementModal({ onClose, onSubmit, error }: Props
         };
 
         onSubmit(draft);
-        onClose();
     };
 
     return (

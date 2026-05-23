@@ -9,6 +9,7 @@ interface Props {
     announcements: Announcement[];
     total: number;
     page: number;
+    pageSize: number;
     loading: boolean;
     error: string | null;
     onDelete: (id: string) => Promise<void>;
@@ -20,6 +21,7 @@ export default function AnnouncementTable({
     announcements,
     total,
     page,
+    pageSize,
     loading,
     onDelete,
     onAdd,
@@ -205,7 +207,7 @@ export default function AnnouncementTable({
                             <span className="px-3 py-1">Page {page}</span>
                             <button
                                 onClick={() => onPageChange(page + 1)}
-                                disabled={announcements.length < 20}
+                                disabled={announcements.length === 0 || page * pageSize >= total}
                                 className="px-3 py-1 border border-gray-200 disabled:opacity-40 hover:bg-gray-50 transition-colors"
                             >
                                 Next
