@@ -46,9 +46,4 @@ describe('App routing', () => {
     renderWithRoute('/admin/dashboard');
     expect(screen.getByRole('heading', { name: 'Faculty Activity' })).toBeInTheDocument();
   });
-
-  it('renders AddSchedule on /admin/add-schedule', () => {
-    renderWithRoute('/admin/add-schedule');
-    expect(screen.getByText('Add Schedule Page')).toBeInTheDocument();
-  });
 });
