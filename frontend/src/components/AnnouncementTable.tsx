@@ -10,8 +10,9 @@ interface Props {
     total: number;
     page: number;
     loading: boolean;
-    onDelete: (id: string) => void;
-    onAdd: (draft: CreateAnnouncementBody) => void;
+    error: string | null;
+    onDelete: (id: string) => Promise<void>;
+    onAdd: (draft: CreateAnnouncementBody) => Promise<void>;
     onPageChange: (page: number) => void;
 }
 
@@ -26,11 +27,16 @@ export default function AnnouncementTable({
 }: Props) {
     const [showAdd, setShowAdd] = useState(false);
     const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+    const [mutationError, setMutationError] = useState<string | null>(null);
 
-    const handleDeleteConfirm = () => {
-        if (pendingDeleteId) {
-            onDelete(pendingDeleteId);
+    const handleDeleteConfirm = async () => {
+        if (!pendingDeleteId) return;
+        try {
+            await onDelete(pendingDeleteId);
             setPendingDeleteId(null);
+            setMutationError(null);
+        } catch (err) {
+            setMutationError((err as Error).message);
         }
     };
 
@@ -38,11 +44,17 @@ export default function AnnouncementTable({
         <section className="p-6">
             {showAdd && (
                 <AddAnnouncementModal
-                    onClose={() => setShowAdd(false)}
-                    onSubmit={(draft) => {
-                        onAdd(draft);
-                        setShowAdd(false);
+                    onClose={() => { setShowAdd(false); setMutationError(null); }}
+                    onSubmit={async (draft) => {
+                        try {
+                            await onAdd(draft);
+                            setShowAdd(false);
+                            setMutationError(null);
+                        } catch (err) {
+                            setMutationError((err as Error).message);
+                        }
                     }}
+                    error={mutationError}
                 />
             )}
 
@@ -59,6 +71,9 @@ export default function AnnouncementTable({
                         <p className="text-sm text-gray-600 mb-6">
                             Are you sure you want to delete this announcement? This action cannot be undone.
                         </p>
+                        {mutationError && (
+                            <p className="text-xs text-red-500 mb-4">{mutationError}</p> // ← add here
+                        )}
                         <div className="flex items-center justify-end gap-3">
                             <button
                                 onClick={() => setPendingDeleteId(null)}

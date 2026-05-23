@@ -94,18 +94,28 @@ export function useAnnouncements(
     const add = useCallback(async (body: CreateAnnouncementBody) => {
         if (!tokenRef.current) throw new Error("Authentication required.");
         setError(null);
-        const created = await postAnnouncement(body, tokenRef.current);
-        setAnnouncements((prev) => [created, ...prev]);
-        setTotal((n) => n + 1);
+        try {
+            const created = await postAnnouncement(body, tokenRef.current);
+            setAnnouncements((prev) => [created, ...prev]);
+            setTotal((n) => n + 1);
+        } catch (err) {
+            setError((err as Error).message);
+            throw err;
+        }
     }, []);
 
     // remove 
     const remove = useCallback(async (id: string) => {
         if (!tokenRef.current) throw new Error("Authentication required.");
         setError(null);
-        await deleteAnnouncement(id, tokenRef.current);
-        setAnnouncements((prev) => prev.filter((a) => a.id !== id));
-        setTotal((n) => Math.max(0, n - 1));
+        try {
+            await deleteAnnouncement(id, tokenRef.current);
+            setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+            setTotal((n) => Math.max(0, n - 1));
+        } catch (err) {
+            setError((err as Error).message);
+            throw err;
+        }
     }, []);
 
     return {

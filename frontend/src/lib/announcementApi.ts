@@ -58,6 +58,7 @@ export async function fetchAnnouncements(
 
     if (params.isActive === true)  qs.set("isActive", "true");   
     if (params.isActive === false) qs.set("isActive", "false");
+    if (params.scope)              qs.set("scope",    params.scope);
     if (params.strand)             qs.set("strand",   params.strand);
     if (params.page)               qs.set("page",     String(params.page));
     if (params.pageSize)           qs.set("pageSize", String(params.pageSize));

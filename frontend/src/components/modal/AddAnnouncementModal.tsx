@@ -4,9 +4,10 @@ import type { CreateAnnouncementBody, AnnouncementScope } from "../../types/anno
 interface Props {
     onClose: () => void;
     onSubmit: (draft: CreateAnnouncementBody) => void;
+    error?: string | null;
 }
 
-export default function AddAnnouncementModal({ onClose, onSubmit }: Props) {
+export default function AddAnnouncementModal({ onClose, onSubmit, error }: Props) {
     const [message, setMessage] = useState("");
     const [scope, setScope] = useState<AnnouncementScope>("all");
     const [strand, setStrand] = useState("");
@@ -48,7 +49,7 @@ export default function AddAnnouncementModal({ onClose, onSubmit }: Props) {
                             onChange={(e) => setScope(e.target.value as AnnouncementScope)}
                             className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-yellow-400"
                         >
-                            <option value="school_wide">All</option>
+                            <option value="all">All</option>
                             <option value="strand">Strand</option>
                         </select>
                     </div>
@@ -98,6 +99,10 @@ export default function AddAnnouncementModal({ onClose, onSubmit }: Props) {
                 </div>
 
                 <div className="border-b border-gray-100 mt-6 mb-6" />
+
+                {error && (
+                    <p className="text-xs text-red-500 mb-4">{error}</p>
+                )}
 
                 <div className="flex items-center justify-end gap-3">
                     <button

@@ -48,6 +48,7 @@ export default function AnnouncementPage() {
                 total={total}
                 page={page}
                 loading={loading}
+                error={error}
                 onDelete={handleDelete}
                 onAdd={handleAdd}
                 onPageChange={setPage}
