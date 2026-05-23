@@ -65,8 +65,12 @@ export function useAnnouncements(
         if (!enabled) return;
 
         let cancelled = false;
-        setLoading(true);
-        setError(null);
+
+        const timer = setTimeout(() => {
+            if (cancelled) return;
+            setLoading(true);
+            setError(null);
+        }, 0);
 
         fetchAnnouncements(
             { scope, strand, isActive, page, pageSize },
@@ -86,7 +90,10 @@ export function useAnnouncements(
                 if (!cancelled) setLoading(false);
             });
 
-        return () => { cancelled = true; };
+        return () => { 
+            cancelled = true;
+            clearTimeout(timer);
+        };
     }, [enabled, scope, strand, isActive, page, pageSize, refreshTick, token]);
 
     // add
