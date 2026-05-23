@@ -60,10 +60,11 @@ async function createAnnouncement(body, user) {
         message,
         scope,
         strand: scope === 'strand' ? strand : null,
-        expiresAt: expiresAt || null,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
         createdBy: user.id,
         createdByRole: user.role,
     });
+
     return announcement;
 }
 

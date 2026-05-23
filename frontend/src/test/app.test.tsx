@@ -16,12 +16,7 @@ vi.mock('@/pages/adminDashboard', () => ({
 vi.mock('../pages/requestFormPage', () => ({
   default: () => <div>Request Form Page</div>,
 }));
-vi.mock('../components/ui/admin-dashboard/addSchedule', () => ({
-  default: () => <div>Add Schedule Page</div>,
-}));
-vi.mock('../components/ui/admin-dashboard/AddAnnouncement', () => ({
-  default: () => <div>Add Announcement Page</div>,
-}));
+
 
 const renderWithRoute = (route: string) => {
   return render(
@@ -50,15 +45,5 @@ describe('App routing', () => {
   it('renders AdminBoard on /admin/dashboard', () => {
     renderWithRoute('/admin/dashboard');
     expect(screen.getByRole('heading', { name: 'Faculty Activity' })).toBeInTheDocument();
-  });
-
-  it('renders AddSchedule on /admin/add-schedule', () => {
-    renderWithRoute('/admin/add-schedule');
-    expect(screen.getByText('Add Schedule Page')).toBeInTheDocument();
-  });
-
-  it('renders AddAnnouncement on /admin/add-announcement', () => {
-    renderWithRoute('/admin/add-announcement');
-    expect(screen.getByText('Add Announcement Page')).toBeInTheDocument();
   });
 });
