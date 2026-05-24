@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { importSchedule } = require('../controllers/schedImport.controller');
+const { importSchedule, addScheduleEntry } = require('../controllers/schedImport.controller');
 const { authToken } = require('../middleware/auth');
 const { requireRole } = require('../middleware/roles');
 const { asyncHandler } = require('../utils/asyncHandler');
@@ -27,5 +27,12 @@ router.post(
     upload.single('file'),
     asyncHandler(importSchedule)
 );
+
+router.post(
+    '/import/:facultyId',
+    authToken,
+    requireRole('principal', 'strand_head'),
+    asyncHandler(addScheduleEntry)
+)
 
 module.exports = router;

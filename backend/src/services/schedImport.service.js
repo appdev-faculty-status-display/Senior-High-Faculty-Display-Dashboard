@@ -1,24 +1,12 @@
+// schedImport.service.js
+
 const XLSX = require('xlsx');
 const { Faculty, ScheduleImport } = require('../models');
 
-/**
- * MEMORY CONSIDERATIONS FOR LARGE FILE IMPORTS:
- * 
- * Current Implementation Limits:
- * - XLSX parser loads the entire file into memory before processing
- * - multer limits file size to 5MB in schedImport.route.js
- * - Faculty.find().cursor() uses streaming to avoid loading all faculty into memory
- * 
- * Scaling Recommendations:
- * 1. For files >10MB: Implement streaming XLSX parsing with 'xlsx-stream' or similar
- * 2. Consider processing files in chunks (e.g., 1000 rows at a time)
- * 3. For very large operations: Use a background job queue (Bull, RabbitMQ, etc.)
- * 4. Monitor memory usage in production and adjust limits based on server capacity
- * 5. Consider compression for API requests if import frequency is high
- */
-
 const REQUIRED_COLUMNS = ['facultyId', 'day', 'startTime', 'endTime', 'subject', 'room'];
 const VALID_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+// ─── Sheet parsing ────────────────────────────────────────────────────────────
 
 function parseSheet(buffer) {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
@@ -31,49 +19,33 @@ function validateHeaders(rows) {
     if (!rows || rows.length === 0) {
         const error = new Error('The uploaded file is empty or has no data rows');
         error.name = 'ValidationError';
-        error.errors = {
-            file: { message: 'The uploaded file is empty or has no data rows' }
-        };
+        error.errors = { file: { message: 'The uploaded file is empty or has no data rows' } };
         throw error;
     }
 
     const headers = Object.keys(rows[0]);
-    const missing = REQUIRED_COLUMNS.filter(function (col) {
-        return !headers.includes(col);
-    });
+    const missing = REQUIRED_COLUMNS.filter(col => !headers.includes(col));
 
     if (missing.length > 0) {
         const error = new Error(`Missing required columns: ${missing.join(', ')}`);
         error.name = 'ValidationError';
-        error.errors = {
-            file: { message: `Missing required columns: ${missing.join(', ')}` }
-        };
+        error.errors = { file: { message: `Missing required columns: ${missing.join(', ')}` } };
         throw error;
     }
 }
 
 function validateRow(row, rowIndex) {
     const errors = [];
-    const rowNumber = rowIndex + 2; // account for header row and 1-based index
+    const rowNumber = rowIndex + 2;
 
-    // Explicit check for empty facultyId (more specific error message)
     if (!row.facultyId || String(row.facultyId).trim() === '') {
-        errors.push({
-            row: rowNumber,
-            message: 'Column "facultyId" is empty or invalid'
-        });
-        // Return early to avoid cascading errors
+        errors.push({ row: rowNumber, message: 'Column "facultyId" is empty or invalid' });
         return errors;
     }
 
-    REQUIRED_COLUMNS.filter(function (col) {
-        return col !== 'facultyId';
-    }).forEach(function (col) {
+    REQUIRED_COLUMNS.filter(col => col !== 'facultyId').forEach(function (col) {
         if (!row[col] || String(row[col]).trim() === '') {
-            errors.push({
-                row: rowNumber,
-                message: `Column "${col}" is empty`
-            });
+            errors.push({ row: rowNumber, message: `Column "${col}" is empty` });
         }
     });
 
@@ -84,7 +56,7 @@ function validateRow(row, rowIndex) {
         });
     }
 
-    const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/; // matches HH:MM in 24-hour format
+    const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
     if (row.startTime && !timePattern.test(String(row.startTime).trim())) {
         errors.push({
@@ -105,23 +77,17 @@ function validateRow(row, rowIndex) {
 
 function groupRowsByFaculty(rows) {
     const grouped = {};
-
     rows.forEach(function (row) {
         const facultyId = String(row.facultyId).trim();
-
-        if (!grouped[facultyId]) {
-            grouped[facultyId] = [];
-        }
-
+        if (!grouped[facultyId]) grouped[facultyId] = [];
         grouped[facultyId].push({
-            day: String(row.day).trim(),
+            day:       String(row.day).trim(),
             startTime: String(row.startTime).trim(),
-            endTime: String(row.endTime).trim(),
-            subject: String(row.subject).trim(),
-            room: String(row.room).trim()
+            endTime:   String(row.endTime).trim(),
+            subject:   String(row.subject).trim(),
+            room:      String(row.room).trim()
         });
     });
-
     return grouped;
 }
 
@@ -137,16 +103,13 @@ async function createImportLog(importedBy, fileName) {
     });
 }
 
-function parseAndValidateRows(buffer) {
-    const rows = parseSheet(buffer);
+function parseAndValidateRows(buffer) {         
     validateHeaders(rows);
-
     const rowErrors = [];
     rows.forEach(function (row, index) {
         const errors = validateRow(row, index);
         rowErrors.push(...errors);
     });
-
     return { rows, rowErrors };
 }
 
@@ -159,18 +122,12 @@ function computeRowCounts(rows, grouped) {
     const attemptedCounts = {};
     rows.forEach(function (row) {
         const facultyId = String(row.facultyId).trim();
-
-        if (facultyId === '') {
-            return;
-        }
-
+        if (facultyId === '') return;
         attemptedCounts[facultyId] = (attemptedCounts[facultyId] || 0) + 1;
     });
 
     const validCounts = {};
-    Object.keys(grouped).forEach(function (fid) {
-        validCounts[fid] = grouped[fid].length;
-    });
+    Object.keys(grouped).forEach(fid => { validCounts[fid] = grouped[fid].length; });
 
     return { attemptedCounts, validCounts };
 }
@@ -191,10 +148,7 @@ async function applyGroupedSchedules(grouped, requestingUser, replaceAll) {
             continue;
         }
 
-        if (
-            requestingUser.role === 'strand_head' &&
-            faculty.strand !== requestingUser.strand
-        ) {
+        if (requestingUser.role === 'strand_head' && faculty.strand !== requestingUser.strand) {
             applyErrors.push({
                 row: 0,
                 message: `Faculty "${facultyId}" belongs to a different strand and was skipped`
@@ -205,20 +159,15 @@ async function applyGroupedSchedules(grouped, requestingUser, replaceAll) {
         if (replaceAll) {
             faculty.schedule = grouped[facultyId];
         } else {
-            const incoming = grouped[facultyId];
-
-            incoming.forEach(function (newEntry) {
+            grouped[facultyId].forEach(function (newEntry) {
                 const exists = faculty.schedule.some(function (existing) {
                     return (
-                        existing.day === newEntry.day &&
+                        existing.day       === newEntry.day &&
                         existing.startTime === newEntry.startTime &&
-                        existing.endTime === newEntry.endTime
+                        existing.endTime   === newEntry.endTime
                     );
                 });
-
-                if (!exists) {
-                    faculty.schedule.push(newEntry);
-                }
+                if (!exists) faculty.schedule.push(newEntry);
             });
         }
 
@@ -238,46 +187,38 @@ async function finalizeLog(log, finalStatus, totalProcessed, recordsApplied, all
     await log.save();
 }
 
+// ─── Bulk import ──────────────────────────────────────────────────────────────
+
 async function runImport(buffer, fileName, importedBy, replaceAll, requestingUser) {
     const log = await createImportLog(importedBy, fileName);
     try {
-        const { rows, rowErrors } = parsedAndValidateRows(buffer);
+        const { rows, rowErrors } = parseAndValidateRows(buffer); // ← typo fixed
         const validRows = getValidRows(rows, rowErrors);
-        const grouped = groupRowsByFaculty(validRows);
+        const grouped   = groupRowsByFaculty(validRows);
         const { attemptedCounts, validCounts } = computeRowCounts(rows, grouped);
-        const { recordsApplied, applyErrors } = await applyGroupedSchedules(
-            grouped,
-            requestingUser,
-            replaceAll
+        const { recordsApplied, applyErrors }  = await applyGroupedSchedules(
+            grouped, requestingUser, replaceAll
         );
 
-        const allErrors = [...rowErrors, ...applyErrors];
+        const allErrors      = [...rowErrors, ...applyErrors];
         const totalProcessed = rows.length;
 
         let finalStatus = 'success';
-
-        if (allErrors.length > 0 && recordsApplied === 0) {
-            finalStatus = 'failed';
-        } else if (allErrors.length > 0) {
-            finalStatus = 'partial';
-        }
+        if (allErrors.length > 0 && recordsApplied === 0) finalStatus = 'failed';
+        else if (allErrors.length > 0)                    finalStatus = 'partial';
 
         await finalizeLog(log, finalStatus, totalProcessed, recordsApplied, allErrors);
 
         return {
-            importId: log._id.toString(),
-            status: finalStatus,
+            importId:         log._id.toString(),
+            status:           finalStatus,
             recordsProcessed: totalProcessed,
-            recordsApplied: recordsApplied,
-            errors: allErrors,
-            perFacultyRowCounts: Object.keys(attemptedCounts)
-                .reduce(function (acc, fid) {
-                    acc[fid] = {
-                        attempted: attemptedCounts[fid] || 0,
-                        valid: validCounts[fid] || 0
-                    };
-                    return acc;
-                }, {})
+            recordsApplied,
+            errors:           allErrors,
+            perFacultyRowCounts: Object.keys(attemptedCounts).reduce(function (acc, fid) {
+                acc[fid] = { attempted: attemptedCounts[fid] || 0, valid: validCounts[fid] || 0 };
+                return acc;
+            }, {})
         };
     } catch (err) {
         await finalizeLog(log, 'failed', 0, 0, [{ row: 0, message: err.stack || err.message }]);
@@ -285,4 +226,132 @@ async function runImport(buffer, fileName, importedBy, replaceAll, requestingUse
     }
 }
 
-module.exports = { runImport };
+// ─── Single-entry add ─────────────────────────────────────────────────────────
+
+/**
+ * Adds one schedule entry to a faculty document.
+ *
+ * Times must be HH:MM strings in Philippine Standard Time (Asia/Manila, UTC+8).
+ * The client is responsible for sending PH-local times — no UTC conversion is
+ * performed here because PH has no DST (fixed offset), so HH:MM string
+ * comparison is safe for duplicate detection.
+ *
+ * @param {string} facultyId       - The business-key facultyId (not MongoDB _id)
+ * @param {{ day, startTime, endTime, subject, room }} entry
+ * @param {{ role: string, strand?: string }} requestingUser - From req.user (JWT payload)
+ * @returns {{ facultyId, addedEntry, totalEntries }}
+ */
+async function addEntry(facultyId, entry, requestingUser) {
+    // ── 1. Validate the incoming entry fields ──────────────────────────────────
+    const { day, startTime, endTime, subject, room } = entry;
+    const validationErrors = [];
+
+    if (!facultyId || String(facultyId).trim() === '') {
+        const error = new Error('facultyId is required');
+        error.name = 'ValidationError';
+        error.errors = { facultyId: { message: 'facultyId is required' } };
+        throw error;
+    }
+
+    if (!day || !VALID_DAYS.includes(String(day).trim())) {
+        validationErrors.push(`day must be one of: ${VALID_DAYS.join(', ')}`);
+    }
+
+    const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+    if (!startTime || !timePattern.test(String(startTime).trim())) {
+        validationErrors.push('startTime must be in HH:MM 24-hour format (PH time)');
+    }
+
+    if (!endTime || !timePattern.test(String(endTime).trim())) {
+        validationErrors.push('endTime must be in HH:MM 24-hour format (PH time)');
+    }
+
+    // Only compare times if both are individually valid
+    if (
+        timePattern.test(String(startTime).trim()) &&
+        timePattern.test(String(endTime).trim()) &&
+        startTime >= endTime
+    ) {
+        validationErrors.push('startTime must be earlier than endTime');
+    }
+
+    if (!subject || String(subject).trim() === '') {
+        validationErrors.push('subject is required');
+    }
+
+    if (!room || String(room).trim() === '') {
+        validationErrors.push('room is required');
+    }
+
+    if (validationErrors.length > 0) {
+        const error = new Error(validationErrors.join('; '));
+        error.name = 'ValidationError';
+        error.errors = validationErrors.reduce(function (acc, msg, i) {
+            acc[`field_${i}`] = { message: msg };
+            return acc;
+        }, {});
+        throw error;
+    }
+
+    // ── 2. Normalize (trim) all fields ─────────────────────────────────────────
+    const normalized = {
+        day:       String(day).trim(),
+        startTime: String(startTime).trim(),
+        endTime:   String(endTime).trim(),
+        subject:   String(subject).trim(),
+        room:      String(room).trim()
+    };
+
+    // ── 3. Fetch faculty document ──────────────────────────────────────────────
+    const faculty = await Faculty.findOne({ facultyId: String(facultyId).trim() });
+
+    if (!faculty) {
+        const error = new Error(`Faculty with facultyId "${facultyId}" not found`);
+        error.name = 'NotFoundError';
+        throw error;
+    }
+
+    // ── 4. Strand-head guard (mirrors applyGroupedSchedules) ──────────────────
+    if (requestingUser.role === 'strand_head' && faculty.strand !== requestingUser.strand) {
+        const error = new Error(
+            `Faculty "${facultyId}" belongs to strand "${faculty.strand}". ` +
+            `You can only manage faculty in your own strand ("${requestingUser.strand}").`
+        );
+        error.name = 'ForbiddenError';
+        throw error;
+    }
+
+    // ── 5. Duplicate detection (same day + startTime + endTime) ───────────────
+    const duplicate = faculty.schedule.some(function (existing) {
+        return (
+            existing.day       === normalized.day &&
+            existing.startTime === normalized.startTime &&
+            existing.endTime   === normalized.endTime
+        );
+    });
+
+    if (duplicate) {
+        const error = new Error(
+            `A schedule entry for "${normalized.day}" from ${normalized.startTime} ` +
+            `to ${normalized.endTime} already exists for this faculty member.`
+        );
+        error.name = 'ValidationError';
+        error.errors = { schedule: { message: error.message } };
+        throw error;
+    }
+
+    // ── 6. Persist ─────────────────────────────────────────────────────────────
+    faculty.schedule.push(normalized);
+    await faculty.save();
+
+    return {
+        facultyId,
+        addedEntry:   normalized,
+        totalEntries: faculty.schedule.length
+    };
+}
+
+// ─── Exports ──────────────────────────────────────────────────────────────────
+
+module.exports = { runImport, addEntry };
