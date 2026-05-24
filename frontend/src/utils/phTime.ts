@@ -83,14 +83,14 @@ export function isValidHHMM(value: string): boolean {
  * formatPHTime("00:00")  // "12:00 AM"
  */
 export function formatPHTime(hhmm: string): string {
-    if (!isValidHHMM(hhmm)) return hhmm; // return as-is rather than crash
+    if (!isValidHHMM(hhmm)) return "";
 
     return new Intl.DateTimeFormat("en-PH", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
         timeZone: PH_TIMEZONE,   // ← never omit this
-    }).format(new Date(`1970-01-01T${hhmm}:00+8:00`));
+    }).format(new Date(`1970-01-01T${hhmm}:00+08:00`));
 }
 
 /**

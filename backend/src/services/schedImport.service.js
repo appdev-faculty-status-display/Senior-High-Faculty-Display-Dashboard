@@ -200,7 +200,7 @@ async function applyGroupedSchedules(grouped, requestingUser, replaceAll) {
             });
         }
 
-        await faculty.save();
+        await faculty.save({ validateModifiedOnly: true });
         recordsApplied += entries.length;
     }
 
@@ -221,7 +221,8 @@ async function finalizeLog(log, finalStatus, totalProcessed, recordsApplied, all
 async function runImport(buffer, fileName, importedBy, replaceAll, requestingUser) {
     const log = await createImportLog(importedBy, fileName);
     try {
-        const { rows, rowErrors } = parseAndValidateRows(buffer); // ← typo fixed
+        const { rows, rowErrors } = parseAndValidateRows(buffer); 
+        
         const validRows = getValidRows(rows, rowErrors);
         const grouped   = groupRowsByFaculty(validRows);
         const { attemptedCounts, validCounts } = computeRowCounts(rows, grouped);
@@ -365,7 +366,7 @@ async function addEntry(facultyId, entry, requestingUser) {
 
     // ── 6. Persist ─────────────────────────────────────────────────────────────
     faculty.schedule.push(normalized);
-    await faculty.save();
+    await faculty.save({ validateModifiedOnly: true });
 
     return {
         facultyId,

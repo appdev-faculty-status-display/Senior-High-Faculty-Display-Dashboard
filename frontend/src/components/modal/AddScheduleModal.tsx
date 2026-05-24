@@ -3,9 +3,10 @@
 import { useState } from "react";
 import type { Day } from "../../types/schedule";
 import { DAYS, ROOMS } from "../../data/mockAddSchedule";
+import { formatPHTime } from "../../utils/phTime";
+const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api';
 
 // Types
-
 interface AddEntryResult {
     facultyId: string;
     addedEntry: {
@@ -22,23 +23,6 @@ interface Props {
     onClose: () => void;
     onSaved: (result: AddEntryResult) => void; // parent re-fetches or appends the new entry
     accessToken: string;
-}
-
-// Helpers
-
-/**
- * Formats a stored HH:MM string (PH local time) into a readable 12-hour label
- * for display only. All formatting is locked to Asia/Manila so the output is
- * always in Philippine Standard Time regardless of the browser's locale.
- */
-function formatPHTime(hhmm: string): string {
-    if (!hhmm) return "";
-    return new Intl.DateTimeFormat("en-PH", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-        timeZone: "Asia/Manila",
-    }).format(new Date(`1970-01-01T${hhmm}:00+8:00`)); // explicitly treat as PH time
 }
 
 const VALID_DAYS = DAYS.filter((d) => d !== "All Days") as Day[];
@@ -84,7 +68,7 @@ export default function AddScheduleModal({ onClose, onSaved, accessToken }: Prop
 
         setIsLoading(true);
         try {
-            const res = await fetch(`/api/schedule/${encodeURIComponent(facultyId.trim())}`, {
+            const res = await fetch(`${BASE_URL}/schedule/${encodeURIComponent(facultyId.trim())}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

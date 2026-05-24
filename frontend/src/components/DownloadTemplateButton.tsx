@@ -64,7 +64,7 @@ export default function DownloadTemplateButton() {
     return (
         <button
             onClick={handleDownload}
-            className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors"
+            className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors"
         >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

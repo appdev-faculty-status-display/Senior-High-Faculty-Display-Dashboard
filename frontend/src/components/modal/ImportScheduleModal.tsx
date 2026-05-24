@@ -3,6 +3,8 @@
 import { useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 
+const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api';
+
 // Props no longer pass FacultySchedule[] — the backend returns an import result summary,
 // not schedule rows. onImportComplete replaces onImport.
 interface ImportResult {
@@ -69,7 +71,7 @@ export default function ImportScheduleModal({ onClose, onImportComplete, accessT
             formData.append("replaceAll", String(replaceAll)); 
 
             // Do NOT set Content-Type manually — browser sets the multipart boundary
-            const res = await fetch("/api/schedule/import", {
+            const res = await fetch(`${BASE_URL}/schedule/import`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
