@@ -1,6 +1,7 @@
 // ImportScheduleModal.tsx
 
 import { useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 
 // Props no longer pass FacultySchedule[] — the backend returns an import result summary,
 // not schedule rows. onImportComplete replaces onImport.
@@ -28,7 +29,7 @@ export default function ImportScheduleModal({ onClose, onImportComplete, accessT
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     // ── File selection validation (before upload) ──────────────────────────────
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         setError(null);
         const file = e.target.files?.[0];
         if (!file) return;

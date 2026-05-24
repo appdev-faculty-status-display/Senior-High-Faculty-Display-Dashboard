@@ -2,7 +2,7 @@ import * as XLSX from 'xlsx';
 
 /**
  * Column names must exactly match backend REQUIRED_COLUMNS:
- * ['facultyId', 'day', 'startTime', 'endTime', 'subject', 'room']
+ * ['facultyId', 'name 'day', 'startTime', 'endTime', 'subject', 'room']
  *
  * Times must be in HH:MM 24-hour format, PH local time (Asia/Manila, UTC+8).
  * Example: 07:30 means 7:30 AM Philippine Standard Time.
@@ -47,6 +47,7 @@ export default function DownloadTemplateButton() {
     // Style the header row (col widths for readability)
     ws['!cols'] = [
       { wch: 14 }, // facultyId
+      { wch: 20 }, // name
       { wch: 12 }, // day
       { wch: 12 }, // startTime
       { wch: 12 }, // endTime

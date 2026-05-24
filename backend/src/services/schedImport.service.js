@@ -375,14 +375,20 @@ async function addEntry(facultyId, entry, requestingUser) {
 }
 
 async function listSchedules() {
-    const faculty = await Faculty.find({}, { facultyId: 1, name: 1, strand: 1, schedule: 1 });
+    const faculty = await Faculty.find(
+        {}, { 
+            facultyId: 1, 
+            name: 1, 
+            strand: 1, 
+            schedule: 1 
+        });
 
     return faculty.flatMap((f) =>
         f.schedule.map((entry) => ({
             // Faculty-level fields
             facultyId: f.facultyId,
             mongoId:   f._id.toString(),
-            name:      f.name,           // ← pulled from Faculty document root
+            name:      f.name,           
             strand:    f.strand,
 
             // Schedule sub-document fields

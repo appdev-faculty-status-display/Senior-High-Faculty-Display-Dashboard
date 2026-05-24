@@ -1,6 +1,9 @@
-const { Faculty } = require('../models/Faculty');
+const Faculty = require('../models/Faculty');
 
-async function listSchedule() {
+// requestingUser is required — strand_head sees only their strand,
+// principal sees all strands. Passed in from the controller via req.user.
+
+async function listSchedule(requestingUser) {
     const filter = requestingUser.role === 'strand_head'
     ? { strand: requestingUser.strand}
     : {};
@@ -12,23 +15,20 @@ async function listSchedule() {
         schedule: 1,
     });
 
-    return faculty.flatMap((f) => {
-        f.schedule.map((entry) => ({
-            // Faculty-level fields — joined from the Faculty document root
+    return faculty.flatMap((f) =>
+        f.schedule.map((entry) => ({                  
             facultyId: f.facultyId,
             mongoId:   f._id.toString(),
             name:      f.name,
             strand:    f.strand,
-
-            // Schedule sub-document fields
-            _id:       entry._id.toString(),
+            entryKey:  `${f.facultyId}_${entry.day}_${entry.startTime}_${entry.endTime}`,
             day:       entry.day,
             startTime: entry.startTime,
             endTime:   entry.endTime,
             subject:   entry.subject,
             room:      entry.room,
         }))
-    })
+    );
 }
 
-module.exports = { listSchedule };
+module.exports = { listSchedules };

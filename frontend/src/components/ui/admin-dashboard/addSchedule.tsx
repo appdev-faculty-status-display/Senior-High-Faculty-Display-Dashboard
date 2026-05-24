@@ -1,7 +1,8 @@
 // addSchedule.tsx
 
 import { useState, useEffect, useCallback } from "react";
-import type { FacultySchedule } from "@/types/schedule";
+import type { FacultySchedule, ScheduleRowDto } from "@/types/schedule";
+import { deriveDisplayFields } from "@/types/schedule";
 import {
     STRANDS,
     DAYS,
@@ -40,15 +41,16 @@ export default function ClassScheduleDashboard() {
     // ── Fetch schedules from API ───────────────────────────────────────────────
     // Defined with useCallback so it can be passed to onSaved without re-creating
     // on every render. Called on mount and after AddScheduleModal saves successfully.
-    const fetchSchedules = useCallback(async () => {      // ← resolves "Cannot find name 'fetchSchedules'"
+    const fetchSchedules = useCallback(async () => {     
         if (!accessToken) return;
         setIsFetching(true);
+
         try {
             const res = await fetch("/api/schedule", {
                 headers: { Authorization: `Bearer ${accessToken}` },
             });
-            const data: FacultySchedule[] = await res.json();
-            setSchedules(data);
+            const raw: ScheduleRowDto[] = await res.json();
+            setSchedules(raw.map((row, index) => deriveDisplayFields(row, index)));
         } catch (err) {
             console.error("Failed to fetch schedules:", err);
         } finally {
@@ -103,6 +105,23 @@ export default function ClassScheduleDashboard() {
                     <DownloadTemplateButton />
 
                     <button
+                        onClick={() => setIsImporting(true)}                     // ← was unreachable
+                        className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-[#002f73] border border-[#002f73] bg-white hover:bg-[#f0f4ff] transition-colors"
+                    >
+                        <svg
+                            width="16" height="16" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor"
+                            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                            className="inline-block"
+                        >
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Import Schedule
+                    </button>
+
+                    <button
                         onClick={() => setIsAdding(true)}
                         className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white border border-[#002f73] bg-[#002f73] hover:bg-[#064db6] transition-colors"
                     >
@@ -118,6 +137,7 @@ export default function ClassScheduleDashboard() {
                         Add Schedule
                     </button>
                 </div>
+
             </div>
 
             <div className="bg-white shadow-sm border border-gray-100 overflow-hidden h-full">
