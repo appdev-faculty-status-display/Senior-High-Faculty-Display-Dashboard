@@ -22,7 +22,7 @@ const optionalAuthToken = (req, res, next) => {
 //GET /announcements
 router.get('/', optionalAuthToken, getAnnouncements);
 
-//POST - confirm exact role strings first then plug in here
+//POST /announcements
 router.post('/', authToken, requireRole('principal', 'strand_head'), postAnnouncement);
 
 //DELETE

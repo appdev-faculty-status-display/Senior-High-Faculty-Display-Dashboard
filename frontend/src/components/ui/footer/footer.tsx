@@ -1,17 +1,32 @@
 import React from "react";
+import { QRCodeSVG } from "qrcode.react";
+import { useAnnouncements } from "@/hooks/useAnnouncements";
+import { useEffect } from "react";
 
-interface FooterProps {
-  announcements?: string[];
-}
+const requestURL = new URL("/request", window.location.origin).toString();
 
-const defaultAnnouncements = [
-    "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
-    "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
-    "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
-    "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
-  ];
+const Footer: React.FC = () => {
+  const { announcements, loading, refresh } = useAnnouncements({
+    scope: "all",
+    pageSize: 10,
+    isActive: true,
+  }); 
 
-const Footer: React.FC<FooterProps> = ({ announcements = defaultAnnouncements }) => {
+  useEffect(() => {
+    const interval = setInterval(refresh, 15000); // Refresh every 15 seconds
+    return () => clearInterval(interval);
+  }, [refresh]);
+
+  const messages = loading
+    ? ["Loading announcements..."]
+    : announcements
+      .filter((a) => {
+        if (!a.expiresAt) return true; // no expiration
+        return new Date(a.expiresAt) > new Date(); // only show if not expired
+      })
+      .map((a) => a.message);
+
+    const hasMessages = messages.length > 0;
   return (
     <footer className="fixed left-0 bottom-0 w-full flex items-stretch z-50 font-sans">
       {/* Left side: Ticker section */}
@@ -21,17 +36,23 @@ const Footer: React.FC<FooterProps> = ({ announcements = defaultAnnouncements })
         </div>
 
         <div className="overflow-hidden whitespace-nowrap flex-1 min-w-0">
-          <div className="inline-flex animate-ticker">
-            {/* Doubling the array for a seamless infinite loop animation */}
-            {[...announcements, ...announcements].map((msg, index) => (
-              <span
-                key={`${msg}-${index}`}
-                className="text-[15px] font-semibold text-[#1a1a1a] mr-16"
-              >
-                {msg}
+            {hasMessages ? (
+              <div className="inline-flex animate-ticker">
+                {/* Double the array for seamless infinite loop */}
+                {[...messages, ...messages].map((msg, index) => (
+                  <span
+                    key={`${msg}-${index}`}
+                    className="text-[15px] font-semibold text-[#1a1a1a] mr-16"
+                  >
+                    {msg}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="text-[15px] font-semibold text-[#1a1a1a]">
+                No announcements at this time.
               </span>
-            ))}
-          </div>
+            )}
         </div>
       </div>
 
@@ -46,13 +67,19 @@ const Footer: React.FC<FooterProps> = ({ announcements = defaultAnnouncements })
           </p>
         </div>
 
-        <div>
-          <img
-            src="/qr/qr.png"
-            alt="QR code"
-            className="w-10 h-10 object-cover block"
+        <div className="w-10 h-10 shrink-0 bg-white p-0.5 rounded-none">
+          <QRCodeSVG
+            value={requestURL}
+            size={36}
+            bgColor="#ffffff"
+            fgColor="#000000"
+            level="M"
+            role="img"
+            aria-label="QR Code for consultation request form"
+            title="QR Code for the consultation request form"
           />
         </div>
+
       </div>
     </footer>
   );
