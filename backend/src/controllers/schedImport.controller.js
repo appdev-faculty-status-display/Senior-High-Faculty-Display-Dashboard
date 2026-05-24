@@ -1,4 +1,4 @@
-const { runImport } = require('../services/schedImport.service');
+const { runImport, addEntry, deleteEntry, updateEntry } = require('../services/schedImport.service');
 
 async function importSchedule(req, res) {
     if (!req.file) {
@@ -23,4 +23,48 @@ async function importSchedule(req, res) {
     return res.status(200).json(result);
 }
 
-module.exports = { importSchedule };
+async function addScheduleEntry(req, res) {
+    const { facultyId } = req.params;
+    const { 
+        day, 
+        startTime, 
+        endTime, 
+        subject, 
+        room 
+    } = req.body;
+
+    const result = await addEntry(
+        facultyId,
+        { day, startTime, endTime, subject, room },
+        req.user
+    );
+    
+    return res.status(201).json(result);
+}
+
+async function deleteScheduleEntry(req, res) {
+    const { facultyId } = req.params;
+    const { entryKey } = req.body;
+
+    const result = await deleteEntry(
+        facultyId,
+        entryKey
+    );
+
+    return res.status(200).json(result);
+}   
+
+async function updateScheduleEntry(req, res) {
+    const { facultyId } = req.params;
+    const { entryKey, ...updates } = req.body;
+
+    const result = await updateEntry(
+        facultyId,
+        entryKey,
+        updates
+    );
+
+    return res.status(200).json(result);
+}
+
+module.exports = { importSchedule, addScheduleEntry, deleteScheduleEntry, updateScheduleEntry };

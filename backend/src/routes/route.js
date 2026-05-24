@@ -1,6 +1,6 @@
 const express = require('express');
-const router = express.Router();
-const multer = require('multer');
+const router  = express.Router();
+const multer  = require('multer');
 
 const { login, refresh, logout } = require('../controllers/auth.controller');
 const {
@@ -11,33 +11,41 @@ const {
     updateFacultySchedule,
     updateFacultyConsultationHours
 } = require('../controllers/faculty.controller');
-
 const {
-getQueue,
-  createQueue,
-  cancelQueue,
-  updateQueue,
-  assignRoom
+    getQueue,
+    createQueue,
+    cancelQueue,
+    updateQueue,
+    assignRoom
 } = require('../controllers/queue.controller');
 
-const { authToken } = require('../middleware/auth');
-const { authLimiter } = require('../middleware/rateLimit');
-const { requireRole } = require('../middleware/roles');
+const { authToken }    = require('../middleware/auth');
+const { authLimiter }  = require('../middleware/rateLimit');
+const { requireRole }  = require('../middleware/roles');
 const { asyncHandler } = require('../utils/asyncHandler');
 
 const scheduleImportRouter = require('./schedImport.route');
-const facultyImportRouter = require('./facultyImport.route');
-const announcementsRouter = require('./announcements.route');
-const notificationRouter = require('./notification.route');
+const schedulesRouter      = require('./schedule.route');
+const facultyImportRouter  = require('./facultyImport.route');
+const announcementsRouter  = require('./announcements.route');
+const notificationRouter   = require('./notification.route');
 
 const upload = multer();
 
-router.use('/schedule', scheduleImportRouter);
+// ── Schedule ──────────────────────────────────────────────────────────────────
+router.use('/schedule', schedulesRouter);      // GET  /schedule
+router.use('/schedule', scheduleImportRouter); // POST /schedule/import
+                                               // POST /schedule/:facultyId
+
+// ── Announcements ─────────────────────────────────────────────────────────────
 router.use('/announcements', announcementsRouter);
 
-router.post('/auth/login', authLimiter, login);
+// ── Auth ──────────────────────────────────────────────────────────────────────
+router.post('/auth/login',   authLimiter, login);
 router.post('/auth/refresh', authLimiter, refresh);
-router.post('/auth/logout', logout);
+router.post('/auth/logout',  logout);
+
+// ── Faculty ───────────────────────────────────────────────────────────────────
 router.post(
     '/faculty',
     authToken,
@@ -46,15 +54,19 @@ router.post(
     asyncHandler(createFaculty)
 );
 router.use('/faculty/:id', authToken);
-router.get('/faculty', asyncHandler(getFacultyList));
+router.get('/faculty',     asyncHandler(getFacultyList));
 router.get('/faculty/:id', asyncHandler(getFacultyById));
-router.patch('/faculty/:id/status', authToken, asyncHandler(updateFacultyStatus));
-router.patch('/faculty/:id/schedule', authToken, asyncHandler(updateFacultySchedule));
+router.patch('/faculty/:id/status',             authToken, asyncHandler(updateFacultyStatus));
+router.patch('/faculty/:id/schedule',           authToken, asyncHandler(updateFacultySchedule));
 router.patch('/faculty/:id/consultation-hours', authToken, asyncHandler(updateFacultyConsultationHours));
 
-router.get('/faculty/:id/queue', asyncHandler(getQueue));
-router.post('/faculty/:id/queue', asyncHandler(createQueue));
-router.patch('/faculty/:facultyId/queue/:queueId/cancel', asyncHandler(cancelQueue));
+// ── Queue ─────────────────────────────────────────────────────────────────────
+router.get('/faculty/:id/queue',   asyncHandler(getQueue));
+router.post('/faculty/:id/queue',  asyncHandler(createQueue));
+router.patch(
+    '/faculty/:facultyId/queue/:queueId/cancel',
+    asyncHandler(cancelQueue)
+);
 router.patch(
     '/faculty/:facultyId/queue/:queueId/status',
     authToken,
@@ -68,6 +80,7 @@ router.patch(
     asyncHandler(assignRoom)
 );
 
+// ── Notifications ─────────────────────────────────────────────────────────────
 router.use('/notifications', notificationRouter);
 
 module.exports = router;
