@@ -2,7 +2,7 @@
 
 const XLSX = require('xlsx');
 const { Faculty, ScheduleImport } = require('../models');
-const { createAuthError } = require('../utils/errors');
+const { createAuthError } = require('../utils/error');
 
 const REQUIRED_COLUMNS = ['facultyId', 'name', 'day', 'startTime', 'endTime', 'subject', 'room'];
 const VALID_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
