@@ -98,7 +98,7 @@ function formatPHTime(hhmm: string): string {
         minute: "2-digit",
         hour12: true,
         timeZone: "Asia/Manila",   // always PH time regardless of browser locale
-    }).format(new Date(`1970-01-01T${hhmm}:00`));
+    }).format(new Date(`1970-01-01T${hhmm}:00+8:00`)); // explicitly treat as PH time
 }
 
 export function deriveDisplayFields(

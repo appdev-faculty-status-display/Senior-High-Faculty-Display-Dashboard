@@ -25,7 +25,7 @@ const { requireRole }  = require('../middleware/roles');
 const { asyncHandler } = require('../utils/asyncHandler');
 
 const scheduleImportRouter = require('./schedImport.route');
-const schedulesRouter      = require('./schedules.route');  // ← added
+const schedulesRouter      = require('./schedule.route');
 const facultyImportRouter  = require('./facultyImport.route');
 const announcementsRouter  = require('./announcements.route');
 const notificationRouter   = require('./notification.route');

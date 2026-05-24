@@ -1,6 +1,6 @@
 // controllers/schedules.controller.js
 
-const { listSchedules } = require('../services/schedules.service');
+const { listSchedules } = require('../services/schedule.service');
 
 async function getSchedules(req, res) {
     const result = await listSchedules(req.user);

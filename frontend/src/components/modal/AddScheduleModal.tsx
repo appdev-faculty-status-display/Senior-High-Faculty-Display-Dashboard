@@ -38,7 +38,7 @@ function formatPHTime(hhmm: string): string {
         minute: "2-digit",
         hour12: true,
         timeZone: "Asia/Manila",
-    }).format(new Date(`1970-01-01T${hhmm}:00`));
+    }).format(new Date(`1970-01-01T${hhmm}:00+8:00`)); // explicitly treat as PH time
 }
 
 const VALID_DAYS = DAYS.filter((d) => d !== "All Days") as Day[];
@@ -84,7 +84,7 @@ export default function AddScheduleModal({ onClose, onSaved, accessToken }: Prop
 
         setIsLoading(true);
         try {
-            const res = await fetch(`/api/schedules/${encodeURIComponent(facultyId.trim())}`, {
+            const res = await fetch(`/api/schedule/${encodeURIComponent(facultyId.trim())}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

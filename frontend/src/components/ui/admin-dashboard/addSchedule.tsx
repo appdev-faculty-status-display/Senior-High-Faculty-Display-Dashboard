@@ -44,7 +44,7 @@ export default function ClassScheduleDashboard() {
         if (!accessToken) return;
         setIsFetching(true);
         try {
-            const res = await fetch("/api/schedules", {
+            const res = await fetch("/api/schedule", {
                 headers: { Authorization: `Bearer ${accessToken}` },
             });
             const data: FacultySchedule[] = await res.json();

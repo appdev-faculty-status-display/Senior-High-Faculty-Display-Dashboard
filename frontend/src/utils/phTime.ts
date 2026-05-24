@@ -90,7 +90,7 @@ export function formatPHTime(hhmm: string): string {
         minute: "2-digit",
         hour12: true,
         timeZone: PH_TIMEZONE,   // ← never omit this
-    }).format(new Date(`1970-01-01T${hhmm}:00`));
+    }).format(new Date(`1970-01-01T${hhmm}:00+8:00`));
 }
 
 /**

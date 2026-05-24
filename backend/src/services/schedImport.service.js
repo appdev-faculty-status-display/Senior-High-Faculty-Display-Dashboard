@@ -39,17 +39,12 @@ function validateRow(row, rowIndex) {
     const errors = [];
     const rowNumber = rowIndex + 2;
 
-    if (!row.facultyId || String(row.facultyId).trim() === '') {
-        errors.push({ row: rowNumber, message: 'Column "facultyId" is empty or invalid' });
-        return errors;
-    }
-
      if (!row.facultyId || String(row.facultyId).trim() === '') {
         errors.push({
             row: rowNumber,
             message: 'Column "facultyId" is empty or invalid'
         });
-        return errors; // early return unchanged
+        return errors; 
     }
 
     REQUIRED_COLUMNS.filter(function (col) {
@@ -102,7 +97,7 @@ function groupRowsByFaculty(rows) {
             };
         };
 
-        grouped[facultyId].push({
+        grouped[facultyId].entries.push({
             day:       String(row.day).trim(),
             startTime: String(row.startTime).trim(),
             endTime:   String(row.endTime).trim(),
