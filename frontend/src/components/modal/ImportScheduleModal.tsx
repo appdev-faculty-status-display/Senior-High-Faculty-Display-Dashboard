@@ -81,13 +81,13 @@ export default function ImportScheduleModal({ onClose, onImportComplete, accessT
 
             if (!res.ok) {
                 // Surface validation / auth errors returned by the backend
-                setError((data as any)?.message ?? "Import failed. Please try again.");
+                setError((data as { message?: string })?.message ?? "Import failed. Please try again.");
                 return;
             }
 
             onImportComplete(data);
             onClose();
-        } catch (err) {
+        } catch {
             setError("Network error. Please check your connection and try again.");
         } finally {
             setIsLoading(false);
