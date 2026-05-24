@@ -2,8 +2,9 @@
 
 const XLSX = require('xlsx');
 const { Faculty, ScheduleImport } = require('../models');
+const { createAuthError } = require('../utils/errors');
 
-const REQUIRED_COLUMNS = ['facultyId', 'day', 'startTime', 'endTime', 'subject', 'room'];
+const REQUIRED_COLUMNS = ['facultyId', 'name', 'day', 'startTime', 'endTime', 'subject', 'room'];
 const VALID_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 // ─── Sheet parsing ────────────────────────────────────────────────────────────
@@ -43,9 +44,22 @@ function validateRow(row, rowIndex) {
         return errors;
     }
 
-    REQUIRED_COLUMNS.filter(col => col !== 'facultyId').forEach(function (col) {
+     if (!row.facultyId || String(row.facultyId).trim() === '') {
+        errors.push({
+            row: rowNumber,
+            message: 'Column "facultyId" is empty or invalid'
+        });
+        return errors; // early return unchanged
+    }
+
+    REQUIRED_COLUMNS.filter(function (col) {
+        return col !== 'facultyId';
+    }).forEach(function (col) {
         if (!row[col] || String(row[col]).trim() === '') {
-            errors.push({ row: rowNumber, message: `Column "${col}" is empty` });
+            errors.push({
+                row: rowNumber,
+                message: `Column "${col}" is empty`
+            });
         }
     });
 
@@ -77,9 +91,17 @@ function validateRow(row, rowIndex) {
 
 function groupRowsByFaculty(rows) {
     const grouped = {};
+
     rows.forEach(function (row) {
         const facultyId = String(row.facultyId).trim();
-        if (!grouped[facultyId]) grouped[facultyId] = [];
+
+        if (!grouped[facultyId]) {
+            grouped[facultyId] = {
+                name: String(row.name).trim(),
+                entries: []
+            };
+        };
+
         grouped[facultyId].push({
             day:       String(row.day).trim(),
             startTime: String(row.startTime).trim(),
@@ -88,6 +110,7 @@ function groupRowsByFaculty(rows) {
             room:      String(row.room).trim()
         });
     });
+
     return grouped;
 }
 
@@ -104,12 +127,15 @@ async function createImportLog(importedBy, fileName) {
 }
 
 function parseAndValidateRows(buffer) {         
+    const rows = parseSheet(buffer);
     validateHeaders(rows);
+
     const rowErrors = [];
     rows.forEach(function (row, index) {
         const errors = validateRow(row, index);
         rowErrors.push(...errors);
     });
+
     return { rows, rowErrors };
 }
 
@@ -127,7 +153,8 @@ function computeRowCounts(rows, grouped) {
     });
 
     const validCounts = {};
-    Object.keys(grouped).forEach(fid => { validCounts[fid] = grouped[fid].length; });
+    Object.keys(grouped).forEach(fid => { 
+        validCounts[fid] = grouped[fid].entries.length; });
 
     return { attemptedCounts, validCounts };
 }
@@ -138,6 +165,7 @@ async function applyGroupedSchedules(grouped, requestingUser, replaceAll) {
     const applyErrors = [];
 
     for (const facultyId of facultyIds) {
+        const { name, entries } = grouped[facultyId];
         const faculty = await Faculty.findOne({ facultyId });
 
         if (!faculty) {
@@ -148,7 +176,9 @@ async function applyGroupedSchedules(grouped, requestingUser, replaceAll) {
             continue;
         }
 
-        if (requestingUser.role === 'strand_head' && faculty.strand !== requestingUser.strand) {
+        if (requestingUser.role === 'strand_head' && 
+            faculty.strand !== requestingUser.strand
+        ) {
             applyErrors.push({
                 row: 0,
                 message: `Faculty "${facultyId}" belongs to a different strand and was skipped`
@@ -156,10 +186,14 @@ async function applyGroupedSchedules(grouped, requestingUser, replaceAll) {
             continue;
         }
 
+        if (name && name !== faculty.name) {
+            faculty.name = name;
+        }
+
         if (replaceAll) {
-            faculty.schedule = grouped[facultyId];
+            faculty.schedule = entries;
         } else {
-            grouped[facultyId].forEach(function (newEntry) {
+            entries.forEach(function (newEntry) {
                 const exists = faculty.schedule.some(function (existing) {
                     return (
                         existing.day       === newEntry.day &&
@@ -172,7 +206,7 @@ async function applyGroupedSchedules(grouped, requestingUser, replaceAll) {
         }
 
         await faculty.save();
-        recordsApplied += grouped[facultyId].length;
+        recordsApplied += entries.length;
     }
 
     return { recordsApplied, applyErrors };
@@ -271,7 +305,7 @@ async function addEntry(facultyId, entry, requestingUser) {
     if (
         timePattern.test(String(startTime).trim()) &&
         timePattern.test(String(endTime).trim()) &&
-        startTime >= endTime
+        String(startTime).trim() >= String(endTime).trim()
     ) {
         validationErrors.push('startTime must be earlier than endTime');
     }
@@ -307,19 +341,12 @@ async function addEntry(facultyId, entry, requestingUser) {
     const faculty = await Faculty.findOne({ facultyId: String(facultyId).trim() });
 
     if (!faculty) {
-        const error = new Error(`Faculty with facultyId "${facultyId}" not found`);
-        error.name = 'NotFoundError';
-        throw error;
+        throw createAuthError('NOT_FOUND');
     }
 
     // ── 4. Strand-head guard (mirrors applyGroupedSchedules) ──────────────────
     if (requestingUser.role === 'strand_head' && faculty.strand !== requestingUser.strand) {
-        const error = new Error(
-            `Faculty "${facultyId}" belongs to strand "${faculty.strand}". ` +
-            `You can only manage faculty in your own strand ("${requestingUser.strand}").`
-        );
-        error.name = 'ForbiddenError';
-        throw error;
+        throw createAuthError('FORBIDDEN');
     }
 
     // ── 5. Duplicate detection (same day + startTime + endTime) ───────────────
@@ -352,6 +379,27 @@ async function addEntry(facultyId, entry, requestingUser) {
     };
 }
 
+async function listSchedules() {
+    const faculty = await Faculty.find({}, { facultyId: 1, name: 1, strand: 1, schedule: 1 });
+
+    return faculty.flatMap((f) =>
+        f.schedule.map((entry) => ({
+            // Faculty-level fields
+            facultyId: f.facultyId,
+            mongoId:   f._id.toString(),
+            name:      f.name,           // ← pulled from Faculty document root
+            strand:    f.strand,
+
+            // Schedule sub-document fields
+            _id:       entry._id.toString(),
+            day:       entry.day,
+            startTime: entry.startTime,
+            endTime:   entry.endTime,
+            subject:   entry.subject,
+            room:      entry.room,
+        }))
+    );
+}
 // ─── Exports ──────────────────────────────────────────────────────────────────
 
 module.exports = { runImport, addEntry };

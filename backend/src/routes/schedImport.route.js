@@ -29,10 +29,10 @@ router.post(
 );
 
 router.post(
-    '/import/:facultyId',
+    '/:facultyId',
     authToken,
     requireRole('principal', 'strand_head'),
     asyncHandler(addScheduleEntry)
-)
+);
 
 module.exports = router;
