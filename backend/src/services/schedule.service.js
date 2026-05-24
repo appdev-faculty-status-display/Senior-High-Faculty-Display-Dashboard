@@ -3,7 +3,7 @@ const Faculty = require('../models/Faculty');
 // requestingUser is required — strand_head sees only their strand,
 // principal sees all strands. Passed in from the controller via req.user.
 
-async function listSchedule(requestingUser) {
+async function listSchedules(requestingUser) {
     const filter = requestingUser.role === 'strand_head'
     ? { strand: requestingUser.strand}
     : {};
