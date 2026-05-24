@@ -3,9 +3,11 @@
 import { useState } from "react";
 import type { FacultySchedule } from "@/types/schedule";
 import { STRANDS, DAYS, ROOMS, ROWS_PER_PAGE } from "@/data/mockAddSchedule";
+
 import { useAuth }            from "@/hooks/useAuth";
 import { useSchedules }       from "@/hooks/useSchedules";
 import { useScheduleFilters } from "@/hooks/useScheduleFilters";
+
 import StatusBadge            from "@/components/StatusBadge";
 import SelectFilter           from "@/components/SelectFilter";
 import IconEdit               from "@/components/icons/EditIcon";
@@ -15,6 +17,8 @@ import EditScheduleModal      from "@/components/modal/EditScheduleModal";
 import ImportScheduleModal    from "@/components/modal/ImportScheduleModal";
 import AddScheduleModal       from "@/components/modal/AddScheduleModal";
 import DownloadTemplateButton from "@/components/DownloadTemplateButton";
+
+const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api'; 
 
 export default function ClassScheduleDashboard() {
     const { getToken } = useAuth();
@@ -33,6 +37,28 @@ export default function ClassScheduleDashboard() {
     const [isImporting,      setIsImporting]      = useState(false);
     const [isEditing,        setIsEditing]        = useState(false);
     const [selectedSchedule, setSelectedSchedule] = useState<FacultySchedule | null>(null);
+
+    const handleDelete = async (s: FacultySchedule) => {
+        try {
+            const res = await fetch (`${BASE_URL}/schedule/${encodeURIComponent(s.facultyId)}`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ entryKey: s.entryKey }),
+            }); 
+
+            if (res.ok) {
+                setSchedules((prev) => prev.filter((r) => r.entryKey !== s.entryKey));
+            } else {
+                const errData = await res.json().catch(() => ({}));
+                alert(errData?.message ?? "Failed to delete schedule entry from the server.");
+            }
+        } catch {
+            console.error("Failed to delete schedule entry.");
+        }
+    }
 
     return (
         <section className="min-h-screen w-full bg-gray-50 p-6">
@@ -159,7 +185,7 @@ export default function ClassScheduleDashboard() {
                                                     <IconEdit />
                                                 </button>
                                                 <button
-                                                    onClick={() => setSchedules((prev) => prev.filter((r) => r.entryKey !== s.entryKey))}
+                                                    onClick={() => handleDelete(s)}
                                                     className="p-1.5 hover:bg-red-100 text-red-400 transition-colors"
                                                 >
                                                     <IconTrash />
@@ -223,16 +249,15 @@ export default function ClassScheduleDashboard() {
             {isEditing && selectedSchedule && (
                 <EditScheduleModal
                     schedule={selectedSchedule}
+                    accessToken={accessToken}
                     onClose={() => { setIsEditing(false); setSelectedSchedule(null); }}
-                    onSave={(updated: FacultySchedule) => {
-                        setSchedules((prev) => prev.map((s) => s.entryKey === updated.entryKey ? updated : s));
+                    onSaved={() => {
+                        fetchSchedules();
                         setIsEditing(false);
                         setSelectedSchedule(null);
                     }}
-                    onDelete={(id: number) => {
-                        setSchedules((prev) => prev.filter((s) => s.id !== id));
-                        setIsEditing(false);
-                        setSelectedSchedule(null);
+                    onDelete={(s: FacultySchedule) => {
+                        handleDelete(s);
                     }}
                 />
             )}

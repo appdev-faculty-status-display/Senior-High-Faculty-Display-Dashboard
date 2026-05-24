@@ -402,6 +402,61 @@ async function listSchedules() {
         }))
     );
 }
+
+// ─── Single-entry delete ──────────────────────────────────────────────────────
+async function deleteEntry(facultyId, entryKey) {
+    const faculty = await Faculty.findOne({ facultyId });
+
+    if (!faculty) {
+        throw createAuthError('NOT_FOUND');
+    }
+
+    // entryKey formay: facultyId_day_startTime_endTime
+    const [ , day, startTime, endTime ] = entryKey.split('_');
+
+    const index = faculty.schedule.findIndex(
+        (e) => e.day === day && e.startTime === startTime && e.endTime === endTime
+    );
+
+    if (index === -1) {
+        const error = new Error('Schedule entry not found for deletion');
+        error.name = 'NOT_FOUND';
+        throw createAuthError('NOT_FOUND');
+    }
+
+    faculty.schedule.splice(index, 1);
+    await faculty.save({ validateModifiedOnly: true });
+
+    return { facultyId, deletedEntryKey: entryKey };
+}
+
+// ——— Update Entry ————————————————————————————————————————————————————————————
+async function updateEntry(facultyId, entryKey, updates) {
+    const faculty = await Faculty.findOne({ facultyId });
+    if (!faculty) throw createAuthError('NOT_FOUND');
+
+    const [, day, startTime, endTime] = entryKey.split('_');
+
+    const entry = faculty.schedule.find(
+        (e) => e.day === day && e.startTime === startTime && e.endTime === endTime
+    );
+
+    if (!entry) throw createAuthError('NOT_FOUND');
+
+    // apply updates
+    entry.day       = updates.day       ?? entry.day;
+    entry.startTime = updates.startTime ?? entry.startTime;
+    entry.endTime   = updates.endTime   ?? entry.endTime;
+    entry.subject   = updates.subject   ?? entry.subject;
+    entry.room      = updates.room      ?? entry.room;
+
+    faculty.markModified('schedule');
+    await faculty.save({ validateModifiedOnly: true });
+
+    return { facultyId, updatedEntry: entry };
+}
+
+
 // ─── Exports ──────────────────────────────────────────────────────────────────
 
-module.exports = { runImport, addEntry };
+module.exports = { runImport, addEntry, deleteEntry, updateEntry };
