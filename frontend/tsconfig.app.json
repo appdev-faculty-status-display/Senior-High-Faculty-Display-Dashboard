@@ -29,7 +29,7 @@
     /* Add these for better compatibility */
     "esModuleInterop": true,
     "strict": true,
-    "types": ["vite/client"]
+    "types": ["vite/client", "react"]
   },
   "include": ["src/**/*"]  // Updated to include all files in src
 }

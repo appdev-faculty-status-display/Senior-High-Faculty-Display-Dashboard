@@ -13,11 +13,11 @@ const {
 } = require('../controllers/faculty.controller');
 
 const {
-getQueue,
-  createQueue,
-  cancelQueue,
-  updateQueue,
-  assignRoom
+    getQueue,
+    createQueue,
+    cancelQueue,
+    updateQueue,
+    assignRoom
 } = require('../controllers/queue.controller');
 
 const { authToken } = require('../middleware/auth');
@@ -29,7 +29,7 @@ const scheduleImportRouter = require('./schedImport.route');
 const facultyImportRouter = require('./facultyImport.route');
 const announcementsRouter = require('./announcements.route');
 const notificationRouter = require('./notification.route');
-
+const requestsRouter = require('./request.route');
 const upload = multer();
 
 router.use('/schedule', scheduleImportRouter);
@@ -69,5 +69,6 @@ router.patch(
 );
 
 router.use('/notifications', notificationRouter);
+router.use('/requests', requestsRouter);
 
 module.exports = router;

@@ -133,7 +133,7 @@ async function createImportLog(importedBy, fileName) {
         startedAt: new Date(),
         recordsProcessed: 0,
         recordsApplied: 0,
-        errors: []
+        importErrors: []
     });
 }
 
@@ -234,7 +234,7 @@ async function finalizeLog(log, finalStatus, totalProcessed, recordsApplied, all
     log.finishedAt = new Date();
     log.recordsProcessed = totalProcessed;
     log.recordsApplied = recordsApplied;
-    log.errors = allErrors;
+    log.importErrors = allErrors;
     await log.save();
 }
 

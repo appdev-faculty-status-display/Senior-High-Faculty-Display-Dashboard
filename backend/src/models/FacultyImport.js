@@ -29,7 +29,7 @@ const facultyImportSchema = new Schema(
     recordsProcessed: { type: Number, default: 0, min: 0 },
     recordsCreated: { type: Number, default: 0, min: 0 },
     recordsUpdated: { type: Number, default: 0, min: 0 },
-    errors: { type: [importErrorSchema], default: [] }
+    importErrors: { type: [importErrorSchema], default: [] }
   },
   { timestamps: true, versionKey: false }
 );

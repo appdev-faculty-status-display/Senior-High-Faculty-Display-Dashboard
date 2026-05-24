@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 import { type Room } from "@/types/requestForm";
 import type { FormState, FormErrors, UrgencyLevel, RoomStatus } from "@/types/requestForm";
 import { mockRooms, strands, teachers, teacherEmails } from "@/data/mockRequestForm";
 import { generateTimeSlots } from "@/utils/timeSlots";
+
 
 // Sub-components
 interface ConsultationRoomPickerProps {
@@ -181,6 +182,8 @@ export default function RequestForm() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const navigate = useNavigate();
+
   const handleSubmit = async () => {
     if (!validate()) return;
 
@@ -191,7 +194,7 @@ export default function RequestForm() {
       studentId: form.studentId,
       studentEmail: form.studentEmail,
       strand: form.strand,
-      teacherName: form.teacher,
+      teacher: form.teacher,
       teacherEmail: teacherEmail,
       reason: form.reason,
       room: form.room,
@@ -200,15 +203,22 @@ export default function RequestForm() {
     };
 
     try {
-      const res = await fetch("YOUR_POWER_AUTOMATE_HTTP_TRIGGER_URL", {
+      const res = await fetch("https://jompi.app.n8n.cloud/webhook/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Flow trigger failed");
+      const data = await res.json();
+      const mongoId = data._id;
 
-      setSubmitted(true);
+      if (!mongoId) {
+        console.error("No _id returned from n8n:", data);
+        return;
+      }
+
+      navigate(`/status?requestId=${mongoId}`);
+
     } catch (err) {
       console.error("Submission error:", err);
     }

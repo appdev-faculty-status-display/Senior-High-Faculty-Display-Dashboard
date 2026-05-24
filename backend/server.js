@@ -1,3 +1,4 @@
+const dns = require('dns');
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -13,6 +14,8 @@ const { errorHandler } = require('./src/middleware/errorHandler');
 const { startAutoStatusCron } = require('./src/services/autoStatus.service');
 
 const app = express();
+
+dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 // Middleware
 app.use(helmet());
