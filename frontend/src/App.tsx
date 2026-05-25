@@ -6,7 +6,6 @@ import RequestForm from "./pages/requestFormPage";
 import StatusPage from "./pages/statusPage";
 import AddSchedule from "./components/ui/admin-dashboard/addSchedule";
 // import AddAnnouncement from "./components/ui/admin-dashboard/AddAnnouncement";
-import AddSchedule from "./components/ui/admin-dashboard/addSchedule";
 
 export default function App() {
   return (

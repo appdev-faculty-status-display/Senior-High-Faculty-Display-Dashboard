@@ -30,9 +30,6 @@ const announcementsRouter = require('./announcements.route');
 const notificationRouter = require('./notification.route');
 const requestsRouter = require('./request.route');
 const schedulesRouter = require('./schedule.route');
-const facultyImportRouter = require('./facultyImport.route');
-const announcementsRouter = require('./announcements.route');
-const notificationRouter = require('./notification.route');
 
 const upload = multer();
 
