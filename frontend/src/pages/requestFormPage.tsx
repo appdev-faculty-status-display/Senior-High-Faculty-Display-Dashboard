@@ -4,7 +4,6 @@ import logo from "@/assets/logo.svg";
 import { type Room } from "@/types/requestForm";
 import type { FormState, FormErrors, UrgencyLevel, RoomStatus } from "@/types/requestForm";
 import { mockRooms, strands, teachers, teacherEmails } from "@/data/mockRequestForm";
-import { generateTimeSlots } from "@/utils/timeSlots";
 
 
 // Sub-components
@@ -51,40 +50,6 @@ function ConsultationRoomPicker({ rooms, selected, onChange }: ConsultationRoomP
   );
 }
 
-interface TimeSlotDropdownProps {
-  value: string;
-  onChange: (value: string) => void;
-  disabledTimes?: string[];
-}
-
-function TimeSlotDropdown({ value, onChange, disabledTimes = [] }: TimeSlotDropdownProps) {
-  const slots = generateTimeSlots(7, 17);
-  return (
-    <div className="relative mt-2">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full border border-[#cbd5e1] px-3 py-2.5 text-sm appearance-none bg-white focus:outline-none focus:border-[#064db6] focus:ring-1 focus:ring-[#064db6]/30 transition-all ${value ? "text-[#1a1a1a]" : "text-[#d6d6d6]"
-          }`}
-      >
-        <option value="" disabled>Select a time slot</option>
-        {slots.map((s) => {
-          const isDisabled = disabledTimes.includes(s);
-
-          return (
-            <option key={s} value={s} disabled={isDisabled} className="text-[#1a1a1a]">
-              {s}{isDisabled ? " (Booked)" : ""}
-            </option>
-          );
-        })}
-      </select>
-      <svg className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none">
-        <path d="M6 9l6 6 6-6" stroke="#4f4f4f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </div>
-  );
-}
-
 function getPhilippineNow(): Date {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Manila',
@@ -104,31 +69,97 @@ function getPhilippineNow(): Date {
   );
 }
 
-function parseSlotEndTime(slot: string): Date | null {
-  const match = slot.match(/–\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+function parseTimeToMinutes(value: string): number | null {
+  const match = value.trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
 
   if (!match) return null;
 
   const [, hourText, minuteText, periodText] = match;
   let hour = Number(hourText);
   const minute = Number(minuteText);
-  const period = periodText.toUpperCase();
+  const period = periodText ? periodText.toUpperCase() : null;
 
-  if (period === 'PM' && hour !== 12) hour += 12;
-  if (period === 'AM' && hour === 12) hour = 0;
+  if (Number.isNaN(hour) || Number.isNaN(minute) || minute < 0 || minute > 59) {
+    return null;
+  }
 
-  const now = getPhilippineNow();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0, 0);
+  if (period) {
+    if (hour < 1 || hour > 12) return null;
+
+    if (period === 'PM' && hour !== 12) hour += 12;
+    if (period === 'AM' && hour === 12) hour = 0;
+  }
+
+  if (hour < 0 || hour > 23) {
+    return null;
+  }
+
+  return hour * 60 + minute;
 }
 
-function formatPhilippineClock(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Manila',
-    hour: 'numeric',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
-  }).format(date);
+function formatInputTimeLabel(value: string): string {
+  const minutes = parseTimeToMinutes(value);
+
+  if (minutes === null) {
+    return value;
+  }
+
+  const hour24 = Math.floor(minutes / 60);
+  const minute = String(minutes % 60).padStart(2, '0');
+  const period = hour24 >= 12 ? 'PM' : 'AM';
+  const displayHour = hour24 % 12 === 0 ? 12 : hour24 % 12;
+
+  return `${displayHour}:${minute} ${period}`;
+}
+
+function formatMinutesToInputValue(totalMinutes: number): string {
+  const normalizedMinutes = ((totalMinutes % 1440) + 1440) % 1440;
+  const hours = Math.floor(normalizedMinutes / 60)
+    .toString()
+    .padStart(2, '0');
+  const minutes = (normalizedMinutes % 60).toString().padStart(2, '0');
+
+  return `${hours}:${minutes}`;
+}
+
+function buildTimeRangeLabel(startTime: string, endTime: string): string {
+  return `${formatInputTimeLabel(startTime)} – ${formatInputTimeLabel(endTime)}`;
+}
+
+function parseTimeRangeLabel(slot: string): { start: number; end: number } | null {
+  const parts = slot.split('–').map((part) => part.trim());
+
+  if (parts.length !== 2) return null;
+
+  const start = parseTimeToMinutes(parts[0]);
+  const end = parseTimeToMinutes(parts[1]);
+
+  if (start === null || end === null) return null;
+
+  return { start, end };
+}
+
+function rangesOverlap(startA: number, endA: number, startB: number, endB: number): boolean {
+  return startA < endB && startB < endA;
+}
+
+function getTimeWindowError(startTime: string, endTime: string): string | null {
+  if (!startTime.trim()) return 'Start time is required.';
+  if (!endTime.trim()) return 'End time is required.';
+
+  const startMinutes = parseTimeToMinutes(startTime);
+  const endMinutes = parseTimeToMinutes(endTime);
+
+  if (startMinutes === null) return 'Start time must be valid.';
+  if (endMinutes === null) return 'End time must be valid.';
+  if (endMinutes <= startMinutes) return 'End time must be later than start time.';
+
+  const duration = endMinutes - startMinutes;
+
+  if (duration < 5) return 'Consultation time must be at least 5 minutes.';
+  if (duration > 30) return 'Consultation time cannot exceed 30 minutes.';
+
+  return null;
 }
 
 interface UrgencySelectorProps {
@@ -205,6 +236,8 @@ export default function RequestForm() {
   const [showTeacherDropdown, setShowTeacherDropdown] = useState<boolean>(false);
   const [bookedTimes, setBookedTimes] = useState<string[]>([]);
   const [phTime, setPhTime] = useState<Date>(() => getPhilippineNow());
+  const [startTime, setStartTime] = useState<string>("");
+  const [endTime, setEndTime] = useState<string>("");
 
   const filteredTeachers = teachers.filter((t) =>
     t.toLowerCase().includes(teacherQuery.toLowerCase())
@@ -253,17 +286,41 @@ export default function RequestForm() {
   }, []);
 
   const activeBookedTimes = bookedTimes.filter((slot) => {
-    const slotEndTime = parseSlotEndTime(slot);
+    const slotRange = parseTimeRangeLabel(slot);
 
-    if (!slotEndTime) return true;
+    if (!slotRange) return true;
 
-    return phTime < slotEndTime;
+    const nowMinutes = phTime.getHours() * 60 + phTime.getMinutes();
+    return nowMinutes < slotRange.end;
   });
+
+  const selectedTimeRange = startTime && endTime ? buildTimeRangeLabel(startTime, endTime) : "";
 
   const set = (field: keyof FormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
+
+  const handleStartTimeChange = (value: string) => {
+    setStartTime(value);
+    setErrors((prev) => ({ ...prev, time: undefined }));
+  };
+
+  const handleEndTimeChange = (value: string) => {
+    setEndTime(value);
+    setErrors((prev) => ({ ...prev, time: undefined }));
+  };
+
+  const selectedTimeRangeMinutes =
+    startTime && endTime
+      ? (() => {
+        const startMinutes = parseTimeToMinutes(startTime);
+        const endMinutes = parseTimeToMinutes(endTime);
+
+        if (startMinutes === null || endMinutes === null) return null;
+        return { start: startMinutes, end: endMinutes };
+      })()
+      : null;
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -280,12 +337,29 @@ export default function RequestForm() {
     }
     if (!form.strand) newErrors.strand = "Please select a strand.";
     if (!form.teacher) newErrors.teacher = "Please select a teacher.";
-    if (form.teacher && form.time && activeBookedTimes.includes(form.time)) {
-      newErrors.time = `${form.teacher} is already booked for that time.`;
+    const timeWindowError = getTimeWindowError(startTime, endTime);
+    if (timeWindowError) {
+      newErrors.time = timeWindowError;
+    } else if (selectedTimeRangeMinutes && form.teacher) {
+      const hasConflict = activeBookedTimes.some((slot) => {
+        const bookedRange = parseTimeRangeLabel(slot);
+
+        return bookedRange
+          ? rangesOverlap(
+            selectedTimeRangeMinutes.start,
+            selectedTimeRangeMinutes.end,
+            bookedRange.start,
+            bookedRange.end
+          )
+          : false;
+      });
+
+      if (hasConflict) {
+        newErrors.time = `${form.teacher} is already booked during that time window.`;
+      }
     }
     if (!form.reason.trim()) newErrors.reason = "Reason is required.";
     if (!form.room) newErrors.room = "Please select a consultation room.";
-    if (!form.time) newErrors.time = "Please select a time slot.";
     if (!form.urgency) newErrors.urgency = "Please select an urgency level.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -307,7 +381,7 @@ export default function RequestForm() {
           teacherEmail: teacherEmails[form.teacher],
           reason: form.reason,
           room: form.room,
-          time: form.time,
+          time: selectedTimeRange,
           urgency: form.urgency,
         }),
       });
@@ -338,7 +412,7 @@ export default function RequestForm() {
           teacherEmail: teacherEmails[form.teacher],
           reason: form.reason,
           room: form.room,
-          time: form.time,
+          time: selectedTimeRange,
           urgency: form.urgency,
         }),
       }).catch(console.error);
@@ -368,6 +442,8 @@ export default function RequestForm() {
             onClick={() => {
               setSubmitted(false);
               setForm({ name: "", studentId: "", strand: "", teacher: "", reason: "", room: "", time: "", urgency: "", studentEmail: "" });
+              setStartTime("");
+              setEndTime("");
               setTeacherQuery("");
               setShowTeacherDropdown(false);
               setErrors({});
@@ -510,17 +586,56 @@ export default function RequestForm() {
               </div>
             </div>
             <ConsultationRoomPicker rooms={rooms} selected={form.room} onChange={(v) => set("room", v)} />
-            <div className="mt-2">
-              <TimeSlotDropdown value={form.time} onChange={(v) => set("time", v)} disabledTimes={activeBookedTimes} />
-              {form.teacher && activeBookedTimes.length > 0 && (
-                <p className="mt-2 text-xs text-[#4f4f4f]">
-                  {form.teacher} is unavailable for {activeBookedTimes.length} booked time slot{activeBookedTimes.length === 1 ? "" : "s"}.
-                </p>
-              )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-black text-[#1a1a1a] uppercase tracking-widest mb-1.5">Time Window:</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="startTime" className="block text-[11px] font-bold uppercase tracking-widest text-[#4f4f4f] mb-1">Start Time</label>
+                <input
+                  id="startTime"
+                  type="time"
+                  step={60}
+                  value={startTime}
+                  onChange={(e) => handleStartTimeChange(e.target.value)}
+                  className={`${inputBase} ${inputBorder("time")}`}
+                />
+                {startTime && (
+                  <p className="text-[11px] text-[#4f4f4f] mt-1">{formatInputTimeLabel(startTime)} PST</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="endTime" className="block text-[11px] font-bold uppercase tracking-widest text-[#4f4f4f] mb-1">
+                  End Time
+                </label>
+                <input
+                  id="endTime"
+                  type="time"
+                  step={60}
+                  min={startTime && parseTimeToMinutes(startTime) !== null ? formatMinutesToInputValue(parseTimeToMinutes(startTime)! + 5) : undefined}
+                  max={startTime && parseTimeToMinutes(startTime) !== null ? formatMinutesToInputValue(parseTimeToMinutes(startTime)! + 30) : undefined}
+                  disabled={!startTime}
+                  value={endTime}
+                  onChange={(e) => handleEndTimeChange(e.target.value)}
+                  className={`${inputBase} ${inputBorder("time")} ${!startTime ? "bg-gray-50 text-gray-400 cursor-not-allowed" : ""}`}
+                />
+                {endTime && (
+                  <p className="text-[11px] text-[#4f4f4f] mt-1">{formatInputTimeLabel(endTime)} PST</p>
+                )}
+              </div>
             </div>
-            <p className="mt-2 text-xs font-semibold text-[#064db6]">
-              Philippine Time: {formatPhilippineClock(phTime)}
+            <p className="mt-2 text-xs text-[#4f4f4f]">
+              Choose a consultation window that is at least 5 minutes and no more than 30 minutes long.
             </p>
+            {selectedTimeRange && (
+              <p className="mt-1 text-xs font-semibold text-[#064db6]">Selected time: {selectedTimeRange}</p>
+            )}
+            {form.teacher && activeBookedTimes.length > 0 && (
+              <p className="mt-2 text-xs text-[#4f4f4f]">
+                {form.teacher} has {activeBookedTimes.length} active booked consultation window{activeBookedTimes.length === 1 ? "" : "s"}.
+              </p>
+            )}
             {errorMsg("room")}
             {errorMsg("time")}
           </div>

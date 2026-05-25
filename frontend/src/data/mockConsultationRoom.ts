@@ -1,7 +1,7 @@
 import type { Room, RoomStatus } from "@/types/consultation-states";
 
 
-export const rooms: Room []= [
+export const rooms: Room[] = [
   {
     id: "CR-01",
     status: "OCCUPIED",
