@@ -56,15 +56,9 @@ router.get('/faculty/:id/queue', asyncHandler(getQueue));
 router.post('/faculty/:id/queue', asyncHandler(createQueue));
 router.patch('/faculty/:facultyId/queue/:queueId/cancel', asyncHandler(cancelQueue));
 router.patch(
-    '/faculty/:facultyId/queue/:queueId/status',
-    authToken,
-    requireRole('faculty', 'strand_head', 'principal'),
-    asyncHandler(updateQueue)
-);
-router.patch(
     '/faculty/:facultyId/queue/:queueId/room',
     authToken,
-    requireRole('faculty', 'strand_head', 'principal'),
+    requireRole('faculty', 'strand_head', 'principal', 'service'),
     asyncHandler(assignRoom)
 );
 

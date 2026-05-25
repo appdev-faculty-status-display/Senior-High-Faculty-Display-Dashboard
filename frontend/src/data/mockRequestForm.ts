@@ -27,3 +27,4 @@ export const teacherEmails: Record<string, string> = {
   "Mr. Jompilla": "jompillam@students.nu-laguna.edu.ph",
   "Mr. Cataag": "cataagjl@students.nu-laguna.edu.ph"
 };
+

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 import { type Room } from "@/types/requestForm";
@@ -54,9 +54,10 @@ function ConsultationRoomPicker({ rooms, selected, onChange }: ConsultationRoomP
 interface TimeSlotDropdownProps {
   value: string;
   onChange: (value: string) => void;
+  disabledTimes?: string[];
 }
 
-function TimeSlotDropdown({ value, onChange }: TimeSlotDropdownProps) {
+function TimeSlotDropdown({ value, onChange, disabledTimes = [] }: TimeSlotDropdownProps) {
   const slots = generateTimeSlots(7, 17);
   return (
     <div className="relative mt-2">
@@ -67,15 +68,67 @@ function TimeSlotDropdown({ value, onChange }: TimeSlotDropdownProps) {
           }`}
       >
         <option value="" disabled>Select a time slot</option>
-        {slots.map((s) => (
-          <option key={s} value={s} className="text-[#1a1a1a]">{s}</option>
-        ))}
+        {slots.map((s) => {
+          const isDisabled = disabledTimes.includes(s);
+
+          return (
+            <option key={s} value={s} disabled={isDisabled} className="text-[#1a1a1a]">
+              {s}{isDisabled ? " (Booked)" : ""}
+            </option>
+          );
+        })}
       </select>
       <svg className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none">
         <path d="M6 9l6 6 6-6" stroke="#4f4f4f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </div>
   );
+}
+
+function getPhilippineNow(): Date {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).formatToParts(new Date());
+
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || '00';
+
+  return new Date(
+    `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}:${get('second')}`
+  );
+}
+
+function parseSlotEndTime(slot: string): Date | null {
+  const match = slot.match(/–\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+
+  if (!match) return null;
+
+  const [, hourText, minuteText, periodText] = match;
+  let hour = Number(hourText);
+  const minute = Number(minuteText);
+  const period = periodText.toUpperCase();
+
+  if (period === 'PM' && hour !== 12) hour += 12;
+  if (period === 'AM' && hour === 12) hour = 0;
+
+  const now = getPhilippineNow();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0, 0);
+}
+
+function formatPhilippineClock(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Manila',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  }).format(date);
 }
 
 interface UrgencySelectorProps {
@@ -128,6 +181,7 @@ function UrgencySelector({ selected, onChange }: UrgencySelectorProps) {
 // Main Page
 export default function RequestForm() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const prefillStudentId = searchParams.get("studentId") ?? "";
   const prefillName = searchParams.get("name") ?? "";
 
@@ -149,10 +203,62 @@ export default function RequestForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [teacherQuery, setTeacherQuery] = useState<string>("");
   const [showTeacherDropdown, setShowTeacherDropdown] = useState<boolean>(false);
+  const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+  const [phTime, setPhTime] = useState<Date>(() => getPhilippineNow());
 
   const filteredTeachers = teachers.filter((t) =>
     t.toLowerCase().includes(teacherQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    const selectedTeacher = form.teacher;
+
+    if (!selectedTeacher) {
+      setBookedTimes([]);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const loadBookedTimes = async () => {
+      try {
+        const response = await fetch(`/api/requests/booked-times?teacher=${encodeURIComponent(selectedTeacher)}`, {
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          setBookedTimes([]);
+          return;
+        }
+
+        const data: { bookedTimes?: string[] } = await response.json();
+        setBookedTimes(Array.isArray(data.bookedTimes) ? data.bookedTimes : []);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setBookedTimes([]);
+      }
+    };
+
+    loadBookedTimes();
+
+    return () => controller.abort();
+  }, [form.teacher]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPhTime(getPhilippineNow());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const activeBookedTimes = bookedTimes.filter((slot) => {
+    const slotEndTime = parseSlotEndTime(slot);
+
+    if (!slotEndTime) return true;
+
+    return phTime < slotEndTime;
+  });
 
   const set = (field: keyof FormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -174,6 +280,9 @@ export default function RequestForm() {
     }
     if (!form.strand) newErrors.strand = "Please select a strand.";
     if (!form.teacher) newErrors.teacher = "Please select a teacher.";
+    if (form.teacher && form.time && activeBookedTimes.includes(form.time)) {
+      newErrors.time = `${form.teacher} is already booked for that time.`;
+    }
     if (!form.reason.trim()) newErrors.reason = "Reason is required.";
     if (!form.room) newErrors.room = "Please select a consultation room.";
     if (!form.time) newErrors.time = "Please select a time slot.";
@@ -182,40 +291,57 @@ export default function RequestForm() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const navigate = useNavigate();
-
   const handleSubmit = async () => {
     if (!validate()) return;
 
-    const teacherEmail = teacherEmails[form.teacher] ?? null;
-
-    const payload = {
-      studentName: form.name,
-      studentId: form.studentId,
-      studentEmail: form.studentEmail,
-      strand: form.strand,
-      teacher: form.teacher,
-      teacherEmail: teacherEmail,
-      reason: form.reason,
-      room: form.room,
-      time: form.time,
-      urgency: form.urgency,
-    };
-
     try {
-      const res = await fetch("https://jompi.app.n8n.cloud/webhook/request", {
+      const createResponse = await fetch("/api/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          studentName: form.name,
+          studentId: form.studentId,
+          studentEmail: form.studentEmail,
+          strand: form.strand,
+          teacher: form.teacher,
+          teacherEmail: teacherEmails[form.teacher],
+          reason: form.reason,
+          room: form.room,
+          time: form.time,
+          urgency: form.urgency,
+        }),
       });
 
-      const data = await res.json();
-      const mongoId = data._id;
-
-      if (!mongoId) {
-        console.error("No _id returned from n8n:", data);
+      if (!createResponse.ok) {
+        console.error("Request creation failed:", await createResponse.text());
         return;
       }
+
+      const createData = await createResponse.json();
+      const mongoId = createData._id;
+
+      if (!mongoId) {
+        console.error("No _id returned from backend:", createData);
+        return;
+      }
+
+      fetch("/api/requests/trigger-flow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: mongoId,
+          studentName: form.name,
+          studentId: form.studentId,
+          studentEmail: form.studentEmail,
+          strand: form.strand,
+          teacher: form.teacher,
+          teacherEmail: teacherEmails[form.teacher],
+          reason: form.reason,
+          room: form.room,
+          time: form.time,
+          urgency: form.urgency,
+        }),
+      }).catch(console.error);
 
       navigate(`/status?requestId=${mongoId}`);
 
@@ -384,7 +510,17 @@ export default function RequestForm() {
               </div>
             </div>
             <ConsultationRoomPicker rooms={rooms} selected={form.room} onChange={(v) => set("room", v)} />
-            <TimeSlotDropdown value={form.time} onChange={(v) => set("time", v)} />
+            <div className="mt-2">
+              <TimeSlotDropdown value={form.time} onChange={(v) => set("time", v)} disabledTimes={activeBookedTimes} />
+              {form.teacher && activeBookedTimes.length > 0 && (
+                <p className="mt-2 text-xs text-[#4f4f4f]">
+                  {form.teacher} is unavailable for {activeBookedTimes.length} booked time slot{activeBookedTimes.length === 1 ? "" : "s"}.
+                </p>
+              )}
+            </div>
+            <p className="mt-2 text-xs font-semibold text-[#064db6]">
+              Philippine Time: {formatPhilippineClock(phTime)}
+            </p>
             {errorMsg("room")}
             {errorMsg("time")}
           </div>
