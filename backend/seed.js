@@ -41,7 +41,7 @@ async function seed() {
             },
             {
                 facultyId: 'ADM001',
-                userId: 'test.principal@nu-laguna.edu.ph',
+                userId: 'test.admin@nu-laguna.edu.ph',
                 name: 'Test Principal',
                 role: 'principal',
                 strand: 'STEM',

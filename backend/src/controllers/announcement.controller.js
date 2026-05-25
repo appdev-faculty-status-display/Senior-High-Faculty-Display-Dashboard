@@ -20,6 +20,8 @@ async function postAnnouncement(req, res) {
             id: announcement._id,
             message: announcement.message,
             scope: announcement.scope,
+            strand: announcement.strand,
+            expiresAt: announcement.expiresAt,
             isActive: announcement.isActive,
             createdAt: announcement.createdAt,
         });

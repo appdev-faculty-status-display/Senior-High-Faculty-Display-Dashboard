@@ -1,6 +1,7 @@
 // frontend/src/pages/admin/adminDashboard.tsx
 import { useState, useRef, type ReactNode } from "react";
 import AddSchedule    from "@/components/ui/admin-dashboard/addSchedule";
+import AddFaculty     from "@/pages/admin/addFaculty";
 import Header         from "@/components/ui/header/header";
 import AddAnnouncement from "@/pages/admin/announcementPage";
 import { DateRangePicker } from "@/components/ui/admin-dashboard/DatePicker";
@@ -373,6 +374,7 @@ function MainContent({ activeNav }: MainContentProps) {
     "resource-communication": <ResourceCommunicationContent />,
     "add-announcement":       <AddAnnouncement />,
     "add-schedule":           <AddSchedule />,
+    "manage-faculty":         <AddFaculty />,
   };
 
   return (

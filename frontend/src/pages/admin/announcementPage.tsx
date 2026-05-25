@@ -1,28 +1,51 @@
 // announcementPage.tsx
-import { useState } from "react";
-import type { Announcement } from "@/types/announcement";
-import { mockAnnouncement } from "@/data/mockAnnouncement";
 import AnnouncementTable from "@/components/AnnouncementTable";
+import { useAnnouncements } from "@/hooks/useAnnouncements";
+import { type CreateAnnouncementBody } from "@/types/announcement";
+import { useAuth } from "@/hooks/useAuth";
 
-export default function AnnouncementPage() {   // <-- uppercase A
-    const [announcements, setAnnouncements] = useState<Announcement[]>(mockAnnouncement);
+export default function AnnouncementPage() {  
+    const { getToken } = useAuth();
+    const token = getToken() ?? undefined;
 
-    const handleDelete = (id: number) =>
-        setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+    const {
+        announcements,
+        total,
+        page,
+        pageSize,
+        loading,
+        error,
+        add,
+        remove,
+        setPage,
+    } = useAnnouncements({ token, pageSize: 20 });
 
-    const handleAdd = (a: Omit<Announcement, "id">) =>
-        setAnnouncements((prev) => [...prev, { ...a, id: Date.now() }]);
+    async function handleAdd(draft: CreateAnnouncementBody) {
+        await add(draft);
+    }
 
-    const handleEdit = (updated: Announcement) =>
-        setAnnouncements((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+    async function handleDelete(id: string) {
+        await remove(id);
+    }
+
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
+            {error && (
+                <p className="px-4 py-2 text-sm text-red-600 bg-red-50 border-b border-red-200">
+                    {error}
+                </p>
+            )}
             <AnnouncementTable
                 announcements={announcements}
+                total={total}
+                page={page}
+                pageSize={pageSize}
+                loading={loading}
+                error={error}
                 onDelete={handleDelete}
                 onAdd={handleAdd}
-                onEdit={handleEdit}
+                onPageChange={setPage}
             />
         </div>
     );

@@ -1,20 +1,32 @@
 import React from "react";
 import { QRCodeSVG } from "qrcode.react";
-
-interface FooterProps {
-  announcements?: string[];
-}
-
-const defaultAnnouncements = [
-    "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
-    "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
-    "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
-    "Developed by Keith, Krisha, Clarence, Aze, Eli, James, and Adrienne",
-  ];
+import { useAnnouncements } from "@/hooks/useAnnouncements";
+import { useEffect } from "react";
 
 const requestURL = new URL("/request", window.location.origin).toString();
 
-const Footer: React.FC<FooterProps> = ({ announcements = defaultAnnouncements }) => {
+const Footer: React.FC = () => {
+  const { announcements, loading, refresh } = useAnnouncements({
+    scope: "all",
+    pageSize: 10,
+    isActive: true,
+  }); 
+
+  useEffect(() => {
+    const interval = setInterval(refresh, 15000); // Refresh every 15 seconds
+    return () => clearInterval(interval);
+  }, [refresh]);
+
+  const messages = loading
+    ? ["Loading announcements..."]
+    : announcements
+      .filter((a) => {
+        if (!a.expiresAt) return true; // no expiration
+        return new Date(a.expiresAt) > new Date(); // only show if not expired
+      })
+      .map((a) => a.message);
+
+    const hasMessages = messages.length > 0;
   return (
     <footer className="fixed left-0 bottom-0 w-full flex items-stretch z-50 font-sans">
       {/* Left side: Ticker section */}
@@ -24,17 +36,23 @@ const Footer: React.FC<FooterProps> = ({ announcements = defaultAnnouncements })
         </div>
 
         <div className="overflow-hidden whitespace-nowrap flex-1 min-w-0">
-          <div className="inline-flex animate-ticker">
-            {/* Doubling the array for a seamless infinite loop animation */}
-            {[...announcements, ...announcements].map((msg, index) => (
-              <span
-                key={`${msg}-${index}`}
-                className="text-[15px] font-semibold text-[#1a1a1a] mr-16"
-              >
-                {msg}
+            {hasMessages ? (
+              <div className="inline-flex animate-ticker">
+                {/* Double the array for seamless infinite loop */}
+                {[...messages, ...messages].map((msg, index) => (
+                  <span
+                    key={`${msg}-${index}`}
+                    className="text-[15px] font-semibold text-[#1a1a1a] mr-16"
+                  >
+                    {msg}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="text-[15px] font-semibold text-[#1a1a1a]">
+                No announcements at this time.
               </span>
-            ))}
-          </div>
+            )}
         </div>
       </div>
 

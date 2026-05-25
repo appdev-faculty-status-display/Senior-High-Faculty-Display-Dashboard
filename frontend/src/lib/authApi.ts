@@ -45,7 +45,7 @@ export async function apiLogin(payload: LoginPayload): Promise<AuthTokens> {
 }
 
 export async function apiRefresh(refreshToken: string): Promise<RefreshedTokens> {
-    const res = await fetch(`${BASE_URL}/api/aith/refresh`, {
+    const res = await fetch(`${BASE_URL}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),
