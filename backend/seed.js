@@ -1,7 +1,10 @@
+const dns = require('dns');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const { Faculty } = require('./src/models');
 require('dotenv').config();
+
+dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 async function seed() {
     if (!process.env.MONGODB_URI) {
