@@ -41,8 +41,20 @@ const statusOverrideSchema = new Schema(
 
 const facultySchema = new Schema(
   {
-    facultyId: { type: String, required: true, index: true, trim: true },
+    // Human-readable ID: FAC-LASTNAME, FAC-LASTNAME-2, etc.
+    facultyId: { type: String, required: true, unique: true, index: true, trim: true },
+
+    // Internal login credential — matches the facultyId by default
     userId: { type: String, sparse: true, index: true, trim: true },
+
+    email: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      lowercase: true
+    },
+
     name: { type: String, required: true, trim: true },
     role: {
       type: String,
@@ -53,10 +65,9 @@ const facultySchema = new Schema(
     passwordHash: { type: String, required: true, select: false },
     refreshTokenHash: { type: String, default: null, select: false },
     strand: { type: String, default: null, trim: true },
-    photoUrl: { type: String, required: true, trim: true },
     status: { type: String, required: true, enum: facultyStatusValues, default: 'available' },
     statusOverride: { type: statusOverrideSchema, default: null },
-    currentLocation: { type: String, required: true, trim: true },
+    currentLocation: { type: String, default: 'TBD', trim: true },
     subject: { type: String, default: null, trim: true },
     subjects: { type: [{ type: String, trim: true }], default: [] },
     schedule: { type: [scheduleEntrySchema], default: [] },

@@ -1,78 +1,131 @@
 // frontend/src/lib/facultyApi.ts
 
-import type { FacultyStatus, Strands } from "@/types/faculty-states";
+const BASE = import.meta.env.VITE_API_URL ?? '';
 
-const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api';
-const TOKEN_KEY = 'auth_token';
-
-function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem(TOKEN_KEY);
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 export interface FacultyRecord {
-  id: string;
-  name: string;
-  strand: Strands;
-  role: string;
-  currentStatus: FacultyStatus;
-  currentRoom: string;
-  subjects: string[];
+  id:            string;
+  facultyId:     string;     // e.g. "FAC-DELACRUZ"
+  name:          string;
+  email:         string | null;
+  strand:        string | null;
+  role:          string;
+  currentStatus: string;
+  currentRoom:   string | null;
+  subjects:      string[];
   consultationHours: { day: string; startTime: string; endTime: string }[];
-  schedule: { day: string; startTime: string; endTime: string; subject: string; room: string }[];
-  updatedAt: string;
-}
-
-export interface FacultyListResponse {
-  data: FacultyRecord[];
-  total: number;
+  schedule:      unknown[];
+  updatedAt:     string;
 }
 
 export interface ImportFacultyResult {
-  importId: string;
-  status: 'success' | 'partial' | 'failed';
+  importId:         string;
+  status:           'success' | 'partial' | 'failed';
   recordsProcessed: number;
-  recordsCreated: number;
-  recordsUpdated: number;
-  errors: { row: number; field: string; message: string }[];
+  recordsCreated:   number;
+  recordsUpdated:   number;
+  errors:           { row: number; field: string; message: string }[];
 }
 
-export interface ApiError {
-  error: string;
-  code: string;
-  details?: Record<string, unknown>;
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+function authHeaders(): Record<string, string> {
+  const token = localStorage.getItem('auth_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
-  const data = await res.json();
-  if (!res.ok) throw data as ApiError;
-  return data as T;
+  if (!res.ok) {
+    let msg = `Request failed (${res.status})`;
+    try {
+      const body = await res.json();
+      msg = body.message ?? msg;
+    } catch {
+    throw new Error(msg);
+    }
+  }  
+  return res.json() as Promise<T>;
 }
 
-// ── API Functions ─────────────────────────────────────────────────────────────
+// ── API calls ─────────────────────────────────────────────────────────────────
 
-export async function getFacultyList(strand?: string): Promise<FacultyListResponse> {
-  const params = strand ? `?strand=${encodeURIComponent(strand)}` : '';
-  const res = await fetch(`${BASE_URL}/faculty${params}`, {
-    headers: getAuthHeaders(),
+export async function getFacultyList(strand?: string): Promise<{ data: FacultyRecord[]; total: number }> {
+  const qs = strand ? `?strand=${encodeURIComponent(strand)}` : '';
+  const res = await fetch(`${BASE}/api/faculty${qs}`);
+  return handleResponse(res);
+}
+
+export async function getFacultyById(id: string): Promise<FacultyRecord> {
+  const res = await fetch(`${BASE}/api/faculty/${id}`, {
+    headers: authHeaders(),
   });
-  return handleResponse<FacultyListResponse>(res);
+  return handleResponse(res);
+}
+
+export interface CreateFacultyPayload {
+  name:     string;
+  email:    string;
+  strand:   string;
+  role:     string;
+  subjects: string[];
+  currentRoom?:     string;
+  teamsWebhookUrl?: string;
+}
+
+export async function createFaculty(payload: CreateFacultyPayload): Promise<FacultyRecord> {
+  const res = await fetch(`${BASE}/api/faculty`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body:    JSON.stringify({ ...payload, subjects: JSON.stringify(payload.subjects) }),
+  });
+  return handleResponse(res);
+}
+
+export interface UpdateFacultyPayload {
+  name?:     string;
+  email?:    string;
+  strand?:   string;
+  role?:     string;
+  subjects?: string[];
+  currentRoom?:     string;
+  teamsWebhookUrl?: string;
+}
+
+export async function updateFaculty(id: string, payload: UpdateFacultyPayload): Promise<FacultyRecord> {
+  // subjects must be serialized as JSON string for multipart-compatible middleware,
+  // but since this route uses upload.none() we can send plain JSON.
+  const body: Record<string, unknown> = { ...payload };
+  if (payload.subjects) body.subjects = JSON.stringify(payload.subjects);
+
+  const res = await fetch(`${BASE}/api/faculty/${id}`, {
+    method:  'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body:    JSON.stringify(body),
+  });
+  return handleResponse(res);
+}
+
+export async function deleteFaculty(id: string): Promise<{ id: string; facultyId: string; deleted: boolean }> {
+  const res = await fetch(`${BASE}/api/faculty/${id}`, {
+    method:  'DELETE',
+    headers: authHeaders(),
+  });
+  return handleResponse(res);
 }
 
 export async function importFaculty(
   file: File,
-  replaceSchedule: boolean
+  replaceSchedule = false
 ): Promise<ImportFacultyResult> {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('replaceSchedule', String(replaceSchedule));
+  const form = new FormData();
+  form.append('file', file);
+  form.append('replaceSchedule', String(replaceSchedule));
 
-  const res = await fetch(`${BASE_URL}/faculty/import`, {
-    method: 'POST',
-    headers: getAuthHeaders(), // no Content-Type — browser sets it for FormData
-    body: formData,
+  const res = await fetch(`${BASE}/api/faculty/import`, {
+    method:  'POST',
+    headers: authHeaders(),    // DO NOT set Content-Type — let the browser set multipart boundary
+    body:    form,
   });
-  return handleResponse<ImportFacultyResult>(res);
+  return handleResponse(res);
 }

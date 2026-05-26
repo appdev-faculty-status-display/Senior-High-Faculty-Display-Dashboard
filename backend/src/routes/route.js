@@ -7,9 +7,13 @@ const {
     getFacultyList,
     getFacultyById,
     createFaculty,
+    updateFaculty,
+    deleteFaculty,
     updateFacultyStatus,
     updateFacultySchedule,
-    updateFacultyConsultationHours
+    updateFacultyConsultationHours,
+    normalizeFacultyCard,
+    generateFacultyId  
 } = require('../controllers/faculty.controller');
 const {
     getQueue,
@@ -47,6 +51,13 @@ router.post('/auth/refresh', authLimiter, refresh);
 router.post('/auth/logout', logout);
 
 // ── Faculty ───────────────────────────────────────────────────────────────────
+// list - public
+router.get('/faculty', asyncHandler(getFacultyList));
+
+// single read - public
+router.get('/faculty/:id', asyncHandler(getFacultyById));
+
+// create single entry
 router.post(
     '/faculty',
     authToken,
@@ -54,9 +65,22 @@ router.post(
     upload.none(),
     asyncHandler(createFaculty)
 );
-router.use('/faculty/:id', authToken);
-router.get('/faculty', asyncHandler(getFacultyList));
-router.get('/faculty/:id', asyncHandler(getFacultyById));
+
+// general update (name, email, strand, role, subjects) - principal or strand_head
+router.patch(
+    '/faculty/:id', 
+    authToken, 
+    requireRole('principal', 'strand_head'), 
+    asyncHandler(updateFaculty));
+
+// delete - principal or strand_head
+router.delete(
+    '/faculty/:id',
+    authToken,
+    requireRole('principal', 'strand_head'),
+    asyncHandler(deleteFaculty)
+);
+
 router.patch('/faculty/:id/status', authToken, asyncHandler(updateFacultyStatus));
 router.patch('/faculty/:id/schedule', authToken, asyncHandler(updateFacultySchedule));
 router.patch('/faculty/:id/consultation-hours', authToken, asyncHandler(updateFacultyConsultationHours));

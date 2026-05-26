@@ -1,4 +1,4 @@
-const Faculty = require('../models/Faculty');
+const Faculty = require('../models/faculty.model');
 
 // requestingUser is required — strand_head sees only their strand,
 // principal sees all strands. Passed in from the controller via req.user.
