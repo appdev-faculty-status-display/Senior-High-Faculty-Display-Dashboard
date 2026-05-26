@@ -21,7 +21,7 @@ interface Props {
 }
 
 const STRANDS = ["STEM", "ABM", "HUMSS"];
-const ROLES   = ["faculty", "strand_head", "principal"];
+const ROLES   = ["faculty", "strand_head"];
 
 const inputClass =
   "w-full border border-gray-300 px-2 py-2 text-sm text-gray-700 outline-none focus:border-yellow-400 appearance-none";

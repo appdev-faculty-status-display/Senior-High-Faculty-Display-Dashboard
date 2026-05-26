@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import type { Day } from "../../types/schedule";
-import { DAYS, ROOMS } from "../../data/mockAddSchedule";
 import { formatPHTime } from "../../utils/phTime";
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api';
 
@@ -24,6 +23,10 @@ interface Props {
     onSaved: (result: AddEntryResult) => void; // parent re-fetches or appends the new entry
     accessToken: string;
 }
+
+// —— Constants ———————————————
+const DAYS = ["All Days", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const ROOMS = ["All Rooms", "101", "102", "103", "104", "105", "106", "Lab 1", "Lab 2"];
 
 const VALID_DAYS = DAYS.filter((d) => d !== "All Days") as Day[];
 const VALID_ROOMS = ROOMS.filter((r) => r !== "All Rooms");

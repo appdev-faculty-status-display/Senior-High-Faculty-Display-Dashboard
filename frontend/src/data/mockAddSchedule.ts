@@ -1,7 +1,6 @@
 import type { FacultySchedule, Strand, Day } from "../types/schedule";
 
 export const ROWS_PER_PAGE = 8;
-
 export const STRANDS: ("All Strands" | Strand)[] = ["All Strands", "STEM", "HUMSS", "ABM"];
 export const DAYS: ("All Days" | Day)[] = ["All Days", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 export const ROOMS = ["All Rooms", "203", "204", "205", "207", "302", "401", "Lab 1"];
