@@ -2,7 +2,7 @@
 
 import { useState, useMemo, type Dispatch, type SetStateAction } from "react";
 import type { FacultySchedule } from "@/types/schedule";
-import { ROWS_PER_PAGE } from "@/data/mockAddSchedule";
+const ROWS_PER_PAGE = 8;
 
 interface UseScheduleFiltersReturn {
     strandFilter:       string;
