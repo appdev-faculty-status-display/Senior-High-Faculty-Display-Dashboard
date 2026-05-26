@@ -9,6 +9,13 @@ import IconSearch from "@/components/icons/SearchIcon";
 import IconEdit from "@/components/icons/EditIcon";
 
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+import {
   Table,
   TableBody,
   TableCell,
@@ -407,242 +414,263 @@ export default function AddFaculty() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <section className="min-h-screen w-full bg-gray-50 p-6">
+    <TooltipProvider>
+      <section className="min-h-screen w-full bg-gray-50 p-6">
 
-      {/* Header */}
-      <div className="flex items-start justify-between mb-5">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-[#002f73] uppercase">
-            Manage Faculty
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            View, add, and manage faculty members for the SHS Faculty Board.
-          </p>
-        </div>
+        {/* Header */}
+        <div className="flex items-start justify-between mb-5">
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-[#002f73] uppercase">
+              Manage Faculty
+            </h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              View, add, and manage faculty members for the SHS Faculty Board.
+            </p>
+          </div>
 
-        <div className="flex gap-2">
-          {/* Single add */}
-          <button
-            onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-[#002f73] border border-[#002f73] hover:bg-blue-50 transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Add Faculty
-          </button>
+          <div className="flex gap-2">
+            {/* Single add */}
+            <button
+              onClick={() => setIsAdding(true)}
+              className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-[#002f73] border border-[#002f73] hover:bg-blue-50 transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add Faculty
+            </button>
 
-          {/* Bulk import */}
-          <button
-            onClick={() => setIsImporting(true)}
-            className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white border border-[#002f73] bg-[#002f73] hover:bg-[#064db6] transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            Import Faculty
-          </button>
-        </div>
-      </div>
-
-      {/* Import result banner */}
-      {lastImport && (
-        <div
-          className="mb-4 px-4 py-2.5 border text-xs font-semibold flex items-center justify-between"
-          style={{
-            background:   lastImport.status === "failed" ? "#fde8e7" : "#e6f9ec",
-            borderColor:  lastImport.status === "failed" ? "#ed3a30" : "#31ac52",
-            color:        lastImport.status === "failed" ? "#ed3a30" : "#31ac52",
-          }}
-        >
-          <span>
-            Last import: {lastImport.recordsCreated} created, {lastImport.recordsUpdated} updated
-            {lastImport.errors.length > 0 && `, ${lastImport.errors.length} error(s)`}
-          </span>
-          <button onClick={() => setLastImport(null)} className="ml-4 font-bold opacity-60 hover:opacity-100">✕</button>
-        </div>
-      )}
-
-      {/* Table card */}
-      <div className="bg-white shadow-sm border border-gray-100 overflow-hidden">
-
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3 p-4 border-b border-gray-100">
-          <SelectFilter
-            value={strandFilter}
-            onChange={handleFilterChange(setStrandFilter)}
-            options={STRANDS}
-          />
-          <div className="flex items-center border border-gray-200 px-3 py-2 bg-white flex-1 min-w-40 gap-2">
-            <IconSearch />
-            <input
-              type="text"
-              placeholder="Search by name, ID, email, or subject…"
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="flex-1 text-sm outline-none text-gray-700 placeholder-gray-400"
-            />
+            {/* Bulk import */}
+            <button
+              onClick={() => setIsImporting(true)}
+              className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white border border-[#002f73] bg-[#002f73] hover:bg-[#064db6] transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              Import Faculty
+            </button>
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-0">
-                {["Faculty ID", "Name", "Email", "Strand", "Role", "Subjects", "Actions"].map((h) => (
-                  <TableHead
-                    key={h}
-                    className="text-white font-bold text-xs uppercase tracking-wider whitespace-nowrap py-3 px-4"
-                    style={{ background: "#002f73" }}
-                  >
-                    {h}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-400 text-sm">
-                    Loading…
-                  </TableCell>
+        {/* Import result banner */}
+        {lastImport && (
+          <div
+            className="mb-4 px-4 py-2.5 border text-xs font-semibold flex items-center justify-between"
+            style={{
+              background:   lastImport.status === "failed" ? "#fde8e7" : "#e6f9ec",
+              borderColor:  lastImport.status === "failed" ? "#ed3a30" : "#31ac52",
+              color:        lastImport.status === "failed" ? "#ed3a30" : "#31ac52",
+            }}
+          >
+            <span>
+              Last import: {lastImport.recordsCreated} created, {lastImport.recordsUpdated} updated
+              {lastImport.errors.length > 0 && `, ${lastImport.errors.length} error(s)`}
+            </span>
+            <button onClick={() => setLastImport(null)} className="ml-4 font-bold opacity-60 hover:opacity-100">✕</button>
+          </div>
+        )}
+
+        {/* Table card */}
+        <div className="bg-white shadow-sm border border-gray-100 overflow-hidden">
+
+          {/* Filters */}
+          <div className="flex flex-wrap gap-3 p-4 border-b border-gray-100">
+            <SelectFilter
+              value={strandFilter}
+              onChange={handleFilterChange(setStrandFilter)}
+              options={STRANDS}
+            />
+            <div className="flex items-center border border-gray-200 px-3 py-2 bg-white flex-1 min-w-40 gap-2">
+              <IconSearch />
+              <input
+                type="text"
+                placeholder="Search by name, ID, email, or subject…"
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="flex-1 text-sm outline-none text-gray-700 placeholder-gray-400"
+              />
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-0">
+                  {["Faculty ID", "Name", "Email", "Strand", "Role", "Subjects", "Actions"].map((h) => (
+                    <TableHead
+                      key={h}
+                      className="text-white font-bold text-xs uppercase tracking-wider whitespace-nowrap py-3 px-4"
+                      style={{ background: "#002f73" }}
+                    >
+                      {h}
+                    </TableHead>
+                  ))}
                 </TableRow>
-              ) : paginated.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-400 text-sm">
-                    No faculty found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginated.map((f, i) => (
-                  <TableRow
-                    key={f.id}
-                    className="border-b border-gray-50 hover:bg-blue-50/40 transition-colors"
-                    style={{ background: i % 2 === 0 ? "#ffffff" : "#f8faff" }}
-                  >
-                    {/* Faculty ID */}
-                    <TableCell className="px-4 py-3">
-                      <span className="font-mono text-xs font-semibold text-[#002f73] bg-blue-50 px-2 py-0.5 rounded">
-                        {f.facultyId}
-                      </span>
-                    </TableCell>
-
-                    {/* Name */}
-                    <TableCell className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <span
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                          style={{ background: "#002f73" }}
-                        >
-                          {f.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
-                        </span>
-                        <span className="font-semibold text-[#1a1a1a] text-sm whitespace-nowrap">{f.name}</span>
-                      </div>
-                    </TableCell>
-
-                    {/* Email */}
-                    <TableCell className="px-4 py-3 text-gray-600 text-sm">{f.email}</TableCell>
-
-                    {/* Strand */}
-                    <TableCell className="px-4 py-3 font-semibold text-[#002f73] text-sm">{f.strand}</TableCell>
-
-                    {/* Role */}
-                    <TableCell className="px-4 py-3 text-gray-600 text-sm capitalize">
-                      {f.role.replace("_", " ")}
-                    </TableCell>
-
-                    {/* Subjects */}
-                    <TableCell className="px-4 py-3 text-gray-600 text-sm max-w-[200px] truncate" title={f.subjects}>
-                      {f.subjects}
-                    </TableCell>
-
-                    {/* Actions */}
-                    <TableCell className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setEditTarget(f)}
-                          className="p-1.5 hover:bg-blue-100 text-[#002f73] transition-colors"
-                          title="Edit faculty"
-                        >
-                          <IconEdit />
-                        </button>
-                      </div>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-400 text-sm">
+                      Loading…
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                ) : paginated.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-400 text-sm">
+                      No faculty found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginated.map((f, i) => (
+                    <TableRow
+                      key={f.id}
+                      className="border-b border-gray-50 hover:bg-blue-50/40 transition-colors"
+                      style={{ background: i % 2 === 0 ? "#ffffff" : "#f8faff" }}
+                    >
+                      {/* Faculty ID */}
+                      <TableCell className="px-4 py-3">
+                        <span className="font-mono text-xs font-semibold text-[#002f73] bg-blue-50 px-2 py-0.5 rounded">
+                          {f.facultyId}
+                        </span>
+                      </TableCell>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm text-gray-500">
-          <span>
-            Showing{" "}
-            {filtered.length === 0 ? 0 : (page - 1) * ROWS_PER_PAGE + 1} –{" "}
-            {Math.min(page * ROWS_PER_PAGE, filtered.length)} of {filtered.length} entries
-          </span>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-2 py-1 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              &lt;
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
+                      {/* Name */}
+                      <TableCell className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                            style={{ background: "#002f73" }}
+                          >
+                            {f.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                          </span>
+                          <span className="font-semibold text-[#1a1a1a] text-sm whitespace-nowrap">{f.name}</span>
+                        </div>
+                      </TableCell>
+
+                      {/* Email */}
+                      <TableCell className="px-4 py-3 text-gray-600 text-sm">{f.email}</TableCell>
+
+                      {/* Strand */}
+                      <TableCell className="px-4 py-3 font-semibold text-[#002f73] text-sm">{f.strand}</TableCell>
+
+                      {/* Role */}
+                      <TableCell className="px-4 py-3 text-gray-600 text-sm capitalize">
+                        {f.role.replace("_", " ")}
+                      </TableCell>
+
+                      {/* Subjects */}
+                      <TableCell className="px-4 py-3 text-sm max-w-[200px]">
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <span className="block truncate text-gray-600 cursor-default max-w-[200px]">
+                              {f.subjects}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            className="max-w-[280px] text-xs leading-relaxed"
+                          >
+                            <div className="flex flex-col gap-1">
+                               {f.subjectsArray.length > 0
+                                  ? f.subjectsArray.map((s, i) => (
+                                      <div key={i} className="py-0.5">{s}</div>
+                                    ))
+                                  : <span className="text-gray-400">No subjects</span>
+                                }
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setEditTarget(f)}
+                            className="p-1.5 hover:bg-blue-100 text-[#002f73] transition-colors"
+                            title="Edit faculty"
+                          >
+                            <IconEdit />
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm text-gray-500">
+            <span>
+              Showing{" "}
+              {filtered.length === 0 ? 0 : (page - 1) * ROWS_PER_PAGE + 1} –{" "}
+              {Math.min(page * ROWS_PER_PAGE, filtered.length)} of {filtered.length} entries
+            </span>
+            <div className="flex items-center gap-1">
               <button
-                key={pg}
-                onClick={() => setPage(pg)}
-                className={`w-7 h-7 text-xs font-semibold transition-colors ${
-                  pg === page ? "bg-[#002f73] text-white shadow-sm" : "hover:bg-gray-100 text-gray-600"
-                }`}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-2 py-1 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {pg}
+                &lt;
               </button>
-            ))}
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-2 py-1 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              &gt;
-            </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
+                <button
+                  key={pg}
+                  onClick={() => setPage(pg)}
+                  className={`w-7 h-7 text-xs font-semibold transition-colors ${
+                    pg === page ? "bg-[#002f73] text-white shadow-sm" : "hover:bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {pg}
+                </button>
+              ))}
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-2 py-1 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                &gt;
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Modals */}
-      {isAdding && (
-        <AddFacultyModal
-          onClose={() => setIsAdding(false)}
-          onAdded={(row) => { setRows((prev) => [row, ...prev]); setIsAdding(false); }}
-        />
-      )}
+        {/* Modals */}
+        {isAdding && (
+          <AddFacultyModal
+            onClose={() => setIsAdding(false)}
+            onAdded={(row) => { setRows((prev) => [row, ...prev]); setIsAdding(false); }}
+          />
+        )}
 
-      {isImporting && (
-        <ImportFacultyModal
-          onClose={() => setIsImporting(false)}
-          onSuccess={(result) => { handleImportSuccess(result); setIsImporting(false); }}
-        />
-      )}
+        {isImporting && (
+          <ImportFacultyModal
+            onClose={() => setIsImporting(false)}
+            onSuccess={(result) => { handleImportSuccess(result); setIsImporting(false); }}
+          />
+        )}
 
-      {editTarget && (
-        <EditFacultyModal
-          row={editTarget}
-          onClose={() => setEditTarget(null)}
-          onSaved={(updated) => {
-            setRows((prev) => prev.map((r) => r.id === updated.id ? updated : r));
-            setEditTarget(null);
-          }}
-          onDeleted={(id) => {
-            setRows((prev) => prev.filter((r) => r.id !== id));
-            setEditTarget(null);
-          }}
-        />
-      )}
-    </section>
+        {editTarget && (
+          <EditFacultyModal
+            row={editTarget}
+            onClose={() => setEditTarget(null)}
+            onSaved={(updated) => {
+              setRows((prev) => prev.map((r) => r.id === updated.id ? updated : r));
+              setEditTarget(null);
+            }}
+            onDeleted={(id) => {
+              setRows((prev) => prev.filter((r) => r.id !== id));
+              setEditTarget(null);
+            }}
+          />
+        )}
+      </section>
+    </TooltipProvider>
   );
 }

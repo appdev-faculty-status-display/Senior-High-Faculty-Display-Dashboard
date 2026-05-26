@@ -68,7 +68,7 @@ export default function AddScheduleModal({ onClose, onSaved, accessToken }: Prop
 
         setIsLoading(true);
         try {
-            const res = await fetch(`${BASE_URL}/schedule/${encodeURIComponent(facultyId.trim())}`, {
+            const res = await fetch(`${BASE_URL}/schedule-entries/${encodeURIComponent(facultyId.trim())}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

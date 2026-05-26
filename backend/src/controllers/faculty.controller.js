@@ -137,7 +137,7 @@ function normalizeFacultyCard(faculty) {
     currentRoom: faculty.currentLocation,
     subjects: normalizeSubjects(faculty),
     consultationHours: Array.isArray(faculty.consultationHours) ? faculty.consultationHours : [],
-    schedule: Array.isArray(faculty.schedule) ? faculty.schedule : [],
+    // schedule: Array.isArray(faculty.schedule) ? faculty.schedule : [],
     updatedAt: faculty.updatedAt
   };
 }
@@ -212,7 +212,7 @@ async function getFacultyList(req, res) {
     filter.status = status;
   }
 
-  const facultyList = await Faculty.find(filter).sort({ name: 1 });
+  const facultyList = await Faculty.find(filter, { schedule: 0 }).sort({ name: 1 });
 
   return res.status(200).json({
     data: facultyList.map(normalizeFacultyCard),

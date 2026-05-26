@@ -38,8 +38,8 @@ const schedulesRouter = require('./schedule.route');
 const upload = multer();
 
 // ── Schedule ──────────────────────────────────────────────────────────────────
-router.use('/schedule', schedulesRouter);      // GET  /schedule
-router.use('/schedule', scheduleImportRouter); // POST /schedule/import
+router.use('/schedule', schedulesRouter);               // GET  /schedule
+router.use('/schedule-entries', scheduleImportRouter); // POST /schedule-entries/import
 // POST /schedule/:facultyId
 
 // ── Announcements ─────────────────────────────────────────────────────────────

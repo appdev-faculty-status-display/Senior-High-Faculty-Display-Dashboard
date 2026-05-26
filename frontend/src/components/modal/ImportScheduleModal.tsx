@@ -71,7 +71,7 @@ export default function ImportScheduleModal({ onClose, onImportComplete, accessT
             formData.append("replaceAll", String(replaceAll)); 
 
             // Do NOT set Content-Type manually — browser sets the multipart boundary
-            const res = await fetch(`${BASE_URL}/schedule/import`, {
+            const res = await fetch(`${BASE_URL}/schedule-entries/import`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
