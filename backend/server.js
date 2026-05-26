@@ -15,7 +15,26 @@ const { startAutoStatusCron } = require('./src/services/autoStatus.service');
 
 const app = express();
 
+function resolveTrustProxy(value) {
+  if (value === undefined || value === null || value === '') {
+    // Default to one upstream proxy (common for deployed environments).
+    return 1;
+  }
+
+  const normalized = String(value).trim().toLowerCase();
+
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+
+  const parsed = Number(normalized);
+  if (Number.isInteger(parsed) && parsed >= 0) return parsed;
+
+  return value;
+}
+
 dns.setServers(['8.8.8.8', '1.1.1.1']);
+
+app.set('trust proxy', resolveTrustProxy(process.env.TRUST_PROXY));
 
 // Middleware
 app.use(helmet());
