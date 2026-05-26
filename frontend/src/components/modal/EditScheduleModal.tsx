@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import type { FacultySchedule, Strand, Day } from "../../types/schedule";
-import { STRANDS, DAYS, ROOMS } from "../../data/mockAddSchedule";
 import { useAuth } from "@/hooks/useAuth";
 import { isValidHHMM, formatPHTime } from "@/utils/phTime";
+
+// —— Constants ———————————————
+const STRANDS = ["All Strands", "STEM", "HUMSS", "ABM"];
+const DAYS = ["All Days", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const ROOMS = ["All Rooms", "101", "102", "103", "104", "105", "106", "Lab 1", "Lab 2"];;
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api';
 

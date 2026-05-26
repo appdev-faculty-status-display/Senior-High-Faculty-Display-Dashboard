@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import type { FacultySchedule } from "@/types/schedule";
-import { STRANDS, DAYS, ROOMS, ROWS_PER_PAGE } from "@/data/mockAddSchedule";
 
 import { useAuth }            from "@/hooks/useAuth";
 import { useSchedules }       from "@/hooks/useSchedules";
@@ -17,6 +16,12 @@ import EditScheduleModal      from "@/components/modal/EditScheduleModal";
 import ImportScheduleModal    from "@/components/modal/ImportScheduleModal";
 import AddScheduleModal       from "@/components/modal/AddScheduleModal";
 import DownloadTemplateButton from "@/components/DownloadTemplateButton";
+
+// —— Constants ———————————————
+const ROWS_PER_PAGE = 8;
+const STRANDS = ["All Strands", "STEM", "HUMSS", "ABM"];
+const DAYS = ["All Days", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const ROOMS = ["All Rooms", "101", "102", "103", "104", "105", "106", "Lab 1", "Lab 2"];
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api'; 
 
