@@ -40,7 +40,7 @@ export default function ClassScheduleDashboard() {
 
     const handleDelete = async (s: FacultySchedule) => {
         try {
-            const res = await fetch (`${BASE_URL}/schedule/${encodeURIComponent(s.facultyId)}`, {
+            const res = await fetch (`${BASE_URL}/schedule-entries/${encodeURIComponent(s.facultyId)}`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",

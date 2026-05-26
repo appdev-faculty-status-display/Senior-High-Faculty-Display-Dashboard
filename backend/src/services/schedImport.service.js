@@ -158,11 +158,11 @@ async function applyGroupedSchedules(grouped, requestingUser, replaceAll) {
     const facultyIds = Object.keys(grouped);
     let recordsApplied = 0;
     const applyErrors = [];
-
+ 
     for (const facultyId of facultyIds) {
         const { name, entries } = grouped[facultyId];
         const faculty = await Faculty.findOne({ facultyId });
-
+ 
         if (!faculty) {
             applyErrors.push({
                 row: 0,
@@ -170,7 +170,7 @@ async function applyGroupedSchedules(grouped, requestingUser, replaceAll) {
             });
             continue;
         }
-
+ 
         if (requestingUser.role === 'strand_head' && 
             faculty.strand !== requestingUser.strand
         ) {
@@ -180,11 +180,11 @@ async function applyGroupedSchedules(grouped, requestingUser, replaceAll) {
             });
             continue;
         }
-
+ 
         if (name && name !== faculty.name) {
             faculty.name = name;
         }
-
+ 
         if (replaceAll) {
             faculty.schedule = entries;
         } else {
@@ -199,13 +199,25 @@ async function applyGroupedSchedules(grouped, requestingUser, replaceAll) {
                 if (!exists) faculty.schedule.push(newEntry);
             });
         }
-
+ 
+        // Sync faculty.subjects from the full schedule (after merge/replace).
+        // Collect unique non-empty subject values across all schedule entries.
+        const subjectSet = new Set(
+            faculty.schedule
+                .map(function (e) { return e.subject && e.subject.trim(); })
+                .filter(Boolean)
+        );
+        if (subjectSet.size > 0) {
+            faculty.subjects = Array.from(subjectSet);
+        }
+ 
         await faculty.save({ validateModifiedOnly: true });
         recordsApplied += entries.length;
     }
-
+ 
     return { recordsApplied, applyErrors };
 }
+
 
 async function finalizeLog(log, finalStatus, totalProcessed, recordsApplied, allErrors) {
     log.status = finalStatus;
@@ -366,6 +378,16 @@ async function addEntry(facultyId, entry, requestingUser) {
 
     // ── 6. Persist ─────────────────────────────────────────────────────────────
     faculty.schedule.push(normalized);
+
+    // Sync subjects from full schedule after adding new entry
+    const subjectSet = new Set(
+        faculty.schedule
+            .map(function (e) { return e.subject && e.subject.trim(); })
+            .filter(Boolean)
+    );
+    if (subjectSet.size > 0) {
+        faculty.subjects = Array.from(subjectSet);
+    }
     await faculty.save({ validateModifiedOnly: true });
 
     return {

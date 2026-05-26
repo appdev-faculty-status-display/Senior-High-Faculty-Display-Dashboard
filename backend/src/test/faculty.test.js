@@ -3,7 +3,15 @@ const express = require('express');
 const multer = require('multer');
 const mongoose = require('mongoose');
 
-jest.mock('../models');
+// Must match what faculty.controller.js actually requires: '../models'
+jest.mock('../models', () => ({
+  Faculty: {
+    find:     jest.fn(),
+    findOne:  jest.fn(),
+    findById: jest.fn(),
+    create:   jest.fn(),
+  },
+}));
 const { Faculty } = require('../models');
 
 const {
@@ -27,15 +35,16 @@ const mockAuth = (
 
 const upload = multer();
 
-app.get('/faculty', asyncHandler(getFacultyList));
-app.get('/faculty/:id', asyncHandler(getFacultyById));
-app.post('/faculty', mockAuth(), upload.none(), asyncHandler(createFaculty));
+// /faculty/strand must be registered BEFORE /faculty/:id to avoid route shadowing
 app.post(
   '/faculty/strand',
   mockAuth('strand_head', new mongoose.Types.ObjectId().toString(), 'STEM'),
   upload.none(),
   asyncHandler(createFaculty)
 );
+app.get('/faculty',        asyncHandler(getFacultyList));
+app.get('/faculty/:id',    asyncHandler(getFacultyById));
+app.post('/faculty',       mockAuth(), upload.none(), asyncHandler(createFaculty));
 app.patch('/faculty/:id/status', mockAuth(), asyncHandler(updateFacultyStatus));
 
 const mockFaculty = {
@@ -69,7 +78,10 @@ describe('Faculty Routes', () => {
       Faculty.find.mockReturnValue({ sort: jest.fn().mockResolvedValue([mockFaculty]) });
       const res = await request(app).get('/faculty?strand=STEM');
       expect(res.status).toBe(200);
-      expect(Faculty.find).toHaveBeenCalledWith(expect.objectContaining({ strand: 'STEM' }));
+      expect(Faculty.find).toHaveBeenCalledWith(
+        expect.objectContaining({ strand: 'STEM' }),
+        expect.anything()
+      );
     });
 
     it('returns 422 on invalid status filter', async () => {
@@ -119,22 +131,32 @@ describe('Faculty Routes', () => {
   describe('POST /faculty', () => {
     it('returns 201 on valid create', async () => {
       Faculty.findOne.mockResolvedValue(null);
+
+      // generateFacultyId calls Faculty.find(...).select(...).lean()
+      Faculty.find.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          lean: jest.fn().mockResolvedValue([]),
+        }),
+      });
+
       const createdFaculty = {
         _id: new mongoose.Types.ObjectId(),
+        facultyId: 'FAC-DOE',
         name: 'Jane Doe',
-        userId: 'jane.doe@nu-laguna.edu.ph',
+        email: 'jane.doe@nu-laguna.edu.ph',
+        userId: 'FAC-DOE',
         strand: 'STEM',
         role: 'faculty',
         subjects: ['English', 'Research'],
         status: 'available',
-        createdAt: new Date()
+        createdAt: new Date(),
       };
       Faculty.create.mockResolvedValue(createdFaculty);
 
       const res = await request(app)
         .post('/faculty')
         .field('name', 'Jane Doe')
-        .field('userId', 'jane.doe@nu-laguna.edu.ph')
+        .field('email', 'jane.doe@nu-laguna.edu.ph')
         .field('strand', 'STEM')
         .field('role', 'faculty')
         .field('subjects', '["English","Research"]')
@@ -144,16 +166,16 @@ describe('Faculty Routes', () => {
 
       expect(res.status).toBe(201);
       expect(res.body).toHaveProperty('id');
-      expect(res.body).toHaveProperty('userId', 'jane.doe@nu-laguna.edu.ph');
+      expect(res.body).toHaveProperty('facultyId', 'FAC-DOE');
     });
 
-    it('returns error on duplicate userId', async () => {
+    it('returns error on duplicate email', async () => {
       Faculty.findOne.mockResolvedValue(mockFaculty);
 
       const res = await request(app)
         .post('/faculty')
         .field('name', 'Jane Doe')
-        .field('userId', 'jane.doe@nu-laguna.edu.ph')
+        .field('email', 'jane.doe@nu-laguna.edu.ph')
         .field('strand', 'STEM')
         .field('role', 'faculty')
         .field('subjects', '["English"]')
@@ -166,22 +188,18 @@ describe('Faculty Routes', () => {
 
     it('returns error when strand head creates mismatched strand', async () => {
       Faculty.findOne.mockResolvedValue(null);
-      Faculty.create.mockResolvedValue({
-        _id: new mongoose.Types.ObjectId(),
-        name: 'Jane Doe',
-        userId: 'jane.doe@nu-laguna.edu.ph',
-        strand: 'ABM',
-        role: 'faculty',
-        subjects: ['English'],
-        status: 'available',
-        createdAt: new Date()
+
+      Faculty.find.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          lean: jest.fn().mockResolvedValue([]),
+        }),
       });
 
       const res = await request(app)
         .post('/faculty/strand')
         .field('name', 'Jane Doe')
-        .field('userId', 'jane.doe@nu-laguna.edu.ph')
-        .field('strand', 'ABM')
+        .field('email', 'jane.doe@nu-laguna.edu.ph')
+        .field('strand', 'ABM') // STEM strand_head trying to create ABM → should 403
         .field('role', 'faculty')
         .field('subjects', '["English"]')
         .field('currentRoom', 'Room 101')

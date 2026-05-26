@@ -257,48 +257,47 @@ export default function RequestForm() {
   );
 
   useEffect(() => {
-    const selectedTeacher = form.teacher;
+  const selectedTeacher = form.teacher;
+  if (!selectedTeacher) return;
 
-    if (!selectedTeacher) {
-      setBookedTimes([]);
-      return;
-    }
+  const controller = new AbortController();
+  const cancelled = { current: false };
 
-    const controller = new AbortController();
+  const loadBookedTimes = async () => {
+    try {
+      const response = await fetch(
+        `/api/requests/booked-times?teacher=${encodeURIComponent(selectedTeacher)}`,
+        { signal: controller.signal }
+      );
 
-    const loadBookedTimes = async () => {
-      try {
-        const response = await fetch(`/api/requests/booked-times?teacher=${encodeURIComponent(selectedTeacher)}`, {
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          setBookedTimes([]);
-          return;
-        }
-
-        const data: { bookedTimes?: string[] } = await response.json();
-        setBookedTimes(Array.isArray(data.bookedTimes) ? data.bookedTimes : []);
-      } catch (error) {
-        if (controller.signal.aborted) return;
-        setBookedTimes([]);
+      if (!response.ok) {
+        if (!cancelled.current) setBookedTimes([]);
+        return;
       }
-    };
 
-    loadBookedTimes();
+      const data: { bookedTimes?: string[] } = await response.json();
+      if (!cancelled.current) {
+        setBookedTimes(Array.isArray(data.bookedTimes) ? data.bookedTimes : []);
+      }
+    } catch {
+      if (!controller.signal.aborted) setBookedTimes([]);
+    }
+  };
 
-    return () => controller.abort();
+  loadBookedTimes();
+
+  return () => {
+    cancelled.current = true;
+    controller.abort();
+  };
   }, [form.teacher]);
 
   useEffect(() => {
     const timeWindowError = getTimeWindowError(startTime, endTime);
-
-    if (!startTime || !endTime || timeWindowError) {
-      setRooms(mockRooms);
-      return;
-    }
+    if (!startTime || !endTime || timeWindowError) return;
 
     const controller = new AbortController();
+    const cancelled = { current: false };
 
     const loadRoomAvailability = async () => {
       try {
@@ -308,23 +307,26 @@ export default function RequestForm() {
         );
 
         if (!response.ok) {
-          setRooms(mockRooms);
+          if (!cancelled.current) setRooms(mockRooms);
           return;
         }
 
         const data: { data?: Array<{ roomCode?: string; status?: string }> } = await response.json();
         const nextRooms: Room[] = Array.isArray(data.data)
           ? data.data
-            .filter((room) => typeof room.roomCode === 'string' && room.roomCode.trim())
-            .map((room): Room => ({
-              id: normalizeRoomCode(room.roomCode as string),
-              status: String(room.status || '').toLowerCase() === 'reserved'
-                ? 'reserved'
-                : String(room.status || '').toLowerCase() === 'occupied'
-                  ? 'occupied'
-                  : 'available',
-            }))
+              .filter((room) => typeof room.roomCode === 'string' && room.roomCode.trim())
+              .map((room): Room => ({
+                id: normalizeRoomCode(room.roomCode as string),
+                status:
+                  String(room.status || '').toLowerCase() === 'reserved'
+                    ? 'reserved'
+                    : String(room.status || '').toLowerCase() === 'occupied'
+                      ? 'occupied'
+                      : 'available',
+              }))
           : [];
+
+        if (cancelled.current) return;
 
         setRooms(nextRooms.length > 0 ? nextRooms : mockRooms);
 
@@ -332,7 +334,6 @@ export default function RequestForm() {
           const selectedRoom = nextRooms.find(
             (room) => normalizeRoomCode(room.id) === normalizeRoomCode(form.room)
           );
-
           if (selectedRoom && selectedRoom.status !== 'available') {
             setForm((prev) => ({ ...prev, room: '' }));
             setErrors((prev) => ({
@@ -341,15 +342,17 @@ export default function RequestForm() {
             }));
           }
         }
-      } catch (error) {
-        if (controller.signal.aborted) return;
-        setRooms(mockRooms);
+      } catch {
+        if (!controller.signal.aborted) setRooms(mockRooms);
       }
     };
 
     loadRoomAvailability();
 
-    return () => controller.abort();
+    return () => {
+      cancelled.current = true;
+      controller.abort();
+    };
   }, [endTime, form.room, startTime]);
 
   useEffect(() => {

@@ -18,7 +18,6 @@ export default function StatusPage() {
         if (!requestId) return;
 
         let mounted = true;
-        let intervalId: ReturnType<typeof setInterval>;
 
         const poll = async () => {
             try {
@@ -41,7 +40,7 @@ export default function StatusPage() {
                 if (s !== "pending") {
                     clearInterval(intervalId);
                 }
-            } catch (err) {
+            } catch {
                 if (mounted) {
                     setErrorMessage("Unable to load request status right now.");
                     setLoading(false);
@@ -50,7 +49,7 @@ export default function StatusPage() {
         };
 
         poll();
-        intervalId = setInterval(poll, pollIntervalMs);
+        const intervalId = setInterval(poll, pollIntervalMs);
 
         return () => {
             mounted = false;

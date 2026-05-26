@@ -49,7 +49,7 @@ export default function EditScheduleModal({ schedule, onClose, onSaved, onDelete
 
         setIsLoading(true);
         try {
-            const res = await fetch(`${BASE_URL}/schedule/${encodeURIComponent(schedule.facultyId)}`, {
+            const res = await fetch(`${BASE_URL}/schedule-entries/${encodeURIComponent(schedule.facultyId)}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { Faculty } = require('../models');
+const Faculty  = require('../models/faculty.model');
 const {
     TIMING_SAFE_DUMMY_HASH,
     signAccessToken,

@@ -4,9 +4,9 @@ import ExcelJS from "exceljs";
 import { IMPORT_TIME_INSTRUCTIONS } from "@/utils/phTime";
 
 const SAMPLE_ROWS = [
-    { facultyId: 'FAC-001', name: 'Juan dela Cruz', day: 'Monday',    startTime: '07:30', endTime: '09:00', subject: 'General Mathematics',    room: 'Room 101' },
-    { facultyId: 'FAC-001', name: 'Juan dela Cruz', day: 'Wednesday', startTime: '13:00', endTime: '14:30', subject: 'Pre-Calculus',            room: 'Room 102' },
-    { facultyId: 'FAC-002', name: 'Maria Santos',   day: 'Tuesday',   startTime: '09:00', endTime: '10:30', subject: 'Earth and Life Science',  room: 'Room 203' },
+    { facultyId: 'FAC-SURNAME', name: 'Last name, First name', day: 'Monday',    startTime: '07:30', endTime: '09:00', subject: 'General Mathematics',    room: 'Room 101' },
+    { facultyId: 'FAC-SURNAME', name: 'Last name, First name', day: 'Wednesday', startTime: '13:00', endTime: '14:30', subject: 'Pre-Calculus',            room: 'Room 102' },
+    { facultyId: 'FAC-SURNAME', name: 'MarLast name, First name',   day: 'Tuesday',   startTime: '09:00', endTime: '10:30', subject: 'Earth and Life Science',  room: 'Room 203' },
 ];
 
 export default function DownloadTemplateButton() {
