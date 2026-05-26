@@ -1,18 +1,17 @@
 const XLSX = require('xlsx');
 const bcrypt = require('bcryptjs');
 const { Faculty, FacultyImport } = require('../models');
+const { generateFacultyId } = require('../controllers/faculty.controller');
 
-const REQUIRED_COLUMNS = ['name', 'userId', 'strand', 'role', 'subjects'];
+const REQUIRED_COLUMNS = ['name', 'email', 'userId', 'strand', 'role', 'subjects'];
 const ALLOWED_ROLES = ['faculty', 'strand_head', 'principal'];
-const DEFAULT_PHOTO_URL = 'https://placeholder.com/photo.jpg';
 const DEFAULT_CURRENT_LOCATION = 'TBD';
 const DEFAULT_PASSWORD_FALLBACK = 'Test1234!';
 
-function normalizeCell(value) {
-  if (value === null || value === undefined) {
-    return '';
-  }
 
+// Helpers
+function normalizeCell(value) {
+  if (value === null || value === undefined)  return '';
   return String(value).trim();
 }
 
@@ -155,58 +154,44 @@ function parseSchedule(value, rowNumber, errors) {
 
 function parseRows(rows, headers) {
   const rowErrors = [];
-  const parsedRows = [];
-  const hasScheduleColumn = headers.includes('schedule');
+  const parsedErrors = [];
+  const hasSchedule = headers.includes('schedule');
 
-  rows.forEach(function (row, index) {
-    const rowNumber = index + 2;
+  rows.forEach((row, index) => {
+    const rowNumber = index + 2; // +2 to account for header row and 0-based index
     const localErrors = [];
 
     const name = normalizeCell(row.name);
+    const email = normalizeCell(row.email);
     const userId = normalizeCell(row.userId);
     const strand = normalizeCell(row.strand);
     const role = normalizeCell(row.role);
 
-    if (!name) {
-      addRowError(localErrors, rowNumber, 'name', 'name is required');
-    }
-
-    if (!userId) {
-      addRowError(localErrors, rowNumber, 'userId', 'userId is required');
-    }
-
-    if (!strand) {
-      addRowError(localErrors, rowNumber, 'strand', 'strand is required');
-    }
-
+    if (!name)  addRowError(localErrors, rowNumber, 'name', 'name is required');
+    if (!email) addRowError(localErrors, rowNumber, 'email', 'email is required');
+    if (!userId) addRowError(localErrors, rowNumber, 'userId', 'userId is required');
+    if (!strand) addRowError(localErrors, rowNumber, 'strand', 'strand is required');
+    
     if (!role) {
       addRowError(localErrors, rowNumber, 'role', 'role is required');
     } else if (!ALLOWED_ROLES.includes(role)) {
-      addRowError(localErrors, rowNumber, 'role', 'role must be a valid faculty role');
+      addRowError(localErrors, rowNumber, 'role', `role must be one of: ${ALLOWED_ROLES.join(', ')}`);
     }
 
     const subjects = parseSubjects(row.subjects, rowNumber, localErrors);
-    const schedule = hasScheduleColumn ? parseSchedule(row.schedule, rowNumber, localErrors) : null;
+    const schedule = hasSchedule ? parseSchedule(row.schedule, rowNumber, localErrors) : null;
 
     if (localErrors.length > 0) {
       rowErrors.push(...localErrors);
       return;
     }
 
-    parsedRows.push({
-      rowNumber,
-      name,
-      userId,
-      strand,
-      role,
-      subjects,
-      schedule
-    });
+    parsedRows.push({ rowNumber, name, email, userId, strand, role, subjects, schedule });
   });
-
   return { parsedRows, rowErrors };
 }
 
+// DB Helpers
 async function createImportLog(importedBy, fileName) {
   return FacultyImport.create({
     importedBy,
@@ -216,7 +201,7 @@ async function createImportLog(importedBy, fileName) {
     recordsProcessed: 0,
     recordsCreated: 0,
     recordsUpdated: 0,
-    errors: []
+    importErrors: []
   });
 }
 
@@ -226,122 +211,122 @@ async function finalizeLog(log, status, recordsProcessed, recordsCreated, record
   log.recordsProcessed = recordsProcessed;
   log.recordsCreated = recordsCreated;
   log.recordsUpdated = recordsUpdated;
-  log.errors = errors;
+  log.importErrors = errors;
   await log.save();
 }
 
+
+// Core apply loop
 async function applyRows(rows, requestingUser, replaceSchedule) {
   let recordsCreated = 0;
   let recordsUpdated = 0;
   const applyErrors = [];
   let defaultPasswordHash = null;
-
+ 
   for (const row of rows) {
+    // Strand-head scope enforcement
     if (requestingUser.role === 'strand_head') {
       if (!requestingUser.strand || row.strand !== requestingUser.strand) {
-      addRowError(
-        applyErrors,
-        row.rowNumber,
-        'strand',
-        'Faculty belongs to a different strand and was skipped'
-      );
-      continue;
+        addRowError(
+          applyErrors,
+          row.rowNumber,
+          'strand',
+          'Faculty belongs to a different strand and was skipped'
+        );
+        continue;
       }
     }
-
-    const existing = await Faculty.findOne({ userId: row.userId });
-
+ 
+    // Prefer lookup by email (most stable identifier); fall back to userId
+    let existing = await Faculty.findOne({ email: row.email });
+    if (!existing) {
+      existing = await Faculty.findOne({ userId: row.userId });
+    }
+ 
     if (existing) {
-      existing.name = row.name;
-      existing.strand = row.strand;
-      existing.role = row.role;
+      // Update mutable fields — facultyId is preserved
+      existing.name     = row.name;
+      existing.email    = row.email;
+      existing.strand   = row.strand;
+      existing.role     = row.role;
       existing.subjects = row.subjects;
-
+ 
       if (replaceSchedule && row.schedule && row.schedule.length > 0) {
         existing.schedule = row.schedule;
       }
-
+ 
       await existing.save();
       recordsUpdated += 1;
       continue;
     }
-
+ 
+    // Create new record
     if (!defaultPasswordHash) {
       defaultPasswordHash = await bcrypt.hash(getDefaultPassword(), 10);
     }
-
+ 
+    // Generate FAC-LASTNAME style id, resolving collisions
+    const facultyId = await generateFacultyId(row.name);
+ 
     await Faculty.create({
-      facultyId: row.userId,
-      userId: row.userId,
+      facultyId,
+      userId: row.userId || facultyId,
+      email: row.email,
       name: row.name,
       role: row.role,
       strand: row.strand,
       passwordHash: defaultPasswordHash,
-      photoUrl: DEFAULT_PHOTO_URL,
       status: 'available',
       currentLocation: DEFAULT_CURRENT_LOCATION,
       subjects: row.subjects,
       schedule: row.schedule || [],
       teamsWebhookUrl: null
     });
-
+ 
     recordsCreated += 1;
   }
-
+ 
   return { recordsCreated, recordsUpdated, applyErrors };
 }
 
+// Public entry point
 async function runFacultyImport(buffer, fileName, importedBy, replaceSchedule, requestingUser) {
   const log = await createImportLog(importedBy, fileName);
-
-  try {
-    const rows = parseSheet(buffer);
-    const headers = validateHeaders(rows);
-    const { parsedRows, rowErrors } = parseRows(rows, headers);
-    const { recordsCreated, recordsUpdated, applyErrors } = await applyRows(
-      parsedRows,
-      requestingUser,
-      replaceSchedule
-    );
-
-    const allErrors = [...rowErrors, ...applyErrors];
-    const totalProcessed = rows.length;
-    let status = 'success';
-
-    if (allErrors.length > 0 && recordsCreated + recordsUpdated === 0) {
-      status = 'failed';
-    } else if (allErrors.length > 0) {
-      status = 'partial';
+ 
+    try {
+      const rows = parseSheet(buffer);
+      const headers = validateHeaders(rows);
+      const { parsedRows, rowErrors } = parseRows(rows, headers);
+      const { recordsCreated, recordsUpdated, applyErrors } = await applyRows(
+        parsedRows,
+        requestingUser,
+        replaceSchedule
+      );
+  
+      const allErrors    = [...rowErrors, ...applyErrors];
+      const totalProcessed = rows.length;
+      let status = 'success';
+  
+      if (allErrors.length > 0 && recordsCreated + recordsUpdated === 0) {
+        status = 'failed';
+      } else if (allErrors.length > 0) {
+        status = 'partial';
+      }
+  
+      await finalizeLog(log, status, totalProcessed, recordsCreated, recordsUpdated, allErrors);
+  
+      return {
+        importId: log._id.toString(),
+        status,
+        recordsProcessed: totalProcessed,
+        recordsCreated,
+        recordsUpdated,
+        errors: allErrors
+      };
+    } catch (error) {
+      await finalizeLog(log, 'failed', 0, 0, 0, [{ row: 0, field: 'file', message: error.message }]);
+      throw error;
     }
-
-    await finalizeLog(
-      log,
-      status,
-      totalProcessed,
-      recordsCreated,
-      recordsUpdated,
-      allErrors
-    );
-
-    return {
-      importId: log._id.toString(),
-      status,
-      recordsProcessed: totalProcessed,
-      recordsCreated,
-      recordsUpdated,
-      errors: allErrors
-    };
-  } catch (error) {
-    await finalizeLog(
-      log,
-      'failed',
-      0,
-      0,
-      0,
-      [{ row: 0, field: 'file', message: error.message }]
-    );
-    throw error;
-  }
 }
 
 module.exports = { runFacultyImport };

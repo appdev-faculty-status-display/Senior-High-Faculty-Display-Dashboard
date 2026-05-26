@@ -1,10 +1,10 @@
 module.exports = {
-  Faculty: require('./Faculty'),
+  Faculty: require('./faculty.model'),
   Queue: require('./Queue'),
   Room: require('./Room'),
   Announcement: require('./announcement.model'),
   Notification: require('./notification.model'),
-  FacultyImport: require('./FacultyImport'),
+  FacultyImport: require('./facultyImport.model'),
   ScheduleImport: require('./ScheduleImport'),
-  ConsultationRoom: require('./consultation.model'),
+  ConsultationRoom: require('./consultation.model')
 };

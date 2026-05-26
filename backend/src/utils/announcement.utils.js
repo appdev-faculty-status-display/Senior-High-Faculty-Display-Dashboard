@@ -7,7 +7,17 @@ function buildAnnouncementFilter({ scope, strand, isActive }) {
     if (isActive !== undefined) {
         filter.isActive = isActive;
     } else {
-        filter.isActive = true; // Default to only active announcements
+        filter.isActive = true;
+    }
+
+    //only apply date filter for active announcement queries
+    if (filter.isActive === true) {
+        const now = new Date();
+        filter.startsAt = { $lte: now };
+        filter.$or = [
+            { expiresAt: null },
+            { expiresAt: { $gt: now } },
+        ];
     }
 
     if (scope) {
@@ -17,7 +27,6 @@ function buildAnnouncementFilter({ scope, strand, isActive }) {
     if (scope === 'strand' && strand) {
         filter.strand = strand;
     }
-
     return filter;
 }
 

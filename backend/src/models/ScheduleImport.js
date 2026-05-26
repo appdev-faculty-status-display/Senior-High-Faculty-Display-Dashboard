@@ -28,7 +28,7 @@ const scheduleImportSchema = new Schema(
     finishedAt: { type: Date, default: null },
     recordsProcessed: { type: Number, default: 0, min: 0 },
     recordsApplied: { type: Number, default: 0, min: 0 },
-    errors: { type: [importErrorSchema], default: [] }
+    importErrors: { type: [importErrorSchema], default: [] }
   },
   { timestamps: true, versionKey: false }
 );

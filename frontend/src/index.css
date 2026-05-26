@@ -316,7 +316,7 @@ canvas {
 }
 
 .animate-ticker {
-  animation: ticker 40s linear infinite;
+  animation: ticker 30s linear infinite;
 }
 
 

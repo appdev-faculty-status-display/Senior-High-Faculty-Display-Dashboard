@@ -1,7 +1,10 @@
+const dns = require('dns');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const { Faculty } = require('./src/models');
 require('dotenv').config();
+
+dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 async function seed() {
     if (!process.env.MONGODB_URI) {
@@ -41,11 +44,53 @@ async function seed() {
             },
             {
                 facultyId: 'ADM001',
-                userId: 'test.principal@nu-laguna.edu.ph',
+                userId: 'test.admin@nu-laguna.edu.ph',
                 name: 'Test Principal',
                 role: 'principal',
                 strand: 'STEM',
                 currentLocation: 'Admin Office'
+            },
+
+            // new real teachers matching mockRequestForm.ts
+            {
+                facultyId: 'FAC-ROBLES',
+                userId: 'roblesk@students.nu-laguna.edu.ph',
+                name: 'Mr. Robles',
+                role: 'faculty',
+                strand: 'STEM',
+                currentLocation: 'Room 301'
+            },
+            {
+                facultyId: 'FAC-PAGARAN',
+                userId: 'pagaranag@students.nu-laguna.edu.ph',
+                name: 'Mr. Pagaran',
+                role: 'faculty',
+                strand: 'HUMSS',
+                currentLocation: 'Room 302'
+            },
+            {
+                facultyId: 'FAC-LEGASPI',
+                userId: 'mjlegaspi@nu-laguna.edu.ph',
+                name: 'Mr. Legaspi',
+                role: 'faculty',
+                strand: 'ABM',
+                currentLocation: 'Room 303'
+            },
+            {
+                facultyId: 'FAC-JOMPILLA',
+                userId: 'jompillam@students.nu-laguna.edu.ph',
+                name: 'Mr. Jompilla',
+                role: 'faculty',
+                strand: 'ABM',
+                currentLocation: 'Room 304'
+            },
+            {
+                facultyId: 'FAC-CATAAG',
+                userId: 'cataagjl@students.nu-laguna.edu.ph',
+                name: 'Mr. Cataag',
+                role: 'faculty',
+                strand: 'STEM',
+                currentLocation: 'Room 305'
             }
         ];
 

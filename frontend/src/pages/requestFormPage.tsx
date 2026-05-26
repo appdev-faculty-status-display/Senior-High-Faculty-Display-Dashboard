@@ -1,19 +1,24 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 import { type Room } from "@/types/requestForm";
 import type { FormState, FormErrors, UrgencyLevel, RoomStatus } from "@/types/requestForm";
 import { mockRooms, strands, teachers, teacherEmails } from "@/data/mockRequestForm";
-import { generateTimeSlots } from "@/utils/timeSlots";
+
 
 // Sub-components
 interface ConsultationRoomPickerProps {
   rooms: Room[];
   selected: string;
   onChange: (roomId: string) => void;
+  disabled?: boolean;
 }
 
-function ConsultationRoomPicker({ rooms, selected, onChange }: ConsultationRoomPickerProps) {
+function normalizeRoomCode(value: string): string {
+  return value.trim().toUpperCase();
+}
+
+function ConsultationRoomPicker({ rooms, selected, onChange, disabled }: ConsultationRoomPickerProps) {
   const statusStyles: Record<RoomStatus, string> = {
     available: "bg-white border border-[#31ac52] text-[#1a1a1a] cursor-pointer hover:border-[#064db6] hover:bg-[#064db6]/5 transition-all",
     occupied: "bg-[#ed3a30]/10 text-[#ed3a30] border border-[#ed3a30]/30 cursor-not-allowed opacity-60",
@@ -25,13 +30,14 @@ function ConsultationRoomPicker({ rooms, selected, onChange }: ConsultationRoomP
     <div className="flex items-center gap-2 flex-wrap">
       {rooms.map((room) => {
         const isDisabled = room.status !== "available";
-        const isSelected = selected === room.id;
-        const style = isSelected ? selectedStyle : statusStyles[room.status];
+        const globalDisabled = disabled ?? false;
+        const isSelected = normalizeRoomCode(selected) === normalizeRoomCode(room.id);
+        const style = isSelected && room.status === "available" ? selectedStyle : statusStyles[room.status];
         return (
           <button
             key={room.id}
             type="button"
-            disabled={isDisabled}
+            disabled={isDisabled || globalDisabled}
             onClick={() => onChange(room.id)}
             className={`px-4 py-1.5 text-sm font-black tracking-wide transition-all ${style}`}
           >
@@ -41,8 +47,9 @@ function ConsultationRoomPicker({ rooms, selected, onChange }: ConsultationRoomP
       })}
       <button
         type="button"
-        className="ml-auto px-5 py-1.5 border border-[#1a1a1a] text-sm font-black text-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white transition-all"
+        className={`ml-auto px-5 py-1.5 border border-[#1a1a1a] text-sm font-black text-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white transition-all ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
         onClick={() => onChange("walk-in")}
+        disabled={disabled}
       >
         WALK-IN
       </button>
@@ -50,31 +57,122 @@ function ConsultationRoomPicker({ rooms, selected, onChange }: ConsultationRoomP
   );
 }
 
-interface TimeSlotDropdownProps {
-  value: string;
-  onChange: (value: string) => void;
+function getPhilippineNow(): Date {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).formatToParts(new Date());
+
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value || '00';
+
+  return new Date(
+    `${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}:${get('second')}`
+  );
 }
 
-function TimeSlotDropdown({ value, onChange }: TimeSlotDropdownProps) {
-  const slots = generateTimeSlots(7, 17);
-  return (
-    <div className="relative mt-2">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full border border-[#cbd5e1] px-3 py-2.5 text-sm appearance-none bg-white focus:outline-none focus:border-[#064db6] focus:ring-1 focus:ring-[#064db6]/30 transition-all ${value ? "text-[#1a1a1a]" : "text-[#d6d6d6]"
-          }`}
-      >
-        <option value="" disabled>Select a time slot</option>
-        {slots.map((s) => (
-          <option key={s} value={s} className="text-[#1a1a1a]">{s}</option>
-        ))}
-      </select>
-      <svg className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none">
-        <path d="M6 9l6 6 6-6" stroke="#4f4f4f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </div>
-  );
+function parseTimeToMinutes(value: string): number | null {
+  const match = value.trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+
+  if (!match) return null;
+
+  const [, hourText, minuteText, periodText] = match;
+  let hour = Number(hourText);
+  const minute = Number(minuteText);
+  const period = periodText ? periodText.toUpperCase() : null;
+
+  if (Number.isNaN(hour) || Number.isNaN(minute) || minute < 0 || minute > 59) {
+    return null;
+  }
+
+  if (period) {
+    if (hour < 1 || hour > 12) return null;
+
+    if (period === 'PM' && hour !== 12) hour += 12;
+    if (period === 'AM' && hour === 12) hour = 0;
+  }
+
+  if (hour < 0 || hour > 23) {
+    return null;
+  }
+
+  return hour * 60 + minute;
+}
+
+function formatInputTimeLabel(value: string): string {
+  const minutes = parseTimeToMinutes(value);
+
+  if (minutes === null) {
+    return value;
+  }
+
+  const hour24 = Math.floor(minutes / 60);
+  const minute = String(minutes % 60).padStart(2, '0');
+  const period = hour24 >= 12 ? 'PM' : 'AM';
+  const displayHour = hour24 % 12 === 0 ? 12 : hour24 % 12;
+
+  return `${displayHour}:${minute} ${period}`;
+}
+
+function formatMinutesToInputValue(totalMinutes: number): string {
+  const normalizedMinutes = ((totalMinutes % 1440) + 1440) % 1440;
+  const hours = Math.floor(normalizedMinutes / 60)
+    .toString()
+    .padStart(2, '0');
+  const minutes = (normalizedMinutes % 60).toString().padStart(2, '0');
+
+  return `${hours}:${minutes}`;
+}
+
+function buildTimeRangeLabel(startTime: string, endTime: string): string {
+  return `${formatInputTimeLabel(startTime)} – ${formatInputTimeLabel(endTime)}`;
+}
+
+function parseTimeRangeLabel(slot: string): { start: number; end: number } | null {
+  const parts = slot.split(/\s*(?:–|-|—)\s*/).map((part) => part.trim()).filter(Boolean);
+
+  if (parts.length !== 2) return null;
+
+  const start = parseTimeToMinutes(parts[0]);
+  const end = parseTimeToMinutes(parts[1]);
+
+  if (start === null || end === null) return null;
+
+  return { start, end };
+}
+
+function rangesOverlap(startA: number, endA: number, startB: number, endB: number): boolean {
+  return startA < endB && startB < endA;
+}
+
+function getTimeWindowError(startTime: string, endTime: string): string | null {
+  const OFFICE_START = 7 * 60; // 07:00 in minutes
+  const OFFICE_END = 17 * 60; // 17:00 in minutes
+  if (!startTime.trim()) return 'Start time is required.';
+  if (!endTime.trim()) return 'End time is required.';
+
+  const startMinutes = parseTimeToMinutes(startTime);
+  const endMinutes = parseTimeToMinutes(endTime);
+
+  if (startMinutes !== null && (startMinutes < OFFICE_START || startMinutes > OFFICE_END)) {
+    return 'Start time must be within office hours (07:00 – 17:00).';
+  }
+
+  if (startMinutes === null) return 'Start time must be valid.';
+  if (endMinutes === null) return 'End time must be valid.';
+  if (endMinutes <= startMinutes) return 'End time must be later than start time.';
+
+  const duration = endMinutes - startMinutes;
+
+  if (duration < 5) return 'Consultation time must be at least 5 minutes.';
+  if (duration > 60) return 'Consultation time cannot exceed 1 hour.';
+
+  return null;
 }
 
 interface UrgencySelectorProps {
@@ -127,10 +225,11 @@ function UrgencySelector({ selected, onChange }: UrgencySelectorProps) {
 // Main Page
 export default function RequestForm() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const prefillStudentId = searchParams.get("studentId") ?? "";
   const prefillName = searchParams.get("name") ?? "";
 
-  const rooms: Room[] = mockRooms;
+  const [rooms, setRooms] = useState<Room[]>(mockRooms);
 
   const [form, setForm] = useState<FormState>({
     name: prefillName,
@@ -148,15 +247,194 @@ export default function RequestForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [teacherQuery, setTeacherQuery] = useState<string>("");
   const [showTeacherDropdown, setShowTeacherDropdown] = useState<boolean>(false);
+  const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+  const [phTime, setPhTime] = useState<Date>(() => getPhilippineNow());
+  const [startTime, setStartTime] = useState<string>("");
+  const [endTime, setEndTime] = useState<string>("");
 
   const filteredTeachers = teachers.filter((t) =>
     t.toLowerCase().includes(teacherQuery.toLowerCase())
   );
 
+  useEffect(() => {
+  const selectedTeacher = form.teacher;
+  if (!selectedTeacher) return;
+
+  const controller = new AbortController();
+  const cancelled = { current: false };
+
+  const loadBookedTimes = async () => {
+    try {
+      const response = await fetch(
+        `/api/requests/booked-times?teacher=${encodeURIComponent(selectedTeacher)}`,
+        { signal: controller.signal }
+      );
+
+      if (!response.ok) {
+        if (!cancelled.current) setBookedTimes([]);
+        return;
+      }
+
+      const data: { bookedTimes?: string[] } = await response.json();
+      if (!cancelled.current) {
+        setBookedTimes(Array.isArray(data.bookedTimes) ? data.bookedTimes : []);
+      }
+    } catch {
+      if (!controller.signal.aborted) setBookedTimes([]);
+    }
+  };
+
+  loadBookedTimes();
+
+  return () => {
+    cancelled.current = true;
+    controller.abort();
+  };
+  }, [form.teacher]);
+
+  useEffect(() => {
+    const timeWindowError = getTimeWindowError(startTime, endTime);
+    if (!startTime || !endTime || timeWindowError) return;
+
+    const controller = new AbortController();
+    const cancelled = { current: false };
+
+    const loadRoomAvailability = async () => {
+      try {
+        const response = await fetch(
+          `/api/requests/room-availability?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
+          { signal: controller.signal }
+        );
+
+        if (!response.ok) {
+          if (!cancelled.current) setRooms(mockRooms);
+          return;
+        }
+
+        const data: { data?: Array<{ roomCode?: string; status?: string }> } = await response.json();
+        const nextRooms: Room[] = Array.isArray(data.data)
+          ? data.data
+              .filter((room) => typeof room.roomCode === 'string' && room.roomCode.trim())
+              .map((room): Room => ({
+                id: normalizeRoomCode(room.roomCode as string),
+                status:
+                  String(room.status || '').toLowerCase() === 'reserved'
+                    ? 'reserved'
+                    : String(room.status || '').toLowerCase() === 'occupied'
+                      ? 'occupied'
+                      : 'available',
+              }))
+          : [];
+
+        if (cancelled.current) return;
+
+        setRooms(nextRooms.length > 0 ? nextRooms : mockRooms);
+
+        if (form.room && form.room !== 'walk-in') {
+          const selectedRoom = nextRooms.find(
+            (room) => normalizeRoomCode(room.id) === normalizeRoomCode(form.room)
+          );
+          if (selectedRoom && selectedRoom.status !== 'available') {
+            setForm((prev) => ({ ...prev, room: '' }));
+            setErrors((prev) => ({
+              ...prev,
+              room: 'Selected room is already reserved for that time window.',
+            }));
+          }
+        }
+      } catch {
+        if (!controller.signal.aborted) setRooms(mockRooms);
+      }
+    };
+
+    loadRoomAvailability();
+
+    return () => {
+      cancelled.current = true;
+      controller.abort();
+    };
+  }, [endTime, form.room, startTime]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPhTime(getPhilippineNow());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const activeBookedTimes = bookedTimes.filter((slot) => {
+    const slotRange = parseTimeRangeLabel(slot);
+
+    if (!slotRange) return true;
+
+    const nowMinutes = phTime.getHours() * 60 + phTime.getMinutes();
+    return nowMinutes < slotRange.end;
+  });
+
+  const selectedTimeRange = startTime && endTime ? buildTimeRangeLabel(startTime, endTime) : "";
+
   const set = (field: keyof FormState, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
+
+  const handleStartTimeChange = (value: string) => {
+    setStartTime(value);
+    setErrors((prev) => ({ ...prev, time: undefined }));
+
+    const OFFICE_START = 7 * 60;
+    const OFFICE_END = 17 * 60;
+
+    // If start outside office hours, set immediate error and clear end
+    const startMinutes = parseTimeToMinutes(value);
+    if (startMinutes !== null && (startMinutes < OFFICE_START || startMinutes > OFFICE_END)) {
+      setErrors((prev) => ({ ...prev, time: 'Start time must be within office hours (07:00 – 17:00).' }));
+      if (endTime) setEndTime("");
+      return;
+    }
+
+    if (startMinutes !== null && endTime) {
+      const endMinutes = parseTimeToMinutes(endTime);
+      if (endMinutes === null) {
+        setEndTime("");
+        return;
+      }
+      const minAllowed = startMinutes + 5;
+      const maxAllowed = Math.min(startMinutes + 60, 23 * 60 + 59);
+      if (endMinutes < minAllowed || endMinutes > maxAllowed) {
+        setEndTime("");
+      }
+    }
+  };
+
+  const handleEndTimeChange = (value: string) => {
+    setEndTime(value);
+    setErrors((prev) => ({ ...prev, time: undefined }));
+  };
+
+  const selectedTimeRangeMinutes =
+    startTime && endTime
+      ? (() => {
+        const startMinutes = parseTimeToMinutes(startTime);
+        const endMinutes = parseTimeToMinutes(endTime);
+
+        if (startMinutes === null || endMinutes === null) return null;
+        return { start: startMinutes, end: endMinutes };
+      })()
+      : null;
+
+  const startMinutesValue = startTime ? parseTimeToMinutes(startTime) : null;
+  const endOptions = startMinutesValue !== null ? (() => {
+    const maxOffset = Math.min(60, 23 * 60 + 59 - startMinutesValue);
+    const opts: { value: string; label: string }[] = [];
+    for (let offset = 5; offset <= maxOffset; offset += 5) {
+      const mins = startMinutesValue + offset;
+      const value = formatMinutesToInputValue(mins);
+      opts.push({ value, label: formatInputTimeLabel(value) });
+    }
+    return opts;
+  })() : [];
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -173,9 +451,41 @@ export default function RequestForm() {
     }
     if (!form.strand) newErrors.strand = "Please select a strand.";
     if (!form.teacher) newErrors.teacher = "Please select a teacher.";
+    const timeWindowError = getTimeWindowError(startTime, endTime);
+    if (timeWindowError) {
+      newErrors.time = timeWindowError;
+    } else if (selectedTimeRangeMinutes && form.teacher) {
+      const hasConflict = activeBookedTimes.some((slot) => {
+        const bookedRange = parseTimeRangeLabel(slot);
+
+        return bookedRange
+          ? rangesOverlap(
+            selectedTimeRangeMinutes.start,
+            selectedTimeRangeMinutes.end,
+            bookedRange.start,
+            bookedRange.end
+          )
+          : false;
+      });
+
+      if (hasConflict) {
+        newErrors.time = `${form.teacher} is already booked during that time window.`;
+      }
+    }
     if (!form.reason.trim()) newErrors.reason = "Reason is required.";
-    if (!form.room) newErrors.room = "Please select a consultation room.";
-    if (!form.time) newErrors.time = "Please select a time slot.";
+    const selectedRoom = rooms.find(
+      (room) => normalizeRoomCode(room.id) === normalizeRoomCode(form.room)
+    );
+    const selectedDuration = selectedTimeRangeMinutes
+      ? selectedTimeRangeMinutes.end - selectedTimeRangeMinutes.start
+      : null;
+    if (!form.room) {
+      newErrors.room = "Please select a consultation room.";
+    } else if (form.room !== 'walk-in' && selectedDuration !== null && selectedDuration < 30) {
+      newErrors.room = "Consultation rooms are allowed if set time is 30 minutes or more.";
+    } else if (form.room !== 'walk-in' && selectedRoom && selectedRoom.status !== 'available') {
+      newErrors.room = "Selected room is already reserved for that time window.";
+    }
     if (!form.urgency) newErrors.urgency = "Please select an urgency level.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -184,31 +494,57 @@ export default function RequestForm() {
   const handleSubmit = async () => {
     if (!validate()) return;
 
-    const teacherEmail = teacherEmails[form.teacher] ?? null;
-
-    const payload = {
-      studentName: form.name,
-      studentId: form.studentId,
-      studentEmail: form.studentEmail,
-      strand: form.strand,
-      teacherName: form.teacher,
-      teacherEmail: teacherEmail,
-      reason: form.reason,
-      room: form.room,
-      time: form.time,
-      urgency: form.urgency,
-    };
-
     try {
-      const res = await fetch("YOUR_POWER_AUTOMATE_HTTP_TRIGGER_URL", {
+      const createResponse = await fetch("/api/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          studentName: form.name,
+          studentId: form.studentId,
+          studentEmail: form.studentEmail,
+          strand: form.strand,
+          teacher: form.teacher,
+          teacherEmail: teacherEmails[form.teacher],
+          reason: form.reason,
+          room: form.room,
+          time: selectedTimeRange,
+          urgency: form.urgency,
+        }),
       });
 
-      if (!res.ok) throw new Error("Flow trigger failed");
+      if (!createResponse.ok) {
+        console.error("Request creation failed:", await createResponse.text());
+        return;
+      }
 
-      setSubmitted(true);
+      const createData = await createResponse.json();
+      const mongoId = createData._id;
+
+      if (!mongoId) {
+        console.error("No _id returned from backend:", createData);
+        return;
+      }
+
+      fetch("/api/requests/trigger-flow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: mongoId,
+          studentName: form.name,
+          studentId: form.studentId,
+          studentEmail: form.studentEmail,
+          strand: form.strand,
+          teacher: form.teacher,
+          teacherEmail: teacherEmails[form.teacher],
+          reason: form.reason,
+          room: form.room,
+          time: selectedTimeRange,
+          urgency: form.urgency,
+        }),
+      }).catch(console.error);
+
+      navigate(`/status?requestId=${mongoId}`);
+
     } catch (err) {
       console.error("Submission error:", err);
     }
@@ -232,6 +568,8 @@ export default function RequestForm() {
             onClick={() => {
               setSubmitted(false);
               setForm({ name: "", studentId: "", strand: "", teacher: "", reason: "", room: "", time: "", urgency: "", studentEmail: "" });
+              setStartTime("");
+              setEndTime("");
               setTeacherQuery("");
               setShowTeacherDropdown(false);
               setErrors({});
@@ -363,20 +701,78 @@ export default function RequestForm() {
             {errorMsg("reason")}
           </div>
 
-          {/* Consultation Rooms */}
+          <div>
+            <label className="block text-xs font-black text-[#1a1a1a] uppercase tracking-widest mb-1.5">Time Window:</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="startTime" className="block text-[11px] font-bold uppercase tracking-widest text-[#4f4f4f] mb-1">Start Time</label>
+                <input
+                  id="startTime"
+                  type="time"
+                  step={60}
+                  min="07:00"
+                  max="17:00"
+                  value={startTime}
+                  onChange={(e) => handleStartTimeChange(e.target.value)}
+                  className={`${inputBase} ${inputBorder("time")}`}
+                />
+                {startTime && (
+                  <p className="text-[11px] text-[#4f4f4f] mt-1">{formatInputTimeLabel(startTime)} PST</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="endTime" className="block text-[11px] font-bold uppercase tracking-widest text-[#4f4f4f] mb-1">
+                  End Time
+                </label>
+                <select
+                  id="endTime"
+                  value={endTime}
+                  onChange={(e) => handleEndTimeChange(e.target.value)}
+                  disabled={!startTime}
+                  className={`${inputBase} ${inputBorder("time")} ${!startTime ? "bg-gray-50 text-gray-400 cursor-not-allowed" : ""}`}
+                >
+                  <option value="" disabled>Select End Time</option>
+                  {endOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value} className="text-[#1a1a1a]">{opt.label}</option>
+                  ))}
+                </select>
+                {endTime && (
+                  <p className="text-[11px] text-[#4f4f4f] mt-1">{formatInputTimeLabel(endTime)} PST</p>
+                )}
+              </div>
+            </div>
+            {selectedTimeRange && (
+              <p className="mt-0 text-xs font-semibold" style={{ color: 'var(--secondary)' }}>Selected time: {selectedTimeRange}</p>
+            )}
+            {form.teacher && activeBookedTimes.length > 0 && (
+              <div className="mt-2">
+                <p className="text-xs font-bold text-[#4f4f4f]">
+                  {form.teacher} has {activeBookedTimes.length} active booked consultation window{activeBookedTimes.length === 1 ? "" : "s"}:
+                </p>
+                <ul className="mt-1 text-xs font-bold text-[#4f4f4f] list-disc pl-5 space-y-0.5">
+                  {activeBookedTimes.map((slot) => (
+                    <li key={slot} style={{ color: 'var(--destructive)' }}>{slot}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {errorMsg("time")}
+          </div>
+
+          {/* Consultation Rooms (moved after Time Window) */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-black text-[#1a1a1a] uppercase tracking-widest">Consultation Rooms:</label>
               <div className="flex items-center gap-3 text-[10px] font-semibold text-[#4f4f4f]">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#ed3a30] inline-block" />Occupied</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#ffef5f] inline-block" />Reserved</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#31ac52] inline-block" />Available</span>
               </div>
             </div>
-            <ConsultationRoomPicker rooms={rooms} selected={form.room} onChange={(v) => set("room", v)} />
-            <TimeSlotDropdown value={form.time} onChange={(v) => set("time", v)} />
+            <ConsultationRoomPicker rooms={rooms} selected={form.room} onChange={(v) => set("room", v)} disabled={!startTime || !endTime} />
+            {!startTime || !endTime ? (
+              <p className="mt-2 text-xs text-[#4f4f4f]">Please select a time window first to choose a room.</p>
+            ) : null}
             {errorMsg("room")}
-            {errorMsg("time")}
           </div>
 
           {/* Urgency */}

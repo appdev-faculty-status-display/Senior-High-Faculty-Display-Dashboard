@@ -3,8 +3,9 @@ import FacultyBoard from "./pages/facultyDashboard";
 import AdminLogin from "./pages/admin/admin-login";
 import AdminBoard from "./pages/admin/adminDashboard";
 import RequestForm from "./pages/requestFormPage";
-import AddSchedule from "./components/ui/admin-dashboard/addSchedule"; 
-import AddAnnouncement from "./components/ui/admin-dashboard/AddAnnouncement";
+import StatusPage from "./pages/statusPage";
+import AddSchedule from "./components/ui/admin-dashboard/addSchedule";
+// import AddAnnouncement from "./components/ui/admin-dashboard/AddAnnouncement";
 
 export default function App() {
   return (
@@ -12,11 +13,11 @@ export default function App() {
       <Routes>
         <Route path="/" element={<FacultyBoard />} />
         <Route path="/request" element={<RequestForm />} />
-        
+        {/* Confirmation pages removed - workflow shows confirmation */}
+        <Route path="/status" element={<StatusPage />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminBoard />} />
         <Route path="/admin/add-schedule" element={<AddSchedule />} />
-        <Route path="/admin/add-announcement" element={<AddAnnouncement />} />
       </Routes>
     </div>
   );

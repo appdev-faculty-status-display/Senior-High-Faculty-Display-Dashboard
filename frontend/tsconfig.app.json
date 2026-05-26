@@ -17,7 +17,9 @@
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
-    
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+
     "jsx": "react-jsx",
 
     /* Linting */
@@ -29,7 +31,7 @@
     /* Add these for better compatibility */
     "esModuleInterop": true,
     "strict": true,
-    "types": ["vite/client"]
+    "types": ["vite/client", "react"]
   },
   "include": ["src/**/*"]  // Updated to include all files in src
 }

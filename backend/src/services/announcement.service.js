@@ -7,8 +7,8 @@ const {
 } = require('../utils/announcement.utils');
 
 async function listAnnouncements(query, user) {
-    if (query.isActive === 'false' && user?.role !== 'Principal') {
-        const err = new Error('Admin auth required to view inactive announcements.');
+    if (query.isActive === 'false' && user?.role !== 'principal') {
+        const err = new Error('Principal auth required to view inactive announcements.');
         err.status = 403;
         throw err;
     }
@@ -60,10 +60,11 @@ async function createAnnouncement(body, user) {
         message,
         scope,
         strand: scope === 'strand' ? strand : null,
-        expiresAt: expiresAt || null,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
         createdBy: user.id,
         createdByRole: user.role,
     });
+
     return announcement;
 }
 

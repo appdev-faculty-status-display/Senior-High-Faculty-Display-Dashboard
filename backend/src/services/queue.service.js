@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const mongoose = require('mongoose');
-const { Faculty, Queue } = require('../models');
+const { Queue } = require('../models');
+const Faculty  = require('../models/faculty.model');
 const { createAuthError } = require('../utils/error');
 
 const queueStatusValues = [
