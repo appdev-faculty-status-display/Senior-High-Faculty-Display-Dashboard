@@ -29,8 +29,7 @@ import {
 const STRANDS      = ["All Strands", "STEM", "ABM", "HUMSS"];
 const ROWS_PER_PAGE = 10;
 
-const ALLOWED_ROLES = ["faculty", "strand_head", "principal"] as const;
-type AllowedRole = typeof ALLOWED_ROLES[number];
+type AllowedRole = "faculty" | "strand_head" | "principal";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -57,9 +56,7 @@ interface EditDraft {
   subjects: string; // comma-separated in the form, parsed on submit
 }
 
-interface AddDraft extends EditDraft {
-  /* same fields as edit */
-}
+type AddDraft = EditDraft; // for quick reference
 
 // ── Converters ────────────────────────────────────────────────────────────────
 
@@ -162,8 +159,8 @@ function EditFacultyModal({
       });
 
       onSaved(toRow(updated));
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to save changes.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message :  "Failed to save changes.");
     } finally {
       setSaving(false);
     }
@@ -174,8 +171,8 @@ function EditFacultyModal({
     try {
       await deleteFaculty(row.id);
       onDeleted(row.id);
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to delete faculty.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to delete faculty.");
       setDeleting(false);
       setConfirmDelete(false);
     }
@@ -302,8 +299,8 @@ function AddFacultyModal({
         subjects: subjectsArray,
       });
       onAdded(toRow(created));
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to create faculty.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to create faculty.");
     } finally {
       setSaving(false);
     }
