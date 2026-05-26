@@ -30,6 +30,8 @@ const announcementsRouter = require('./announcements.route');
 const notificationRouter = require('./notification.route');
 const requestsRouter = require('./request.route');
 const schedulesRouter = require('./schedule.route');
+const consultationAnalyticsRouter = require('./consultationAnalytics.route');
+const resourceCommunicationAnalyticsRouter = require('./resourceCommunicationAnalytics.route');
 
 const upload = multer();
 
@@ -78,5 +80,7 @@ router.patch(
 // ── Notifications ─────────────────────────────────────────────────────────────
 router.use('/notifications', notificationRouter);
 router.use('/requests', requestsRouter);
+router.use('/analytics', consultationAnalyticsRouter);
+router.use('/analytics', resourceCommunicationAnalyticsRouter);
 
 module.exports = router;

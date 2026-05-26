@@ -4,7 +4,14 @@ const ConsultRooms = require('../models/consultation.model');
 
 const powerAutomateUrl = process.env.POWER_AUTOMATE_URL || 'https://default1d981f773ca346aeb0d4e8044e6c7f.84.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/3343cd1296ee46efaaa5abec7e1c62c9/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=h0isss1ndoNgJjPPfHk_Tml5YX55M_AyJwtyC2H0w-o';
 
-const allowedStatuses = new Set(['pending', 'approved', 'rejected']);
+const allowedStatuses = new Set([
+    'pending',
+    'approved',
+    'rejected',
+    'cancelled',
+    'completed',
+    'no_show'
+]);
 const defaultRoomCodes = ['CR-01', 'CR-02', 'CR-03'];
 
 const timeRangeSplitPattern = /\s*(?:–|-|—)\s*/;
@@ -101,6 +108,22 @@ const normalizeDecision = (body = {}) => {
         };
     }
 
+    if (rawDecision === 'cancel' || rawDecision === 'cancelled' || rawDecision === 'canceled') {
+        const cancellationReason = String(body.cancellationReason || body.reason || '').trim();
+        return {
+            status: 'cancelled',
+            cancellationReason: cancellationReason || null
+        };
+    }
+
+    if (rawDecision === 'complete' || rawDecision === 'completed') {
+        return { status: 'completed' };
+    }
+
+    if (rawDecision === 'no_show' || rawDecision === 'no-show' || rawDecision === 'no show') {
+        return { status: 'no_show' };
+    }
+
     return null;
 };
 
@@ -110,6 +133,7 @@ const buildRequestResponse = (request) => ({
         id: String(request._id),
         status: allowedStatuses.has(request.status) ? request.status : 'pending',
         rejectionReason: request.rejectionReason || null,
+        cancellationReason: request.cancellationReason || null,
         updatedAt: request.updatedAt || null
     }
 });
@@ -160,6 +184,7 @@ const createRequest = async (req, res) => {
             strand: payload.strand || null,
             teacher: payload.teacher || null,
             reason: payload.reason,
+            purpose: typeof payload.purpose === 'string' ? payload.purpose.trim() : null,
             room: typeof payload.room === 'string' ? payload.room.trim() : null,
             time: payload.time || null,
             urgency: payload.urgency || 'low'
@@ -329,7 +354,8 @@ const getRequest = async (req, res) => {
 
         res.json({
             status: allowedStatuses.has(request.status) ? request.status : 'pending',
-            rejectionReason: request.rejectionReason || null
+            rejectionReason: request.rejectionReason || null,
+            cancellationReason: request.cancellationReason || null
         });
     } catch (err) {
         console.error('[getRequest]', err);
@@ -340,6 +366,8 @@ const getRequest = async (req, res) => {
 const updateRequestStatus = async (req, res) => {
     const { requestId } = req.params;
     const normalizedDecision = normalizeDecision(req.body);
+    const approvalRole = String(req.body?.approvalRole || '').trim().toLowerCase();
+    const now = new Date();
 
     console.log('[updateRequestStatus] received requestId=', requestId, 'body=', req.body);
 
@@ -350,17 +378,38 @@ const updateRequestStatus = async (req, res) => {
     if (!normalizedDecision) {
         return res.status(400).json({
             error: 'Invalid decision',
-            allowed: ['approve', 'reject']
+            allowed: ['approve', 'reject', 'cancel', 'complete', 'no_show']
         });
     }
 
     try {
+        const existingRequest = await Request.findById(requestId).lean();
+
+        if (!existingRequest) {
+            return res.status(404).json({ error: 'Request not found' });
+        }
+
         const update = { status: normalizedDecision.status };
 
         if (normalizedDecision.status === 'rejected') {
             update.rejectionReason = normalizedDecision.rejectionReason;
+            update.cancellationReason = null;
+        } else if (normalizedDecision.status === 'cancelled') {
+            update.rejectionReason = null;
+            update.cancellationReason = normalizedDecision.cancellationReason || null;
         } else {
             update.rejectionReason = null;
+            update.cancellationReason = null;
+        }
+
+        if (normalizedDecision.status === 'approved') {
+            const approvedAt = req.body?.approvedAt ? new Date(req.body.approvedAt) : now;
+            if (approvalRole === 'strand_head') {
+                update.strandHeadApprovedAt = approvedAt;
+                update.facultyApprovedAt = existingRequest.facultyApprovedAt || approvedAt;
+            } else {
+                update.facultyApprovedAt = approvedAt;
+            }
         }
 
         const request = await Request.findByIdAndUpdate(
@@ -370,8 +419,6 @@ const updateRequestStatus = async (req, res) => {
         );
 
         console.log('[updateRequestStatus] MongoDB returned after update=', request);
-
-        if (!request) return res.status(404).json({ error: 'Request not found' });
 
         res.json(buildRequestResponse(request));
     } catch (err) {

@@ -32,6 +32,7 @@ const queueSchema = new Schema(
     strand: { type: String, default: null, trim: true },
     reason: { type: String, required: true, trim: true },
     urgency: { type: String, enum: urgencyValues, default: 'normal', trim: true },
+    type: { type: String, enum: queueTypeValues, default: null, trim: true },
     roomId: { type: String, default: null, trim: true },
     strandHeadApproval: {
       type: String,

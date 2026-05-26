@@ -55,9 +55,12 @@ export default function ConsultationParticipantsTable({
       const globalFacultyMatch = globalFaculty
         ? p.facultyName.toLowerCase().includes(globalFaculty.toLowerCase())
         : true;
+      const participantDate = new Date(p.date);
+      const fromDate = globalDateFrom ? new Date(globalDateFrom) : null;
+      const toDate = globalDateTo ? new Date(globalDateTo) : null;
       const dateMatch =
-        (!globalDateFrom || p.date >= globalDateFrom) &&
-        (!globalDateTo   || p.date <= globalDateTo);
+        (!fromDate || participantDate >= fromDate) &&
+        (!toDate   || participantDate <= toDate);
 
       const localFacultyMatch = searchFaculty
         ? p.facultyName.toLowerCase().includes(searchFaculty.toLowerCase())

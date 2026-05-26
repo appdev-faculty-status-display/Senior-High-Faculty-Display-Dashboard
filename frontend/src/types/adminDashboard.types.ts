@@ -32,7 +32,7 @@ export interface RoomData {
 // ConsultationParticipantsTable
 
 export interface ConsultationParticipant {
-  id: number;
+  id: string;
   hashedStudentId: string;
   facultyName: string;
   strand: string;

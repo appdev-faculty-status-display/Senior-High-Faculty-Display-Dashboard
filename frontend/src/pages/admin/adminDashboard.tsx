@@ -19,6 +19,8 @@ import AnnouncementReachChart        from "@/components/ui/admin-dashboard/Annou
 import NotificationSuccessChart      from "@/components/ui/admin-dashboard/NotificationSuccessChart";
 import UrgencyPurposeAnalysis        from "@/components/ui/admin-dashboard/UrgencyPurposeAnalysis";
 import ConsultationParticipantsTable from "@/components/ui/admin-dashboard/ConsultationParticipantsTable";
+import { useConsultationAnalytics }  from "@/hooks/useConsultationAnalytics";
+import { useResourceCommunicationAnalytics } from "@/hooks/useResourceCommunicationAnalytics";
 
 // Types
 import type { ActiveNav, SidebarNavItemProps, MainContentProps } from "@/types/adminDashboard.types";
@@ -28,17 +30,9 @@ import {
   NAV_ITEMS,
   MOCK_STATUS_DATA,
   MOCK_RECENCY_LOG,
-  MOCK_ANNOUNCEMENT_LABELS,
-  MOCK_STRAND_SPECIFIC,
-  MOCK_SCHOOL_WIDE,
-  MOCK_ROOM_OCCUPANCY,
   MOCK_CONSULTATION_WINDOW,
-  MOCK_CONSULTATION_EFFICIENCY,
-  MOCK_CANCELLATION_RATE,
-  MOCK_APPROVAL_BOTTLENECK,
   MOCK_MANUAL_OVERRIDE,
   MOCK_NOTIFICATION_SUCCESS,
-  MOCK_CONSULTATION_PARTICIPANTS,
 } from "@/data/mockAdminDashboardData";
 
 // Utils
@@ -173,18 +167,45 @@ function ConsultationContent() {
   const [dateTo,        setDateTo]        = useState("");
   const [facultySearch, setFacultySearch] = useState("");
 
+  const { data, error } = useConsultationAnalytics({
+    from: dateFrom || undefined,
+    to: dateTo || undefined,
+    faculty: facultySearch || undefined,
+    pollIntervalMs: 5000,
+  });
+
+  const efficiency = data?.efficiency ?? {
+    quickConsultations: 0,
+    consultationRoom: 0,
+    avgQueueWaitMin: 0,
+  };
+
+  const cancellationRate = data?.cancellationRate ?? {
+    resolved: 0,
+    scheduleConflict: 0,
+    longWaitTime: 0,
+  };
+
+  const approvalBottleneck = data?.approvalBottleneck ?? {
+    facultyApprovalMin: 0,
+    strandHeadApprovalMin: 0,
+  };
+
+  const participants = data?.participants ?? [];
+  const purposeItems = data?.urgencyPurpose?.purposes ?? [];
+
   function handleExportCSV() {
     downloadCSV(
       [
         ["Metric", "Value"],
-        ["Quick Consultations",        String(MOCK_CONSULTATION_EFFICIENCY.quickConsultations)],
-        ["Consultation Room",          String(MOCK_CONSULTATION_EFFICIENCY.consultationRoom)],
-        ["Avg Queue Wait (min)",       String(MOCK_CONSULTATION_EFFICIENCY.avgQueueWaitMin)],
-        ["Resolved (%)",               String(MOCK_CANCELLATION_RATE.resolved)],
-        ["Schedule Conflict (%)",      String(MOCK_CANCELLATION_RATE.scheduleConflict)],
-        ["Long Wait Time (%)",         String(MOCK_CANCELLATION_RATE.longWaitTime)],
-        ["Faculty Approval (min)",     String(MOCK_APPROVAL_BOTTLENECK.facultyApprovalMin)],
-        ["Strand Head Approval (min)", String(MOCK_APPROVAL_BOTTLENECK.strandHeadApprovalMin)],
+        ["Quick Consultations",        String(efficiency.quickConsultations)],
+        ["Consultation Room",          String(efficiency.consultationRoom)],
+        ["Avg Queue Wait (min)",       String(efficiency.avgQueueWaitMin)],
+        ["Resolved (%)",               String(cancellationRate.resolved)],
+        ["Schedule Conflict (%)",      String(cancellationRate.scheduleConflict)],
+        ["Long Wait Time (%)",         String(cancellationRate.longWaitTime)],
+        ["Faculty Approval (min)",     String(approvalBottleneck.facultyApprovalMin)],
+        ["Strand Head Approval (min)", String(approvalBottleneck.strandHeadApprovalMin)],
       ],
       "consultation_analytics"
     );
@@ -229,20 +250,26 @@ function ConsultationContent() {
         actions={<ExportButtons onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} />}
       />
 
+      {error && (
+        <div className="text-xs text-[#ed3a30]">
+          Unable to load live consultation analytics: {error}
+        </div>
+      )}
+
       <div ref={analyticsRef} className="flex flex-col gap-6">
         <div className="grid gap-6" style={{ gridTemplateColumns: "3fr 2fr" }}>
-          <ConsultationEfficiencyCard {...MOCK_CONSULTATION_EFFICIENCY} />
-          <CancellationRateChart {...MOCK_CANCELLATION_RATE} />
+          <ConsultationEfficiencyCard {...efficiency} />
+          <CancellationRateChart {...cancellationRate} />
         </div>
         <div className="grid gap-6" style={{ gridTemplateColumns: "3fr 2fr" }}>
-          <ApprovalBottleneckCard {...MOCK_APPROVAL_BOTTLENECK} />
-          <UrgencyPurposeAnalysis />
+          <ApprovalBottleneckCard {...approvalBottleneck} />
+          <UrgencyPurposeAnalysis items={purposeItems} />
         </div>
       </div>
 
       {/* Participants table — global filters passed in, local filters inside */}
       <ConsultationParticipantsTable
-        participants={MOCK_CONSULTATION_PARTICIPANTS}
+        participants={participants}
         globalFaculty={facultySearch}
         globalDateFrom={dateFrom}
         globalDateTo={dateTo}
@@ -260,14 +287,26 @@ function ResourceCommunicationContent() {
   const [dateTo,       setDateTo]       = useState("");
   const [strandFilter, setStrandFilter] = useState("All");
 
+  const { data } = useResourceCommunicationAnalytics({
+    from: dateFrom || undefined,
+    to: dateTo || undefined,
+    strand: strandFilter !== "All" ? strandFilter : undefined,
+    pollIntervalMs: 5000,
+  });
+
+  const reachLabels = data?.announcementReach.labels ?? [];
+  const reachStrand = data?.announcementReach.strandSpecific ?? [];
+  const reachSchool = data?.announcementReach.schoolWide ?? [];
+  const occupancyRooms = data?.roomOccupancy.rooms ?? [];
+
   const STRANDS = ["All", "STEM", "ABM", "HUMSS", "TVL", "GAS"];
 
   function handleExportCSV() {
     downloadCSV(
       [
         ["Month", "Strand-Specific Reach", "School-Wide Reach"],
-        ...MOCK_ANNOUNCEMENT_LABELS.map((label, i) => [
-          label, String(MOCK_STRAND_SPECIFIC[i]), String(MOCK_SCHOOL_WIDE[i]),
+        ...reachLabels.map((label, i) => [
+          label, String(reachStrand[i] ?? 0), String(reachSchool[i] ?? 0),
         ]),
         ["---", "---", "---"],
         ["Channel", "Sent", "Failed"],
@@ -278,7 +317,7 @@ function ResourceCommunicationContent() {
         ]),
         ["---", "---", "---"],
         ["Room", "Used (%)", "Available (%)"],
-        ...MOCK_ROOM_OCCUPANCY.map((r) => [r.room, String(r.used), String(r.available)]),
+        ...occupancyRooms.map((r) => [r.room, String(r.used), String(r.available)]),
       ],
       "resource_communication_analytics"
     );
@@ -316,14 +355,14 @@ function ResourceCommunicationContent() {
       <div ref={analyticsRef} className="flex flex-col gap-6">
         {/* Announcement Reach — full width on top */}
         <AnnouncementReachChart
-          labels={MOCK_ANNOUNCEMENT_LABELS}
-          strandSpecific={MOCK_STRAND_SPECIFIC}
-          schoolWide={MOCK_SCHOOL_WIDE}
+          labels={reachLabels}
+          strandSpecific={reachStrand}
+          schoolWide={reachSchool}
         />
         {/* Notification + Room Occupancy side by side */}
         <div className="grid grid-cols-2 gap-6">
           <NotificationSuccessChart {...MOCK_NOTIFICATION_SUCCESS} />
-          <RoomOccupancyChart rooms={MOCK_ROOM_OCCUPANCY} />
+          <RoomOccupancyChart rooms={occupancyRooms} />
         </div>
       </div>
     </div>

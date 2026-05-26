@@ -12,6 +12,7 @@ export interface FormState {
   studentEmail: string;
   strand: string;
   teacher: string;
+  purpose: string;
   reason: string;
   room: string;
   time: string;
@@ -24,6 +25,7 @@ export interface FormErrors {
   studentEmail?: string;
   strand?: string;
   teacher?: string;
+  purpose?: string;
   reason?: string;
   room?: string;
   time?: string;

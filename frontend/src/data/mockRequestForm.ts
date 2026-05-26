@@ -28,3 +28,16 @@ export const teacherEmails: Record<string, string> = {
   "Mr. Cataag": "cataagjl@students.nu-laguna.edu.ph"
 };
 
+export const purposes: string[] = [
+  "Grades",
+  "Clearance",
+  "Schedule",
+  "Research",
+  "Requirements",
+  "Project",
+  "Capstone",
+  "TOR",
+  "Final Grade",
+  "Other"
+];
+

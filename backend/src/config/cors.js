@@ -3,7 +3,7 @@ const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173')
     .map(o => o.trim())
     .filter(Boolean);
 
-const devTunnelOriginPattern = /^https:\/\/[a-z0-9-]+-\d+\.asse\.devtunnels\.ms$/i;
+const devTunnelOriginPattern = /^https:\/\/[a-z0-9-]+-\d+\.(?:asse|use)\.devtunnels\.ms$/i;
 
 const corsOptions = {
     origin: function (origin, callback) {
