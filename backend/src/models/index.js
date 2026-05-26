@@ -6,5 +6,5 @@ module.exports = {
   Notification: require('./notification.model'),
   FacultyImport: require('./FacultyImport'),
   ScheduleImport: require('./ScheduleImport'),
-  ConsultationRoom: require('./consultation.model'),
+  ConsultationRoom: require('./consultation.model')
 };

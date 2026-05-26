@@ -216,7 +216,7 @@ async function createImportLog(importedBy, fileName) {
     recordsProcessed: 0,
     recordsCreated: 0,
     recordsUpdated: 0,
-    errors: []
+    importErrors: []
   });
 }
 
@@ -226,7 +226,7 @@ async function finalizeLog(log, status, recordsProcessed, recordsCreated, record
   log.recordsProcessed = recordsProcessed;
   log.recordsCreated = recordsCreated;
   log.recordsUpdated = recordsUpdated;
-  log.errors = errors;
+  log.importErrors = errors;
   await log.save();
 }
 
