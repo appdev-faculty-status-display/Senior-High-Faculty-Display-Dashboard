@@ -121,22 +121,18 @@ export default function Consultation() {
   const isInitialLoadRef = useRef(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchApprovedConsultations = async () => {
       try {
         // Only show loading on initial load
-        if (isInitialLoadRef.current) {
-          setLoading(true);
-        }
+        if (isInitialLoadRef.current) setLoading(true);
+        
         const response = await getApprovedConsultations();
-
-        console.log('API Response:', response);
-        console.log('Consultations from API:', response.data);
+        if (cancelled) return;
 
         // Filter out expired consultations
         const validConsultations = filterExpiredConsultations(response.data);
-
-        console.log('Valid consultations after filtering:', validConsultations);
-
         // Transform fetched consultations
         const activeConsultations = validConsultations.map((consultation: ApprovedConsultation) => {
           const isOngoing = isConsultationOngoing(consultation.time);
@@ -150,26 +146,19 @@ export default function Consultation() {
           };
         });
 
-        console.log('Transformed consultations:', activeConsultations);
-
         // Create a map of active consultations by room ID
         const activeMap = new Map(activeConsultations.map(room => [room.id, room]));
-
-        console.log('Active map:', Array.from(activeMap.entries()));
 
         // Merge with DEFAULT_ROOMS: use active consultations if available, otherwise use default room
         const mergedRooms = DEFAULT_ROOMS.map(mockRoom =>
           activeMap.get(String(mockRoom.id)) || (mockRoom as Room)
         );
 
-        console.log('Merged rooms:', mergedRooms);
-
         setRooms(mergedRooms as Room[]);
       } catch (err) {
+         if (cancelled) return;
         console.error('Failed to fetch approved consultations:', err);
-        const errorMessage = err instanceof Error ? err.message : JSON.stringify(err);
-        console.error('Full error details:', errorMessage);
-        console.error('Error object:', err);
+        setRooms(DEFAULT_ROOMS as Room[]);
         // Fallback to default rooms on error
         setRooms(DEFAULT_ROOMS as Room[]);
       } finally {
@@ -182,9 +171,12 @@ export default function Consultation() {
 
     fetchApprovedConsultations();
 
-    const interval = setInterval(fetchApprovedConsultations, 3000);
+    const interval = setInterval(fetchApprovedConsultations, 200_000); // Refresh every 200 seconds
 
-    return () => clearInterval(interval);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    }
   }, []);
 
   if (loading) {

@@ -1,4 +1,5 @@
 // frontend/src/lib/facultyApi.ts
+import type { ConsultationHours, ScheduleEntry } from "@/types/faculty-states";
 
 const BASE = import.meta.env.VITE_API_URL ?? '';
 
@@ -14,8 +15,8 @@ export interface FacultyRecord {
   currentStatus: string;
   currentRoom:   string | null;
   subjects:      string[];
-  consultationHours: { day: string; startTime: string; endTime: string }[];
-  schedule:      unknown[];
+  consultationHours: ConsultationHours[];
+  schedule:      ScheduleEntry[];
   updatedAt:     string;
 }
 

@@ -212,7 +212,7 @@ async function getFacultyList(req, res) {
     filter.status = status;
   }
 
-  const facultyList = await Faculty.find(filter, { schedule: 0 }).sort({ name: 1 });
+  const facultyList = await Faculty.find(filter).sort({ name: 1 });
 
   return res.status(200).json({
     data: facultyList.map(normalizeFacultyCard),
