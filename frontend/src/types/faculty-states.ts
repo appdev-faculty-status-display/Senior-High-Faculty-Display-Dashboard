@@ -28,6 +28,7 @@ export interface ScheduleEntry {
 export interface Faculty {
     id: string;
     name: string;
+    role: string;
     strand: Strands;
     photoUrl: string;
     status: FacultyStatus;
