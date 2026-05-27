@@ -19,6 +19,7 @@ const statusStyleMap: Record<Status, string> = {
 export default function StatusPage() {
     const [searchParams] = useSearchParams();
     const requestId = searchParams.get("requestId");
+    const BASE_URL = (import.meta.env.VITE_API_URL || 'https://facultyboard-cqdzg5a8dwccegby.japaneast-01.azurewebsites.net');
 
     const [status, setStatus] = useState<Status>("pending");
     const [rejectionReason, setRejectionReason] = useState<string>("");
@@ -33,7 +34,7 @@ export default function StatusPage() {
 
         const poll = async () => {
             try {
-                const res = await fetch(`/api/requests/${requestId}`);
+                const res = await fetch(`${BASE_URL}/api/requests/${requestId}`);
                 if (!res.ok) {
                     if (res.status === 404) {
                         setErrorMessage("This request is not available yet. Checking again soon.");
