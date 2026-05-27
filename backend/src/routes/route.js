@@ -13,7 +13,8 @@ const {
     updateFacultySchedule,
     updateFacultyConsultationHours,
     normalizeFacultyCard,
-    generateFacultyId  
+    generateFacultyId,
+    downloadFacultyTemplate  
 } = require('../controllers/faculty.controller');
 const {
     getQueue,
@@ -69,6 +70,8 @@ router.post(
     upload.none(),
     asyncHandler(createFaculty)
 );
+
+router.get('/faculty/template', authToken, asyncHandler(downloadFacultyTemplate));
 
 // general update (name, email, strand, role, subjects) - principal or strand_head
 router.patch(

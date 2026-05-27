@@ -88,6 +88,34 @@ function normalizeConsultationHours(entries) {
   }));
 }
 
+async function downloadFacultyTemplate(req, res) {
+  const XLSX = require('xlsx');
+
+  const headers = ['name', 'email', 'userId', 'strand', 'role', 'subjects', 'schedule'];
+
+  const exampleRow = {
+    name:     'Juan Dela Cruz',
+    email:    'jdelacruz@school.edu',
+    userId:   'jdelacruz',
+    strand:   'STEM',
+    role:     'faculty',
+    subjects: '["Math","Science"]',
+    schedule: '[{"day":"Monday","startTime":"07:30","endTime":"09:00","subject":"Math","room":"101"}]',
+  };
+
+  const ws = XLSX.utils.json_to_sheet([exampleRow], { header: headers });
+  ws['!cols'] = headers.map((h) => ({ wch: Math.max(h.length + 4, 24) }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, wb, 'Faculty Import');
+
+  const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+  res.setHeader('Content-Disposition', 'attachment; filename="faculty_import_template.xlsx"');
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  return res.send(buffer);
+}
+
 // ── facultyId generation: FAC-LASTNAME, FAC-LASTNAME-2, etc. ─────────────────
 
 /**
@@ -494,5 +522,6 @@ module.exports = {
   updateFacultySchedule,
   updateFacultyConsultationHours,
   normalizeFacultyCard,
-  generateFacultyId  
+  generateFacultyId,
+  downloadFacultyTemplate,
 };
