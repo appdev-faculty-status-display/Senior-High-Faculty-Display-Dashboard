@@ -154,7 +154,7 @@ function parseSchedule(value, rowNumber, errors) {
 
 function parseRows(rows, headers) {
   const rowErrors = [];
-  const parsedErrors = [];
+  const parsedRows = [];
   const hasSchedule = headers.includes('schedule');
 
   rows.forEach((row, index) => {

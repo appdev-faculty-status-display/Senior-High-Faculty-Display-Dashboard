@@ -80,7 +80,6 @@ describe('Faculty Routes', () => {
       expect(res.status).toBe(200);
       expect(Faculty.find).toHaveBeenCalledWith(
         expect.objectContaining({ strand: 'STEM' }),
-        expect.anything()
       );
     });
 
