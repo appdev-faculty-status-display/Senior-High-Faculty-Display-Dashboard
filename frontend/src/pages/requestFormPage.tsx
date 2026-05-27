@@ -5,7 +5,6 @@ import { type Room } from "@/types/requestForm";
 import type { FormState, FormErrors, UrgencyLevel, RoomStatus } from "@/types/requestForm";
 import { mockRooms, strands, teachers, teacherEmails, strandHeadsEmail } from "@/data/mockRequestForm";
 
-
 // Sub-components
 interface ConsultationRoomPickerProps {
   rooms: Room[];
@@ -229,6 +228,8 @@ export default function RequestForm() {
   const prefillStudentId = searchParams.get("studentId") ?? "";
   const prefillName = searchParams.get("name") ?? "";
 
+  const BASE_URL = (import.meta.env.VITE_API_URL || 'https://facultyboard-cqdzg5a8dwccegby.japaneast-01.azurewebsites.net');
+
   const [rooms, setRooms] = useState<Room[]>(mockRooms);
 
   const [form, setForm] = useState<FormState>({
@@ -266,7 +267,7 @@ export default function RequestForm() {
     const loadBookedTimes = async () => {
       try {
         const response = await fetch(
-          `/api/requests/booked-times?teacher=${encodeURIComponent(selectedTeacher)}`,
+          `${BASE_URL}/api/requests/booked-times?teacher=${encodeURIComponent(selectedTeacher)}`,
           { signal: controller.signal }
         );
 
@@ -302,7 +303,7 @@ export default function RequestForm() {
     const loadRoomAvailability = async () => {
       try {
         const response = await fetch(
-          `/api/requests/room-availability?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
+          `${BASE_URL}/api/requests/room-availability?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`,
           { signal: controller.signal }
         );
 
@@ -483,7 +484,7 @@ export default function RequestForm() {
     if (!validate()) return;
 
     try {
-      const createResponse = await fetch("/api/requests", {
+      const createResponse = await fetch(`${BASE_URL}/api/requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -514,7 +515,7 @@ export default function RequestForm() {
         return;
       }
 
-      fetch("/api/requests/trigger-flow", {
+      fetch(`${BASE_URL}/api/requests/trigger-flow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
