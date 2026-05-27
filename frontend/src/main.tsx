@@ -1,4 +1,3 @@
-import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@fontsource-variable/inter';
 import './index.css';
@@ -14,10 +13,8 @@ document.fonts.ready.then(() => {
   applyChartDefaults();
 
   createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   );
 });

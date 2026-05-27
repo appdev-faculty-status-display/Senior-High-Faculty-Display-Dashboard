@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import type { FacultySchedule, Strand, Day } from "../../types/schedule";
-import { useAuth } from "@/hooks/useAuth";
 import { isValidHHMM, formatPHTime } from "@/utils/phTime";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 // —— Constants ———————————————
 const STRANDS = ["All Strands", "STEM", "HUMSS", "ABM"];
@@ -14,16 +14,12 @@ const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api';
 
 interface Props {
     schedule: FacultySchedule;
-    accessToken: string;
     onClose: () => void;
     onSaved: () => void;        // re-fetches after save
     onDelete: (s: FacultySchedule) => void; // passes full schedule for API call
 }
 
 export default function EditScheduleModal({ schedule, onClose, onSaved, onDelete }: Props) {
-    const { getToken } = useAuth();
-    const accessToken = getToken() ?? "";
-
     // Editable fields — split time back into startTime/endTime
     const [subject, setSubject] = useState(schedule.subject);
     const [strand, setStrand] = useState<Strand>(schedule.strand);
@@ -53,11 +49,10 @@ export default function EditScheduleModal({ schedule, onClose, onSaved, onDelete
 
         setIsLoading(true);
         try {
-            const res = await fetch(`${BASE_URL}/schedule-entries/${encodeURIComponent(schedule.facultyId)}`, {
+            const res = await fetchWithAuth(`${BASE_URL}/schedule-entries/${encodeURIComponent(schedule.facultyId)}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({
                     entryKey: schedule.entryKey, // identifies which sub-doc to update

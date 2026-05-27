@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import type { FacultySchedule, ScheduleRowDto } from "@/types/schedule";
 import { deriveDisplayFields } from "@/types/schedule";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api';
 
@@ -14,19 +15,16 @@ interface UseSchedulesReturn {
     fetchSchedules: () => Promise<void>;
 }
 
-export function useSchedules(accessToken: string): UseSchedulesReturn {
+export function useSchedules(): UseSchedulesReturn {
     const [schedules,  setSchedules]  = useState<FacultySchedule[]>([]);
     const [isFetching, setIsFetching] = useState(false);
     const [fetchError, setFetchError] = useState<string | null>(null);
 
     const fetchSchedules = useCallback(async () => {
-        if (!accessToken) return;
         setIsFetching(true);
         setFetchError(null);
         try {
-            const res = await fetch(`${BASE_URL}/schedule`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-            });
+            const res = await fetchWithAuth(`${BASE_URL}/schedule`);
 
             if (!res.ok) {
                 setFetchError("Failed to load schedules.");
@@ -40,7 +38,7 @@ export function useSchedules(accessToken: string): UseSchedulesReturn {
         } finally {
             setIsFetching(false);
         }
-    }, [accessToken]);
+    }, []);
 
     useEffect(() => {
         fetchSchedules();

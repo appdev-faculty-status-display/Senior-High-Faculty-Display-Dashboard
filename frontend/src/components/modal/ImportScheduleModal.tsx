@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { ChangeEvent } from "react";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api';
 
@@ -18,10 +19,9 @@ interface ImportResult {
 interface Props {
     onClose: () => void;
     onImportComplete: (result: ImportResult) => void; 
-    accessToken: string;                             
 }
 
-export default function ImportScheduleModal({ onClose, onImportComplete, accessToken }: Props) {
+export default function ImportScheduleModal({ onClose, onImportComplete }: Props) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Local UI state
@@ -71,11 +71,8 @@ export default function ImportScheduleModal({ onClose, onImportComplete, accessT
             formData.append("replaceAll", String(replaceAll)); 
 
             // Do NOT set Content-Type manually — browser sets the multipart boundary
-            const res = await fetch(`${BASE_URL}/schedule-entries/import`, {
+            const res = await fetchWithAuth(`${BASE_URL}/schedule-entries/import`, {
                 method: "POST",
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
                 body: formData,
             });
 

@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const { verifyAccessToken } = require('../utils/authToken');
 const { createAuthError } = require('../utils/error');
 
@@ -25,6 +26,17 @@ function authToken(req, res, next) {
         next();
     }
     catch (error) {
+        // Try to decode token to provide helpful debug info (expiry, issued-at)
+        try {
+            const decoded = jwt.decode(token) || {};
+            const now = Date.now();
+            const expMs = decoded.exp ? decoded.exp * 1000 : null;
+            console.warn('Access token verification failed:', error && error.message);
+            console.warn('Token decoded exp (ms):', expMs, 'now (ms):', now, 'token payload:', decoded);
+        } catch (e) {
+            console.warn('Failed to decode token for debug:', e && e.message);
+        }
+
         return next(createAuthError('ACCESS_TOKEN_EXPIRED'));
     }
 

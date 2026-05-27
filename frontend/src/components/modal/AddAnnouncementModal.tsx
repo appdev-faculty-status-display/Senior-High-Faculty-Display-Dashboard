@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { CreateAnnouncementBody, AnnouncementScope } from "../../types/announcement";
+import { strands } from "../../data/mockRequestForm";
 
 interface Props {
     onClose: () => void;
@@ -51,6 +52,11 @@ export default function AddAnnouncementModal({ onClose, onSubmit, error }: Props
                             <option value="all">All</option>
                             <option value="strand">Strand</option>
                         </select>
+                        <p className="mt-1 text-xs text-gray-400">
+                            {scope === "strand"
+                                ? "Posting a new strand announcement replaces the active announcement for that strand."
+                                : "Posting a new all-school announcement replaces the current active all-school announcement."}
+                        </p>
                     </div>
 
                     {scope === "strand" && (
@@ -58,13 +64,18 @@ export default function AddAnnouncementModal({ onClose, onSubmit, error }: Props
                             <label className="block text-xs font-bold tracking-widest text-gray-500 uppercase mb-1">
                                 Strand
                             </label>
-                            <input
-                                type="text"
-                                placeholder="e.g. STEM"
+                            <select
                                 value={strand}
                                 onChange={(e) => setStrand(e.target.value)}
                                 className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-yellow-400"
-                            />
+                            >
+                                <option value="">Select a strand</option>
+                                {strands.map((item) => (
+                                    <option key={item} value={item}>
+                                        {item}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     )}
 
