@@ -1,14 +1,24 @@
 import { useState, useCallback } from 'react';
 import { apiLogin, apiLogout, apiRefresh } from '@/lib/authApi';
-import type { LoginPayload, ApiError } from '@/lib/authApi';
+import type { LoginPayload, ApiError, AuthTokens } from '@/lib/authApi';
 
 const TOKEN_KEY = 'auth_token';
 const REFRESH_KEY = 'auth_refresh_token';
+const USER_KEY = 'auth_user';
 
 export function useAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [user, setUser] = useState<AuthTokens['user'] | null>(() => {
+    try {
+      const raw = localStorage.getItem(USER_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
+  
   const login = useCallback(async (payload: LoginPayload) => {
     setLoading(true);
     setError(null);
@@ -16,6 +26,8 @@ export function useAuth() {
       const data = await apiLogin(payload);
       localStorage.setItem(TOKEN_KEY, data.token);
       localStorage.setItem(REFRESH_KEY, data.refreshToken);
+      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      setUser(data.user);
       return data;
     } catch (err) {
       const apiErr = err as ApiError;
@@ -23,9 +35,9 @@ export function useAuth() {
       const message =
         apiErr.code === 'MISSING_CREDENTIALS'
           ? 'Please enter your email and password.'
-          : apiErr.code === 'UNAUTHORIZED'
+          : apiErr.code === 'INVALID_LOGIN'
           ? 'Invalid email or password.'
-          : apiErr.error ?? 'Something went wrong. Please try again.';
+          : apiErr.message ?? 'Something went wrong. Please try again.';
       setError(message);
       return null;
     } finally {
@@ -39,6 +51,7 @@ export function useAuth() {
     try {
       await apiLogout(token, refreshToken);
     } finally {
+      localStorage.removeItem(USER_KEY);
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(REFRESH_KEY);
     }
@@ -59,11 +72,13 @@ export function useAuth() {
     } catch {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(REFRESH_KEY);
+      localStorage.removeItem(USER_KEY);
+      setUser(null);
       return null;
     }
   }, []);
 
   const getToken = useCallback(() => localStorage.getItem(TOKEN_KEY), []);
 
-  return { login, logout, refresh, getToken, loading, error, setError };
+  return { login, logout, refresh, getToken, loading, error, setError, user };
 }

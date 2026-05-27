@@ -22,7 +22,7 @@ export interface RefreshedTokens {
 }
 
 export interface ApiError {
-    error: string;
+    message: string;
     code: string;
     details?: Record<string, unknown>;
 }
