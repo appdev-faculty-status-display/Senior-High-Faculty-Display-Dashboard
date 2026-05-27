@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 import { type Room } from "@/types/requestForm";
 import type { FormState, FormErrors, UrgencyLevel, RoomStatus } from "@/types/requestForm";
-import { mockRooms, strands, teachers, teacherEmails } from "@/data/mockRequestForm";
+import { mockRooms, strands, teachers, teacherEmails, strandHeadsEmail } from "@/data/mockRequestForm";
 
 
 // Sub-components
@@ -47,7 +47,7 @@ function ConsultationRoomPicker({ rooms, selected, onChange, disabled }: Consult
       })}
       <button
         type="button"
-        className={`ml-auto px-5 py-1.5 border border-[#1a1a1a] text-sm font-black text-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white transition-all ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+        className={`px-4 py-1.5 border border-[#1a1a1a] text-sm font-black tracking-wide text-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white transition-all ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
         onClick={() => onChange("walk-in")}
         disabled={disabled}
       >
@@ -257,39 +257,39 @@ export default function RequestForm() {
   );
 
   useEffect(() => {
-  const selectedTeacher = form.teacher;
-  if (!selectedTeacher) return;
+    const selectedTeacher = form.teacher;
+    if (!selectedTeacher) return;
 
-  const controller = new AbortController();
-  const cancelled = { current: false };
+    const controller = new AbortController();
+    const cancelled = { current: false };
 
-  const loadBookedTimes = async () => {
-    try {
-      const response = await fetch(
-        `/api/requests/booked-times?teacher=${encodeURIComponent(selectedTeacher)}`,
-        { signal: controller.signal }
-      );
+    const loadBookedTimes = async () => {
+      try {
+        const response = await fetch(
+          `/api/requests/booked-times?teacher=${encodeURIComponent(selectedTeacher)}`,
+          { signal: controller.signal }
+        );
 
-      if (!response.ok) {
-        if (!cancelled.current) setBookedTimes([]);
-        return;
+        if (!response.ok) {
+          if (!cancelled.current) setBookedTimes([]);
+          return;
+        }
+
+        const data: { bookedTimes?: string[] } = await response.json();
+        if (!cancelled.current) {
+          setBookedTimes(Array.isArray(data.bookedTimes) ? data.bookedTimes : []);
+        }
+      } catch {
+        if (!controller.signal.aborted) setBookedTimes([]);
       }
+    };
 
-      const data: { bookedTimes?: string[] } = await response.json();
-      if (!cancelled.current) {
-        setBookedTimes(Array.isArray(data.bookedTimes) ? data.bookedTimes : []);
-      }
-    } catch {
-      if (!controller.signal.aborted) setBookedTimes([]);
-    }
-  };
+    loadBookedTimes();
 
-  loadBookedTimes();
-
-  return () => {
-    cancelled.current = true;
-    controller.abort();
-  };
+    return () => {
+      cancelled.current = true;
+      controller.abort();
+    };
   }, [form.teacher]);
 
   useEffect(() => {
@@ -314,16 +314,16 @@ export default function RequestForm() {
         const data: { data?: Array<{ roomCode?: string; status?: string }> } = await response.json();
         const nextRooms: Room[] = Array.isArray(data.data)
           ? data.data
-              .filter((room) => typeof room.roomCode === 'string' && room.roomCode.trim())
-              .map((room): Room => ({
-                id: normalizeRoomCode(room.roomCode as string),
-                status:
-                  String(room.status || '').toLowerCase() === 'reserved'
-                    ? 'reserved'
-                    : String(room.status || '').toLowerCase() === 'occupied'
-                      ? 'occupied'
-                      : 'available',
-              }))
+            .filter((room) => typeof room.roomCode === 'string' && room.roomCode.trim())
+            .map((room): Room => ({
+              id: normalizeRoomCode(room.roomCode as string),
+              status:
+                String(room.status || '').toLowerCase() === 'reserved'
+                  ? 'reserved'
+                  : String(room.status || '').toLowerCase() === 'occupied'
+                    ? 'occupied'
+                    : 'available',
+            }))
           : [];
 
         if (cancelled.current) return;
@@ -424,18 +424,6 @@ export default function RequestForm() {
       })()
       : null;
 
-  const startMinutesValue = startTime ? parseTimeToMinutes(startTime) : null;
-  const endOptions = startMinutesValue !== null ? (() => {
-    const maxOffset = Math.min(60, 23 * 60 + 59 - startMinutesValue);
-    const opts: { value: string; label: string }[] = [];
-    for (let offset = 5; offset <= maxOffset; offset += 5) {
-      const mins = startMinutesValue + offset;
-      const value = formatMinutesToInputValue(mins);
-      opts.push({ value, label: formatInputTimeLabel(value) });
-    }
-    return opts;
-  })() : [];
-
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
     if (!form.name.trim()) newErrors.name = "Name is required.";
@@ -509,6 +497,7 @@ export default function RequestForm() {
           room: form.room,
           time: selectedTimeRange,
           urgency: form.urgency,
+          strandHeadEmail: strandHeadsEmail[form.strand]
         }),
       });
 
@@ -540,6 +529,7 @@ export default function RequestForm() {
           room: form.room,
           time: selectedTimeRange,
           urgency: form.urgency,
+          strandHeadEmail: strandHeadsEmail[form.strand]
         }),
       }).catch(console.error);
 
@@ -716,26 +706,39 @@ export default function RequestForm() {
                   onChange={(e) => handleStartTimeChange(e.target.value)}
                   className={`${inputBase} ${inputBorder("time")}`}
                 />
-                {startTime && (
-                  <p className="text-[11px] text-[#4f4f4f] mt-1">{formatInputTimeLabel(startTime)} PST</p>
-                )}
+                <div className="flex items-center gap-2 mt-2">
+                  {startTime && (
+                    <p className="text-[11px] text-[#4f4f4f]">{formatInputTimeLabel(startTime)} PST</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const now = getPhilippineNow();
+                      const hours = String(now.getHours()).padStart(2, '0');
+                      const minutes = String(now.getMinutes()).padStart(2, '0');
+                      handleStartTimeChange(`${hours}:${minutes}`);
+                    }}
+                    className="ml-auto text-[11px] font-bold text-[#064db6] hover:text-[#002f73] hover:underline transition-colors"
+                  >
+                    NOW
+                  </button>
+                </div>
               </div>
               <div>
                 <label htmlFor="endTime" className="block text-[11px] font-bold uppercase tracking-widest text-[#4f4f4f] mb-1">
                   End Time
                 </label>
-                <select
+                <input
                   id="endTime"
+                  type="time"
+                  step={60}
+                  min={startTime ? formatMinutesToInputValue(parseTimeToMinutes(startTime)! + 5) : ""}
+                  max="17:00"
                   value={endTime}
                   onChange={(e) => handleEndTimeChange(e.target.value)}
                   disabled={!startTime}
                   className={`${inputBase} ${inputBorder("time")} ${!startTime ? "bg-gray-50 text-gray-400 cursor-not-allowed" : ""}`}
-                >
-                  <option value="" disabled>Select End Time</option>
-                  {endOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value} className="text-[#1a1a1a]">{opt.label}</option>
-                  ))}
-                </select>
+                />
                 {endTime && (
                   <p className="text-[11px] text-[#4f4f4f] mt-1">{formatInputTimeLabel(endTime)} PST</p>
                 )}
