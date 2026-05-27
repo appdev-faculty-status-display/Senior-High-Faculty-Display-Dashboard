@@ -7,12 +7,13 @@ jest.mock('../models/consultation.model');
 const Request = require('../models/request.model');
 const ConsultRooms = require('../models/consultation.model');
 
-const { createRequest, getBookedTimes, getRoomAvailability, getRequest, updateRequestStatus } = require('../controllers/request.controller');
+const { createRequest, getBookedTimes, getRoomAvailability, getRequest, triggerPowerAutomateFlow, updateRequestStatus } = require('../controllers/request.controller');
 const { asyncHandler } = require('../utils/asyncHandler');
 
 const app = express();
 app.use(express.json());
 app.post('/requests', asyncHandler(createRequest));
+app.post('/requests/trigger-flow', asyncHandler(triggerPowerAutomateFlow));
 app.get('/requests/booked-times', asyncHandler(getBookedTimes));
 app.get('/requests/room-availability', asyncHandler(getRoomAvailability));
 app.get('/requests/:requestId', asyncHandler(getRequest));
@@ -23,6 +24,10 @@ const requestId = new mongoose.Types.ObjectId().toString();
 
 describe('Request Routes', () => {
     afterEach(() => jest.clearAllMocks());
+
+    beforeEach(() => {
+        global.fetch = jest.fn();
+    });
 
     describe('POST /requests', () => {
         it('creates a request and returns top-level _id for flow response mapping', async () => {
@@ -78,6 +83,42 @@ describe('Request Routes', () => {
             expect(res.status).toBe(409);
             expect(res.body).toHaveProperty('error', 'Selected room is already booked for that time window.');
             expect(Request.create).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('POST /requests/trigger-flow', () => {
+        it('derives startTime and endTime from the combined time label', async () => {
+            global.fetch.mockResolvedValue({
+                ok: true,
+                text: async () => JSON.stringify({ sent: true })
+            });
+
+            const payload = {
+                requestId,
+                studentName: 'Juan Dela Cruz',
+                teacher: 'Mr. Robles',
+                room: 'CR-01',
+                time: '07:30 AM – 08:30 AM',
+                reason: 'Consultation request'
+            };
+
+            const res = await request(app)
+                .post('/requests/trigger-flow')
+                .send(payload);
+
+            expect(res.status).toBe(202);
+            expect(res.body).toHaveProperty('success', true);
+            expect(global.fetch).toHaveBeenCalledTimes(1);
+
+            const [, requestOptions] = global.fetch.mock.calls[0];
+            expect(JSON.parse(requestOptions.body)).toEqual(
+                expect.objectContaining({
+                    requestId,
+                    time: '07:30 AM – 08:30 AM',
+                    startTime: '07:30 AM',
+                    endTime: '08:30 AM'
+                })
+            );
         });
     });
 

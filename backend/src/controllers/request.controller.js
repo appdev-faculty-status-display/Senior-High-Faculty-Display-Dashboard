@@ -66,6 +66,22 @@ function parseTimeRange(value) {
     return { start, end };
 }
 
+function splitTimeRangeLabel(value) {
+    const parts = String(value || '')
+        .split(timeRangeSplitPattern)
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+    if (parts.length !== 2) {
+        return { startTime: null, endTime: null };
+    }
+
+    return {
+        startTime: parts[0],
+        endTime: parts[1]
+    };
+}
+
 function rangesOverlap(startA, endA, startB, endB) {
     return startA < endB && startB < endA;
 }
@@ -281,6 +297,12 @@ const getRoomAvailability = async (req, res) => {
 
 const triggerPowerAutomateFlow = async (req, res) => {
     const payload = req.body || {};
+    const derivedTimeRange = splitTimeRangeLabel(payload.time);
+    const flowPayload = {
+        ...payload,
+        startTime: payload.startTime || derivedTimeRange.startTime,
+        endTime: payload.endTime || derivedTimeRange.endTime
+    };
 
     try {
         const flowResponse = await fetch(powerAutomateUrl, {
@@ -288,7 +310,7 @@ const triggerPowerAutomateFlow = async (req, res) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(flowPayload)
         });
 
         const responseText = await flowResponse.text();
