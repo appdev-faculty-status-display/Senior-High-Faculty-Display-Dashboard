@@ -2,12 +2,8 @@
 import AnnouncementTable from "@/components/AnnouncementTable";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { type CreateAnnouncementBody } from "@/types/announcement";
-import { useAuth } from "@/hooks/useAuth";
 
 export default function AnnouncementPage() {  
-    const { getToken } = useAuth();
-    const token = getToken() ?? undefined;
-
     const {
         announcements,
         total,
@@ -18,7 +14,7 @@ export default function AnnouncementPage() {
         add,
         remove,
         setPage,
-    } = useAnnouncements({ token, pageSize: 20 });
+    } = useAnnouncements({ pageSize: 20 });
 
     async function handleAdd(draft: CreateAnnouncementBody) {
         await add(draft);

@@ -3,9 +3,9 @@
 import { useState } from "react";
 import type { FacultySchedule } from "@/types/schedule";
 
-import { useAuth }            from "@/hooks/useAuth";
 import { useSchedules }       from "@/hooks/useSchedules";
 import { useScheduleFilters } from "@/hooks/useScheduleFilters";
+import { fetchWithAuth }      from "@/lib/fetchWithAuth";
 
 import SelectFilter           from "@/components/SelectFilter";
 import IconEdit               from "@/components/icons/EditIcon";
@@ -25,11 +25,8 @@ const ROOMS = ["All Rooms", "101", "102", "103", "104", "105", "106", "Lab 1", "
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api'; 
 
 export default function ClassScheduleDashboard() {
-    const { getToken } = useAuth();
-    const accessToken  = getToken() ?? "";
-
     const { schedules, setSchedules, isFetching, fetchError, fetchSchedules } =
-        useSchedules(accessToken);
+        useSchedules();
 
     const {
         strandFilter, dayFilter, roomFilter, search, schedulePage,
@@ -44,11 +41,10 @@ export default function ClassScheduleDashboard() {
 
     const handleDelete = async (s: FacultySchedule) => {
         try {
-            const res = await fetch (`${BASE_URL}/schedule-entries/${encodeURIComponent(s.facultyId)}`, {
+            const res = await fetchWithAuth(`${BASE_URL}/schedule-entries/${encodeURIComponent(s.facultyId)}`, {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({ entryKey: s.entryKey }),
             }); 
@@ -232,16 +228,15 @@ export default function ClassScheduleDashboard() {
             {/* Add Schedule Modal */}
             {isAdding && (
                 <AddScheduleModal
-                    accessToken={accessToken}
+                        existingSchedules={schedules}
                     onClose={() => setIsAdding(false)}
-                    onSaved={() => { fetchSchedules(); setIsAdding(false); }}
+                        onSaved={() => { fetchSchedules(); }}
                 />
             )}
 
             {/* Import Schedule Modal */}
             {isImporting && (
                 <ImportScheduleModal
-                    accessToken={accessToken}
                     onClose={() => setIsImporting(false)}
                     onImportComplete={() => { fetchSchedules(); setIsImporting(false); }}
                 />
@@ -251,7 +246,6 @@ export default function ClassScheduleDashboard() {
             {isEditing && selectedSchedule && (
                 <EditScheduleModal
                     schedule={selectedSchedule}
-                    accessToken={accessToken}
                     onClose={() => { setIsEditing(false); setSelectedSchedule(null); }}
                     onSaved={() => {
                         fetchSchedules();

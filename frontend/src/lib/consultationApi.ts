@@ -1,10 +1,4 @@
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api';
-const TOKEN_KEY = 'auth_token';
-
-function getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem(TOKEN_KEY);
-    return token ? { Authorization: `Bearer ${token}` } : {};
-}
 
 export interface ApprovedConsultation {
     _id: string;
@@ -40,13 +34,7 @@ export async function getApprovedConsultations(): Promise<ApprovedConsultationsR
     console.log('Fetching from:', url);
 
     try {
-        const res = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                ...getAuthHeaders()
-            }
-        });
+        const res = await fetch(url);
 
         console.log('Response status:', res.status);
         console.log('Response ok:', res.ok);

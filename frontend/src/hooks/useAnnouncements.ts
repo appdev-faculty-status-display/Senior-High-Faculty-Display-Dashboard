@@ -6,7 +6,7 @@
 
 // hooks/useAnnouncements.ts
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
     fetchAnnouncements,
     postAnnouncement,
@@ -19,7 +19,6 @@ import type {
 } from "@/types/announcement";
 
 export interface UseAnnouncementsOptions extends ListAnnouncementsParams {
-    token?: string;
     enabled?: boolean;
 }
 
@@ -40,7 +39,6 @@ export function useAnnouncements(
     options: UseAnnouncementsOptions = {}
 ): UseAnnouncementsReturn {
     const {
-        token,
         enabled = true,
         scope,
         strand,
@@ -54,9 +52,6 @@ export function useAnnouncements(
     const [page, setPage]       = useState(initialPage);
     const [loading, setLoading] = useState(false);
     const [error, setError]     = useState<string | null>(null);
-
-    const tokenRef = useRef(token);
-    useEffect(() => { tokenRef.current = token; }, [token]);
 
     const [refreshTick, setRefreshTick] = useState(0);
     const refresh = useCallback(() => setRefreshTick((n) => n + 1), []);
@@ -72,10 +67,7 @@ export function useAnnouncements(
             setError(null);
         }, 0);
 
-        fetchAnnouncements(
-            { scope, strand, isActive, page, pageSize },
-            token
-        )
+        fetchAnnouncements({ scope, strand, isActive, page, pageSize })
             .then((result) => {
                 if (cancelled) return;
                 setAnnouncements(result.data);
@@ -94,14 +86,13 @@ export function useAnnouncements(
             cancelled = true;
             clearTimeout(timer);
         };
-    }, [enabled, scope, strand, isActive, page, pageSize, refreshTick, token]);
+    }, [enabled, scope, strand, isActive, page, pageSize, refreshTick]);
 
     // add
     const add = useCallback(async (body: CreateAnnouncementBody) => {
-        if (!tokenRef.current) throw new Error("Authentication required.");
         setError(null);
         try {
-            const created = await postAnnouncement(body, tokenRef.current);
+            const created = await postAnnouncement(body);
             setAnnouncements((prev) => [created, ...prev]);
             setTotal((n) => n + 1);
         } catch (err) {
@@ -112,10 +103,9 @@ export function useAnnouncements(
 
     // remove 
     const remove = useCallback(async (id: string) => {
-        if (!tokenRef.current) throw new Error("Authentication required.");
         setError(null);
         try {
-            await deleteAnnouncement(id, tokenRef.current);
+            await deleteAnnouncement(id);
             setAnnouncements((prev) => prev.filter((a) => a.id !== id));
             setTotal((n) => Math.max(0, n - 1));
         } catch (err) {
