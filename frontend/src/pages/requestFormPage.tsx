@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 import { type Room } from "@/types/requestForm";
@@ -24,6 +24,7 @@ function ConsultationRoomPicker({ rooms, selected, onChange, disabled }: Consult
     reserved: "bg-[#ffef5f]/20 text-[#4f4f4f] border border-[#ffef5f]/60 cursor-not-allowed opacity-60",
   };
   const selectedStyle = "bg-[#064db6] text-white border border-[#064db6] cursor-pointer";
+  const walkInSelected = normalizeRoomCode(selected) === "WALK-IN";
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
@@ -46,9 +47,9 @@ function ConsultationRoomPicker({ rooms, selected, onChange, disabled }: Consult
       })}
       <button
         type="button"
-        className={`px-4 py-1.5 border border-[#1a1a1a] text-sm font-black tracking-wide text-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white transition-all ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+        className={`px-4 py-1.5 border text-sm font-black tracking-wide transition-all ${walkInSelected ? selectedStyle : "border-[#1a1a1a] text-[#1a1a1a] hover:bg-[#1a1a1a] hover:text-white"}`}
         onClick={() => onChange("walk-in")}
-        disabled={disabled}
+        disabled={false}
       >
         WALK-IN
       </button>
@@ -248,6 +249,24 @@ export default function RequestForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [teacherQuery, setTeacherQuery] = useState<string>("");
   const [showTeacherDropdown, setShowTeacherDropdown] = useState<boolean>(false);
+  const teacherDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent | TouchEvent) {
+      if (!teacherDropdownRef.current) return;
+      const target = e.target as Node | null;
+      if (target && !teacherDropdownRef.current.contains(target)) {
+        setShowTeacherDropdown(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
   const [bookedTimes, setBookedTimes] = useState<string[]>([]);
   const [phTime, setPhTime] = useState<Date>(() => getPhilippineNow());
   const [startTime, setStartTime] = useState<string>("");
@@ -515,7 +534,7 @@ export default function RequestForm() {
         return;
       }
 
-      fetch(`${BASE_URL}/api/requests/trigger-flow`, {
+      fetch(`/api/requests/trigger-flow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -655,7 +674,7 @@ export default function RequestForm() {
           </div>
 
           {/* Teacher */}
-          <div className="relative">
+          <div className="relative" ref={teacherDropdownRef}>
             {fieldLabel("Teacher:", "teacher")}
             <div className="relative">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none">
