@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 import { type Room } from "@/types/requestForm";
 import type { FormState, FormErrors, UrgencyLevel, RoomStatus } from "@/types/requestForm";
-import { mockRooms, strands, teachers, teacherEmails, purposes } from "@/data/mockRequestForm";
+import { mockRooms, strands, teachers, teacherEmails } from "@/data/mockRequestForm";
 
 
 // Sub-components
@@ -237,7 +237,6 @@ export default function RequestForm() {
     studentEmail: "",
     strand: "",
     teacher: "",
-    purpose: "",
     reason: "",
     room: "",
     time: "",
@@ -449,7 +448,6 @@ export default function RequestForm() {
     }
     if (!form.strand) newErrors.strand = "Please select a strand.";
     if (!form.teacher) newErrors.teacher = "Please select a teacher.";
-    if (!form.purpose) newErrors.purpose = "Please select a purpose.";
     const timeWindowError = getTimeWindowError(startTime, endTime);
     if (timeWindowError) {
       newErrors.time = timeWindowError;
@@ -471,7 +469,7 @@ export default function RequestForm() {
         newErrors.time = `${form.teacher} is already booked during that time window.`;
       }
     }
-    if (!form.reason.trim()) newErrors.reason = "Reason is required.";
+    if (!form.reason.trim()) newErrors.reason = "Purpose keywords are required.";
     const selectedRoom = rooms.find(
       (room) => normalizeRoomCode(room.id) === normalizeRoomCode(form.room)
     );
@@ -504,7 +502,6 @@ export default function RequestForm() {
           strand: form.strand,
           teacher: form.teacher,
           teacherEmail: teacherEmails[form.teacher],
-          purpose: form.purpose,
           reason: form.reason,
           room: form.room,
           time: selectedTimeRange,
@@ -536,7 +533,6 @@ export default function RequestForm() {
           strand: form.strand,
           teacher: form.teacher,
           teacherEmail: teacherEmails[form.teacher],
-          purpose: form.purpose,
           reason: form.reason,
           room: form.room,
           time: selectedTimeRange,
@@ -568,7 +564,7 @@ export default function RequestForm() {
             type="button"
             onClick={() => {
               setSubmitted(false);
-              setForm({ name: "", studentId: "", strand: "", teacher: "", purpose: "", reason: "", room: "", time: "", urgency: "", studentEmail: "" });
+              setForm({ name: "", studentId: "", strand: "", teacher: "", reason: "", room: "", time: "", urgency: "", studentEmail: "" });
               setStartTime("");
               setEndTime("");
               setTeacherQuery("");
@@ -695,32 +691,10 @@ export default function RequestForm() {
             {errorMsg("teacher")}
           </div>
 
-          {/* Purpose */}
+          {/* Purpose Keywords */}
           <div>
-            {fieldLabel("Purpose:", "purpose")}
-            <div className="relative">
-              <select
-                id="purpose"
-                value={form.purpose}
-                onChange={(e) => set("purpose", e.target.value)}
-                className={`w-full border px-3 py-2.5 text-sm appearance-none bg-white focus:outline-none focus:border-[#064db6] focus:ring-1 focus:ring-[#064db6]/30 transition-all ${form.purpose ? "text-[#1a1a1a]" : "text-[#d6d6d6]"} ${inputBorder("purpose")}`}
-              >
-                <option value="" disabled>Select Purpose</option>
-                {purposes.map((p) => (
-                  <option key={p} value={p} className="text-[#1a1a1a]">{p}</option>
-                ))}
-              </select>
-              <svg className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M6 9l6 6 6-6" stroke="#4f4f4f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            {errorMsg("purpose")}
-          </div>
-
-          {/* Reason */}
-          <div>
-            {fieldLabel("Reason:", "reason")}
-            <textarea id="reason" placeholder="Enter reason for consultation..." value={form.reason} onChange={(e) => set("reason", e.target.value)} rows={4} className={`w-full border px-3 py-2.5 text-sm text-[#1a1a1a] placeholder:text-[#d6d6d6] resize-none focus:outline-none focus:border-[#064db6] focus:ring-1 focus:ring-[#064db6]/30 transition-all ${inputBorder("reason")}`} />
+            {fieldLabel("Purpose:", "reason")}
+            <textarea id="reason" placeholder="Enter purpose (e.g., grades, clearance, schedule)" value={form.reason} onChange={(e) => set("reason", e.target.value)} rows={4} className={`w-full border px-3 py-2.5 text-sm text-[#1a1a1a] placeholder:text-[#d6d6d6] resize-none focus:outline-none focus:border-[#064db6] focus:ring-1 focus:ring-[#064db6]/30 transition-all ${inputBorder("reason")}`} />
             {errorMsg("reason")}
           </div>
 
