@@ -1,4 +1,4 @@
-const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api';
+const BASE_URL = (import.meta.env.VITE_API_URL || 'https://facultyboard-cqdzg5a8dwccegby.japaneast-01.azurewebsites.net') + '/api';
 
 export interface LoginPayload {
     email: string;

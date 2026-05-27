@@ -22,7 +22,7 @@ const STRANDS = ["All Strands", "STEM", "HUMSS", "ABM"];
 const DAYS = ["All Days", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const ROOMS = ["All Rooms", "101", "102", "103", "104", "105", "106", "Lab 1", "Lab 2"];
 
-const BASE_URL = (import.meta.env.VITE_API_URL ?? '') + '/api'; 
+const BASE_URL = (import.meta.env.VITE_API_URL || 'https://facultyboard-cqdzg5a8dwccegby.japaneast-01.azurewebsites.net') + '/api';
 
 export default function ClassScheduleDashboard() {
     const { schedules, setSchedules, isFetching, fetchError, fetchSchedules } =

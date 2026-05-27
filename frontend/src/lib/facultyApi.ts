@@ -2,7 +2,7 @@
 import type { ConsultationHours, ScheduleEntry } from "@/types/faculty-states";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
-const BASE = import.meta.env.VITE_API_URL ?? '';
+const BASE = (import.meta.env.VITE_API_URL || 'https://facultyboard-cqdzg5a8dwccegby.japaneast-01.azurewebsites.net');
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
