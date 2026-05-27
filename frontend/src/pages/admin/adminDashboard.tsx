@@ -1,5 +1,6 @@
 // frontend/src/pages/admin/adminDashboard.tsx
 import { useState, useRef, type ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 import AddSchedule    from "@/components/ui/admin-dashboard/addSchedule";
 import AddFaculty     from "@/pages/admin/addFaculty";
 import Header         from "@/components/ui/header/header";
@@ -44,6 +45,9 @@ import {
 // Utils
 import { downloadCSV }  from "@/utils/csvEscapeHelper";
 import { printElement } from "@/utils/pdfExportHelper";
+
+// Hooks
+import { useAuth } from "@/hooks/useAuth";
 
 // Shared: Export Buttons 
 
@@ -388,19 +392,26 @@ function MainContent({ activeNav }: MainContentProps) {
 
 export default function AdminDashboard() {
   const [activeNav, setActiveNav] = useState<ActiveNav>("faculty-activity");
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
 
+  const handleLogout = async () => {
+    await logout();
+    navigate("/admin/login");
+  }
+
+  const rawRole = user?.role || "";
+  const formattedRole = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
+  
   return (
     <div className="min-h-screen flex flex-col bg-white" style={{ fontFamily: "Inter Variable, sans-serif" }}>
 
       {/* Uses the existing shared Header component */}
       <Header
         variant="admin"
-        adminName="Admin Account"
-        adminRole="SSHS Principal"
-        onLogout={() => {
-          // TODO: wire to auth logout (e.g. navigate("/admin/login"), clear session)
-          console.log("Logout clicked");
-        }}
+        adminName={user?.name || ''}
+        adminRole={formattedRole}
+        onLogout={handleLogout}
       />
 
       <div className="flex flex-1 min-h-0">
