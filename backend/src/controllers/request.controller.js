@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 const Request = require('../models/request.model');
 const ConsultRooms = require('../models/consultation.model');
 
-const powerAutomateUrl = process.env.POWER_AUTOMATE_URL || 'https://default1d981f773ca346aeb0d4e8044e6c7f.84.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/3343cd1296ee46efaaa5abec7e1c62c9/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=h0isss1ndoNgJjPPfHk_Tml5YX55M_AyJwtyC2H0w-o';
+const rawUrl = process.env.POWER_AUTOMATE_URL || 'https://default1d981f773ca346aeb0d4e8044e6c7f.84.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/3343cd1296ee46efaaa5abec7e1c62c9/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=h0isss1ndoNgJjPPfHk_Tml5YX55M_AyJwtyC2H0w-o';
+const powerAutomateUrl = rawUrl.replace(/[\r\n\t ]/g, '').trim();
 
 const allowedStatuses = new Set(['pending', 'approved', 'rejected']);
 const defaultRoomCodes = ['CR-01', 'CR-02', 'CR-03'];

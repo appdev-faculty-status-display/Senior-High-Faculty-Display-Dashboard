@@ -534,7 +534,7 @@ export default function RequestForm() {
         return;
       }
 
-      fetch(`/api/requests/trigger-flow`, {
+      fetch(`${BASE_URL}/api/requests/trigger-flow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
