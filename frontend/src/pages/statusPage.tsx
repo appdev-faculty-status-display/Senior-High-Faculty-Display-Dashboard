@@ -12,7 +12,7 @@ export default function StatusPage() {
     const [rejectionReason, setRejectionReason] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(true);
     const [errorMessage, setErrorMessage] = useState<string>("");
-    const pollIntervalMs = 1500;
+    const pollIntervalMs = 10000;
 
     useEffect(() => {
         if (!requestId) return;
