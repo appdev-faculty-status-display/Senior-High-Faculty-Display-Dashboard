@@ -167,7 +167,7 @@ export default function ImportFacultyModal({ onClose, onSuccess }: Props) {
         </label>
 
         <p className="text-xs text-gray-400 mb-4">
-          Required columns: <span className="font-mono text-[#064db6]">name, userId, strand, role, subjects</span>
+          Required columns: <span className="font-mono text-[#064db6]">name, email, userId, strand, role, subjects</span>
           <br />Optional: <span className="font-mono text-[#4f4f4f]">schedule</span>
         </p>
 

@@ -7,7 +7,6 @@ import { useAuth }            from "@/hooks/useAuth";
 import { useSchedules }       from "@/hooks/useSchedules";
 import { useScheduleFilters } from "@/hooks/useScheduleFilters";
 
-import StatusBadge            from "@/components/StatusBadge";
 import SelectFilter           from "@/components/SelectFilter";
 import IconEdit               from "@/components/icons/EditIcon";
 import IconTrash              from "@/components/icons/TrashIcon";
@@ -136,7 +135,6 @@ export default function ClassScheduleDashboard() {
                                 <th className="text-left px-4 py-3">Subject</th>
                                 <th className="text-left px-4 py-3">Strand</th>
                                 <th className="text-left px-4 py-3">Room</th>
-                                <th className="text-left px-4 py-3">Status</th>
                                 <th className="text-left px-4 py-3">Time</th>
                                 <th className="text-left px-4 py-3">Actions</th>
                             </tr>
@@ -179,7 +177,6 @@ export default function ClassScheduleDashboard() {
                                         <td className="px-4 py-3 text-gray-600">{s.subject}</td>
                                         <td className="px-4 py-3 font-semibold text-[#002f73]">{s.strand}</td>
                                         <td className="px-4 py-3 text-gray-600">{s.room}</td>
-                                        <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
                                         <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{s.time}</td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
 // frontend/src/pages/admin/addFaculty.tsx
 import { useState, useEffect } from "react";
 import type { FacultyRecord, ImportFacultyResult } from "@/lib/facultyApi";
-import { getFacultyList, updateFaculty, deleteFaculty, createFaculty } from "@/lib/facultyApi";
+import { getFacultyList, updateFaculty, deleteFaculty, createFaculty, downloadFacultyTemplate } from "@/lib/facultyApi";
 import ImportFacultyModal from "@/components/modal/ImportfacultyModal";
 import SelectFilter from "@/components/SelectFilter";
 
@@ -370,6 +370,17 @@ export default function AddFaculty() {
   const [isImporting,   setIsImporting]   = useState(false);
   const [isAdding,      setIsAdding]      = useState(false);
   const [lastImport,    setLastImport]    = useState<ImportFacultyResult | null>(null);
+
+  const [templateLoading, setTemplateLoading] = useState(false);
+
+  async function handleDownloadTemplate() {
+    setTemplateLoading(true);
+    try {
+      await downloadFacultyTemplate();
+    } finally {
+      setTemplateLoading(false);
+    }
+  }
   const [editTarget,    setEditTarget]    = useState<FacultyRow | null>(null);
 
   // ── Initial fetch ──────────────────────────────────────────────────────────
@@ -426,6 +437,20 @@ export default function AddFaculty() {
           </div>
 
           <div className="flex gap-2">
+            {/* Download template */}
+            <button
+              onClick={handleDownloadTemplate}
+              disabled={templateLoading}
+              className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-[#002f73] border border-[#cbd5e1] hover:bg-[#f0f4ff] hover:border-[#002f73] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              {templateLoading ? 'Generating…' : 'Download Template'}
+            </button>
+            
             {/* Single add */}
             <button
               onClick={() => setIsAdding(true)}

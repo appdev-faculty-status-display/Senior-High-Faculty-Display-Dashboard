@@ -28,3 +28,8 @@ export const teacherEmails: Record<string, string> = {
   "Mr. Cataag": "cataagjl@students.nu-laguna.edu.ph"
 };
 
+export const strandHeadsEmail: Record<string, string> = {
+  "ABM": "jompillam@students.nu-laguna.edu.ph",
+  "STEM": "roblesk@students.nu-laguna.edu.ph",
+  "HUMSS": "pagaranag@students.nu-laguna.edu.ph",
+};

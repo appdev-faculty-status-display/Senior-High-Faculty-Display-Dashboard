@@ -11,14 +11,24 @@ export type Strands =
     | "ABM"
     | "HUMSS";
 
-export interface consultationHours {
-    start: string;
-    end: string;
+export interface ConsultationHours {
+    day: string;
+    startTime: string;
+    endTime: string;
+}
+
+export interface ScheduleEntry {
+    day: string;
+    startTime: string;
+    endTime: string;
+    subject: string;
+    room: string;
 }
 
 export interface Faculty {
     id: string;
     name: string;
+    role: string;
     strand: Strands;
     photoUrl: string;
     status: FacultyStatus;
@@ -26,11 +36,12 @@ export interface Faculty {
     currentLocation: string; //always present
 
     subject?: string; //only present if status is "in-class"
-    consultationHours?: consultationHours; //only present if status is "available"
     meetingWith?: string; //only present if status is "in-meeting"
     returnTime?: string; //only present if status is "on-break"
     note?: string;
     currentPeriod?: string; //only present if status is "in-class"
+    consultationHours?: ConsultationHours[]; //only present if status is "available"
+    schedule?: ScheduleEntry[]; //only present if status is "in-class"
 
 }
 

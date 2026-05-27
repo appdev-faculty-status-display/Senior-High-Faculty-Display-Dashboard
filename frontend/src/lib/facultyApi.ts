@@ -1,4 +1,5 @@
 // frontend/src/lib/facultyApi.ts
+import type { ConsultationHours, ScheduleEntry } from "@/types/faculty-states";
 
 const BASE = import.meta.env.VITE_API_URL ?? '';
 
@@ -14,8 +15,8 @@ export interface FacultyRecord {
   currentStatus: string;
   currentRoom:   string | null;
   subjects:      string[];
-  consultationHours: { day: string; startTime: string; endTime: string }[];
-  schedule:      unknown[];
+  consultationHours: ConsultationHours[];
+  schedule:      ScheduleEntry[];
   updatedAt:     string;
 }
 
@@ -42,8 +43,9 @@ async function handleResponse<T>(res: Response): Promise<T> {
       const body = await res.json();
       msg = body.message ?? msg;
     } catch {
-    throw new Error(msg);
+      // ignore JSON parse errors and use default message
     }
+    throw new Error(msg);
   }  
   return res.json() as Promise<T>;
 }
@@ -128,4 +130,21 @@ export async function importFaculty(
     body:    form,
   });
   return handleResponse(res);
+}
+
+// Template Download
+export async function downloadFacultyTemplate(): Promise<void> {
+  const res = await fetch(`${BASE}/api/faculty/template`, {
+    headers: authHeaders(),
+  });
+
+  if (!res.ok) throw new Error('Failed to download template');
+
+  const blob = await res.blob();
+  const url  = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href     = url;
+  link.download = 'faculty_import_template.xlsx';
+  link.click();
+  URL.revokeObjectURL(url);
 }

@@ -13,7 +13,7 @@ const Footer: React.FC = () => {
   }); 
 
   useEffect(() => {
-    const interval = setInterval(refresh, 15000); // Refresh every 15 seconds
+    const interval = setInterval(refresh, 60000); // Refresh every 60 seconds
     return () => clearInterval(interval);
   }, [refresh]);
 
@@ -35,14 +35,14 @@ const Footer: React.FC = () => {
           🔔
         </div>
 
-        <div className="overflow-hidden whitespace-nowrap flex-1 min-w-0">
+        <div className="overflow-hidden whitespace-nowrap flex-1 min-w-10">
             {hasMessages ? (
               <div className="inline-flex animate-ticker">
                 {/* Double the array for seamless infinite loop */}
                 {[...messages, ...messages].map((msg, index) => (
                   <span
                     key={`${msg}-${index}`}
-                    className="text-[15px] font-semibold text-[#1a1a1a] mr-16"
+                    className="text-[20px] font-semibold text-[#1a1a1a] mr-16"
                   >
                     {msg}
                   </span>
