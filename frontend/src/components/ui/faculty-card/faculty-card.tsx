@@ -105,17 +105,17 @@ export function FacultyCard({ faculty }: { faculty: Faculty }) {
     const dynamicRow = getDynamicRow();
 
     return (
-        <Card className="relative w-60 overflow-hidden transition-all hover:shadow-lg">
+        <Card className="relative w-full overflow-hidden transition-all hover:shadow-lg">
 
             {/* Status Header Bar */}
-            <div className={cn("w-full px-4 py-2 m-0", config.badgeBg)}>
-                <span className={cn("block text-xs font-bold uppercase tracking-wide", config.badgeText)}>
+            <div className={cn("w-full px-3 py-1 m-0", config.badgeBg)}>
+                <span className={cn("block text-[10[x]] font-bold uppercase tracking-wide", config.badgeText)}>
                     {config.label}
                 </span>
             </div>
 
             {/* Name + Avatar */}
-            <div className="flex flex-row items-center justify-between w-full px-4 py-2">
+            <div className="flex flex-row items-center justify-between w-full px-3 py-1.5">
                 <div className="flex flex-col gap-0.5">
                     <h3 className="text-xs font-normal text-foreground leading-tight">{faculty.name}</h3>
                     <span className="text-[10px] text-muted-foreground leading-tight">
@@ -131,7 +131,7 @@ export function FacultyCard({ faculty }: { faculty: Faculty }) {
             </div>
 
             {/* Info Rows - padded extra on the left to indent past the name */}
-            <CardContent className="space-y-1 px-4 py-2">
+            <CardContent className="space-y-0.5 px-3 py-1">
                 {/* Row 1: Location */}
                 <InfoRow 
                     label="Current Location" 
@@ -152,19 +152,21 @@ export function FacultyCard({ faculty }: { faculty: Faculty }) {
                     </p>
                 </div>
             ):(
-                <div className="mx-4 mb-4 flex flex-col justify-center border-l-4 border-[#002d5d] bg-[#ffc107] px-3 py-2">
+                <div className="mx-3 mb-3 flex flex-col justify-center border-l-4 border-[#002d5d] bg-[#ffc107] px-2 py-1.5">
                     <span className="text-[10px] font-bold uppercase text-slate-800/70">
                         Consultation Hours
                     </span>
-                    <span className="text-xs font-medium text-slate-900">
-                        {faculty.consultationHours 
-                            ? `${faculty.consultationHours.start} - ${faculty.consultationHours.end}`
-                            : "No Hours Set"
-                        }
-                    </span>
+                    {faculty.consultationHours && faculty.consultationHours.length > 0 ? (
+                    faculty.consultationHours.map((ch, i) => (
+                        <span key={i} className="text-xs font-medium text-slate-900">
+                        {ch.day} {ch.startTime} – {ch.endTime}
+                        </span>
+                    ))
+                    ) : (
+                    <span className="text-xs font-medium text-slate-900">No Hours Set</span>
+                    )}
                 </div>
             )}
-
         </Card>
     );
 }
