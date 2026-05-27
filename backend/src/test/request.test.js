@@ -180,6 +180,16 @@ describe('Request Routes', () => {
     });
 
     describe('PATCH /requests/:requestId/decision', () => {
+        beforeEach(() => {
+            Request.findById.mockReturnValue({
+                lean: () => Promise.resolve({
+                    _id: requestId,
+                    status: 'pending',
+                    facultyApprovedAt: null
+                })
+            });
+        });
+
         it('approves a request from a direct decision payload', async () => {
             Request.findByIdAndUpdate.mockResolvedValue({
                 _id: requestId,
@@ -197,7 +207,14 @@ describe('Request Routes', () => {
             expect(res.body.request).toHaveProperty('status', 'approved');
             expect(Request.findByIdAndUpdate).toHaveBeenCalledWith(
                 requestId,
-                { $set: { status: 'approved', rejectionReason: null } },
+                {
+                    $set: expect.objectContaining({
+                        status: 'approved',
+                        rejectionReason: null,
+                        cancellationReason: null,
+                        facultyApprovedAt: expect.any(Date)
+                    })
+                },
                 expect.objectContaining({ new: true, runValidators: true })
             );
         });
@@ -230,6 +247,16 @@ describe('Request Routes', () => {
     });
 
     describe('PATCH /requests/:requestId', () => {
+        beforeEach(() => {
+            Request.findById.mockReturnValue({
+                lean: () => Promise.resolve({
+                    _id: requestId,
+                    status: 'pending',
+                    facultyApprovedAt: null
+                })
+            });
+        });
+
         it('keeps the legacy status payload working', async () => {
             Request.findByIdAndUpdate.mockResolvedValue({
                 _id: requestId,
