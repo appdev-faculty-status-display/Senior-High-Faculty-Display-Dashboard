@@ -1,4 +1,4 @@
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173')
+const allowedOrigins = (process.env.CORS_ORIGINS || 'https://delightful-sea-063f8bc00.7.azurestaticapps.net')
     .split(',')
     .map(o => o.trim())
     .filter(Boolean);
