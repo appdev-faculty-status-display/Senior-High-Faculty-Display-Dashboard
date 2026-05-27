@@ -4,6 +4,18 @@ import logo from "@/assets/logo.svg";
 
 type Status = "pending" | "approved" | "rejected";
 
+const statusLabelMap: Record<Status, string> = {
+    pending: "Pending",
+    approved: "Approved",
+    rejected: "Rejected",
+};
+
+const statusStyleMap: Record<Status, string> = {
+    pending: "bg-[#ffc107]/10 text-[#b37a00] border-[#ffc107]/30",
+    approved: "bg-[#31ac52]/10 text-[#1d7a38] border-[#31ac52]/30",
+    rejected: "bg-[#ed3a30]/10 text-[#b91f18] border-[#ed3a30]/30",
+};
+
 export default function StatusPage() {
     const [searchParams] = useSearchParams();
     const requestId = searchParams.get("requestId");
@@ -77,13 +89,20 @@ export default function StatusPage() {
                 <div className="h-2 bg-[#ffc107]" />
 
                 <div className="bg-white border border-[#cbd5e1] px-5 py-6 mt-6">
+                    <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-[#e2e8f0]">
+                        <div className="text-base font-black text-[#000000] uppercase tracking-widest">Current Status</div>
+                        <div className={`px-3 py-1.5 border text-xs font-black uppercase tracking-widest ${statusStyleMap[status]}`}>
+                            {statusLabelMap[status]}
+                        </div>
+                    </div>
+
                     {status === "pending" && (
                         <div className="flex flex-col items-start gap-4">
-                            <div className="flex items-center gap-3">
+                            {/* <div className="flex items-center gap-3">
                                 <div className="w-4 h-4 bg-[#ffc107] animate-pulse" />
                                 <h2 className="text-[#1a1a1a] font-black">Waiting for Teacher Response</h2>
-                            </div>
-                            <p className="text-sm text-[#4f4f4f]">This page updates automatically. Please keep it open.</p>
+                            </div> */}
+                            <p className="text-sm text-[#4f4f4f]">Please wait for the confirmation through the Teams workflow notification.</p>
                             {loading && <div className="text-sm text-[#4f4f4f]">Loading…</div>}
                             {errorMessage && <div className="text-sm text-[#ed3a30]">{errorMessage}</div>}
                         </div>
