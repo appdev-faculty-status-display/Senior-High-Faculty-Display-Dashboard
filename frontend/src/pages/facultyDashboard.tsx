@@ -30,6 +30,7 @@ export default function FacultyBoard() {
         const mapped: Faculty[] = res.data.map((f) => ({
           id:                f.id,
           name:              f.name,
+          role:              f.role as Faculty["role"],
           strand:            f.strand as Faculty["strand"],
           photoUrl:          "",
           status:            f.currentStatus as Faculty["status"],
@@ -58,9 +59,9 @@ export default function FacultyBoard() {
     return () => clearInterval(tick);
   }, []);
 
-  const stemFaculty  = faculty.filter((f) => f.strand === "STEM");
-  const abmFaculty   = faculty.filter((f) => f.strand === "ABM");
-  const humssFaculty = faculty.filter((f) => f.strand === "HUMSS");
+  const stemFaculty  = faculty.filter((f) => f.strand === "STEM" && f.role !== "principal");
+  const abmFaculty   = faculty.filter((f) => f.strand === "ABM" && f.role !== "principal");
+  const humssFaculty = faculty.filter((f) => f.strand === "HUMSS" && f.role !== "principal");
 
 
   return (
