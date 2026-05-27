@@ -311,12 +311,12 @@ canvas {
     transform: translateX(0%);
   }
   100% {
-    transform: translateX(-50%);
+        transform: translateX(-25%);
   }
 }
 
 .animate-ticker {
-  animation: ticker 30s linear infinite;
+    animation: ticker 28s linear infinite;
 }
 
 

@@ -56,6 +56,16 @@ async function createAnnouncement(body, user) {
         throw err;
     }
 
+    const overwriteFilter = {
+        isActive: true,
+        scope,
+        strand: scope === 'strand' ? strand : null,
+    };
+
+    await Announcement.updateMany(overwriteFilter, {
+        $set: { isActive: false }
+    });
+
     const announcement = await Announcement.create({
         message,
         scope,

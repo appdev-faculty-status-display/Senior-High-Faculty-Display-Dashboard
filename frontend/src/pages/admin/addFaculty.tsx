@@ -1,9 +1,10 @@
 // frontend/src/pages/admin/addFaculty.tsx
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import type { FacultyRecord, ImportFacultyResult } from "@/lib/facultyApi";
-import { getFacultyList, updateFaculty, deleteFaculty, createFaculty, downloadFacultyTemplate } from "@/lib/facultyApi";
+import { updateFaculty, deleteFaculty, createFaculty, downloadFacultyTemplate } from "@/lib/facultyApi";
 import ImportFacultyModal from "@/components/modal/ImportfacultyModal";
 import SelectFilter from "@/components/SelectFilter";
+import { useFacultyRecords } from "@/hooks/useFacultyRecords";
 
 import IconSearch from "@/components/icons/SearchIcon";
 import IconEdit from "@/components/icons/EditIcon";
@@ -120,7 +121,7 @@ function EditFacultyModal({
 }: {
   row: FacultyRow;
   onClose: () => void;
-  onSaved: (updated: FacultyRow) => void;
+  onSaved: (updated: FacultyRecord) => void;
   onDeleted: (id: string) => void;
 }) {
   const [draft, setDraft] = useState<EditDraft>({
@@ -158,7 +159,7 @@ function EditFacultyModal({
         subjects: subjectsArray,
       });
 
-      onSaved(toRow(updated));
+      onSaved(updated);
     } catch (e) {
       setError(e instanceof Error ? e.message :  "Failed to save changes.");
     } finally {
@@ -265,7 +266,7 @@ function AddFacultyModal({
   onAdded,
 }: {
   onClose: () => void;
-  onAdded: (row: FacultyRow) => void;
+  onAdded: (row: FacultyRecord) => void;
 }) {
   const [draft, setDraft] = useState<AddDraft>({
     name:     "",
@@ -280,6 +281,11 @@ function AddFacultyModal({
   function set<K extends keyof AddDraft>(key: K, val: AddDraft[K]) {
     setDraft((d) => ({ ...d, [key]: val }));
   }
+
+  const inputClass =
+    "w-full border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-yellow-400 appearance-none";
+  const labelClass =
+    "text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500";
 
   async function handleAdd() {
     setError(null);
@@ -298,7 +304,7 @@ function AddFacultyModal({
         role:     draft.role,
         subjects: subjectsArray,
       });
-      onAdded(toRow(created));
+      onAdded(created);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create faculty.");
     } finally {
@@ -307,49 +313,98 @@ function AddFacultyModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white w-full max-w-md shadow-xl p-6 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-extrabold text-[#002f73] uppercase tracking-tight">Add Faculty</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="w-full max-w-lg border border-gray-100 bg-white p-8 shadow-lg">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="mb-1 text-xl font-extrabold tracking-tight text-[#002f73]">Add Faculty</h2>
+            <p className="text-sm text-gray-500">Create a faculty record using the same form style as the schedule modal.</p>
+          </div>
+          <button onClick={onClose} className="text-xl leading-none text-gray-400 transition-colors hover:text-gray-600">✕</button>
         </div>
 
-        <p className="text-xs text-gray-400">Faculty ID will be generated automatically (e.g. FAC-DELA CRUZ).</p>
+        <div className="border-b-2 border-yellow-400 mb-6 mt-2" />
 
-        <Field label="Full Name" value={draft.name}  onChange={(v) => set("name",  v)} required />
-        <Field label="Email"     value={draft.email} onChange={(v) => set("email", v)} type="email" required />
-        <Field label="Strand"    value={draft.strand} onChange={(v) => set("strand", v)} required />
+        <p className="mb-4 text-xs text-gray-400">Faculty ID will be generated automatically (e.g. FAC-DELA CRUZ).</p>
 
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Role<span className="text-red-500 ml-0.5">*</span></label>
-          <select
-            value={draft.role}
-            onChange={(e) => set("role", e.target.value as AllowedRole)}
-            className="border border-gray-200 px-3 py-2 text-sm rounded outline-none focus:border-[#002f73] bg-white text-gray-800"
-          >
-            <option value="faculty">Faculty</option>
-            <option value="strand_head">Strand Head</option>
-            <option value="principal">Principal</option>
-          </select>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2 flex flex-col gap-1.5">
+            <label className={labelClass}>Full Name<span className="ml-0.5 text-red-500">*</span></label>
+            <input
+              type="text"
+              value={draft.name}
+              onChange={(e) => set("name", e.target.value)}
+              className={inputClass}
+            />
+          </div>
+
+          <div className="col-span-2 flex flex-col gap-1.5">
+            <label className={labelClass}>Email<span className="ml-0.5 text-red-500">*</span></label>
+            <input
+              type="email"
+              value={draft.email}
+              onChange={(e) => set("email", e.target.value)}
+              className={inputClass}
+            />
+          </div>
+
+          <div className="col-span-2 flex flex-col gap-1.5">
+            <label className={labelClass}>Strand<span className="ml-0.5 text-red-500">*</span></label>
+            <div className="relative">
+              <select
+                value={draft.strand}
+                onChange={(e) => set("strand", e.target.value)}
+                className={`${inputClass} pr-10`}
+              >
+                <option value="">Select a strand</option>
+                {STRANDS.filter((strand) => strand !== "All Strands").map((strand) => (
+                  <option key={strand} value={strand}>{strand}</option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌵</span>
+            </div>
+          </div>
+
+          <div className="col-span-2 flex flex-col gap-1.5">
+            <label className={labelClass}>Role<span className="ml-0.5 text-red-500">*</span></label>
+            <div className="relative">
+              <select
+                value={draft.role}
+                onChange={(e) => set("role", e.target.value as AllowedRole)}
+                className={`${inputClass} pr-10 capitalize`}
+              >
+                <option value="faculty">Faculty</option>
+                <option value="strand_head">Strand Head</option>
+                <option value="principal">Principal</option>
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">⌵</span>
+            </div>
+          </div>
+
+          <div className="col-span-2 flex flex-col gap-1.5">
+            <label className={labelClass}>Subjects (comma-separated)<span className="ml-0.5 text-red-500">*</span></label>
+            <textarea
+              value={draft.subjects}
+              onChange={(e) => set("subjects", e.target.value)}
+              rows={4}
+              placeholder="General Mathematics, Pre-Calculus"
+              className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-700 outline-none focus:border-yellow-400 resize-none"
+            />
+          </div>
         </div>
 
-        <Field
-          label="Subjects (comma-separated)"
-          value={draft.subjects}
-          onChange={(v) => set("subjects", v)}
-          required
-        />
+        {error && <p className="mt-4 text-xs font-semibold text-red-500">{error}</p>}
 
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        <div className="border-b border-gray-100 mt-6 mb-6" />
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
-          <button onClick={onClose} className="px-4 py-1.5 text-xs font-bold border border-gray-200 text-gray-600 hover:bg-gray-50">
+        <div className="flex items-center justify-end gap-3">
+          <button onClick={onClose} className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-[#002f73] border border-[#cbd5e1] bg-white hover:bg-[#f0f4ff] hover:border-[#064db6] transition-colors">
             Cancel
           </button>
           <button
             onClick={handleAdd}
             disabled={saving}
-            className="px-4 py-1.5 text-xs font-bold text-white bg-[#002f73] hover:bg-[#064db6] disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white bg-[#002f73] border border-[#002f73] hover:bg-[#064db6] transition-colors disabled:opacity-50"
           >
             {saving ? "Adding…" : "Add Faculty"}
           </button>
@@ -362,36 +417,18 @@ function AddFacultyModal({
 // ── Main page component ───────────────────────────────────────────────────────
 
 export default function AddFaculty() {
-  const [rows,          setRows]          = useState<FacultyRow[]>([]);
-  const [loading,       setLoading]       = useState(true);
-  const [strandFilter,  setStrandFilter]  = useState("All Strands");
-  const [search,        setSearch]        = useState("");
-  const [page,          setPage]          = useState(1);
-  const [isImporting,   setIsImporting]   = useState(false);
-  const [isAdding,      setIsAdding]      = useState(false);
-  const [lastImport,    setLastImport]    = useState<ImportFacultyResult | null>(null);
-
+  const { facultyRecords, setFacultyRecords, loading, refresh } = useFacultyRecords();
+  const [strandFilter, setStrandFilter] = useState("All Strands");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [lastImport, setLastImport] = useState<ImportFacultyResult | null>(null);
   const [templateLoading, setTemplateLoading] = useState(false);
+  const [editTarget, setEditTarget] = useState<FacultyRow | null>(null);
 
-  async function handleDownloadTemplate() {
-    setTemplateLoading(true);
-    try {
-      await downloadFacultyTemplate();
-    } finally {
-      setTemplateLoading(false);
-    }
-  }
-  const [editTarget,    setEditTarget]    = useState<FacultyRow | null>(null);
+  const rows = useMemo(() => facultyRecords.map(toRow), [facultyRecords]);
 
-  // ── Initial fetch ──────────────────────────────────────────────────────────
-  useEffect(() => {
-    getFacultyList()
-      .then((res) => setRows(res.data.map(toRow)))
-      .catch(() => {/* keep empty — user will see "No faculty found" */})
-      .finally(() => setLoading(false));
-  }, []);
-
-  // ── Filtering ──────────────────────────────────────────────────────────────
   const filtered = rows.filter((r) => {
     const matchStrand = strandFilter === "All Strands" || r.strand === strandFilter;
     const q = search.toLowerCase();
@@ -405,27 +442,34 @@ export default function AddFaculty() {
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ROWS_PER_PAGE));
-  const paginated  = filtered.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
+  const paginated = filtered.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
 
   function handleFilterChange(setter: (v: string) => void) {
-    return (value: string) => { setter(value); setPage(1); };
+    return (value: string) => {
+      setter(value);
+      setPage(1);
+    };
+  }
+
+  async function handleDownloadTemplate() {
+    setTemplateLoading(true);
+    try {
+      await downloadFacultyTemplate();
+    } finally {
+      setTemplateLoading(false);
+    }
   }
 
   function handleImportSuccess(result: ImportFacultyResult) {
     setLastImport(result);
     if (result.status !== "failed") {
-      getFacultyList()
-        .then((res) => setRows(res.data.map(toRow)))
-        .catch(() => {});
+      refresh().catch(() => {});
     }
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <TooltipProvider>
       <section className="min-h-screen w-full bg-gray-50 p-6">
-
-        {/* Header */}
         <div className="flex items-start justify-between mb-5">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-[#002f73] uppercase">
@@ -437,7 +481,6 @@ export default function AddFaculty() {
           </div>
 
           <div className="flex gap-2">
-            {/* Download template */}
             <button
               onClick={handleDownloadTemplate}
               disabled={templateLoading}
@@ -450,8 +493,7 @@ export default function AddFaculty() {
               </svg>
               {templateLoading ? 'Generating…' : 'Download Template'}
             </button>
-            
-            {/* Single add */}
+
             <button
               onClick={() => setIsAdding(true)}
               className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-[#002f73] border border-[#002f73] hover:bg-blue-50 transition-colors"
@@ -462,7 +504,6 @@ export default function AddFaculty() {
               Add Faculty
             </button>
 
-            {/* Bulk import */}
             <button
               onClick={() => setIsImporting(true)}
               className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-white border border-[#002f73] bg-[#002f73] hover:bg-[#064db6] transition-colors"
@@ -476,14 +517,13 @@ export default function AddFaculty() {
           </div>
         </div>
 
-        {/* Import result banner */}
         {lastImport && (
           <div
             className="mb-4 px-4 py-2.5 border text-xs font-semibold flex items-center justify-between"
             style={{
-              background:   lastImport.status === "failed" ? "#fde8e7" : "#e6f9ec",
-              borderColor:  lastImport.status === "failed" ? "#ed3a30" : "#31ac52",
-              color:        lastImport.status === "failed" ? "#ed3a30" : "#31ac52",
+              background: lastImport.status === "failed" ? "#fde8e7" : "#e6f9ec",
+              borderColor: lastImport.status === "failed" ? "#ed3a30" : "#31ac52",
+              color: lastImport.status === "failed" ? "#ed3a30" : "#31ac52",
             }}
           >
             <span>
@@ -494,10 +534,7 @@ export default function AddFaculty() {
           </div>
         )}
 
-        {/* Table card */}
         <div className="bg-white shadow-sm border border-gray-100 overflow-hidden">
-
-          {/* Filters */}
           <div className="flex flex-wrap gap-3 p-4 border-b border-gray-100">
             <SelectFilter
               value={strandFilter}
@@ -510,13 +547,15 @@ export default function AddFaculty() {
                 type="text"
                 placeholder="Search by name, ID, email, or subject…"
                 value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
                 className="flex-1 text-sm outline-none text-gray-700 placeholder-gray-400"
               />
             </div>
           </div>
 
-          {/* Table */}
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -552,14 +591,11 @@ export default function AddFaculty() {
                       className="border-b border-gray-50 hover:bg-blue-50/40 transition-colors"
                       style={{ background: i % 2 === 0 ? "#ffffff" : "#f8faff" }}
                     >
-                      {/* Faculty ID */}
                       <TableCell className="px-4 py-3">
                         <span className="font-mono text-xs font-semibold text-[#002f73] bg-blue-50 px-2 py-0.5 rounded">
                           {f.facultyId}
                         </span>
                       </TableCell>
-
-                      {/* Name */}
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <span
@@ -571,43 +607,27 @@ export default function AddFaculty() {
                           <span className="font-semibold text-[#1a1a1a] text-sm whitespace-nowrap">{f.name}</span>
                         </div>
                       </TableCell>
-
-                      {/* Email */}
                       <TableCell className="px-4 py-3 text-gray-600 text-sm">{f.email}</TableCell>
-
-                      {/* Strand */}
                       <TableCell className="px-4 py-3 font-semibold text-[#002f73] text-sm">{f.strand}</TableCell>
-
-                      {/* Role */}
                       <TableCell className="px-4 py-3 text-gray-600 text-sm capitalize">
                         {f.role.replace("_", " ")}
                       </TableCell>
-
-                      {/* Subjects */}
-                      <TableCell className="px-4 py-3 text-sm max-w-[200px]">
+                      <TableCell className="px-4 py-3 text-sm max-w-50">
                         <Tooltip>
                           <TooltipTrigger>
-                            <span className="block truncate text-gray-600 cursor-default max-w-[200px]">
+                            <span className="block truncate text-gray-600 cursor-default max-w-50">
                               {f.subjects}
                             </span>
                           </TooltipTrigger>
-                          <TooltipContent
-                            side="top"
-                            className="max-w-[280px] text-xs leading-relaxed"
-                          >
+                          <TooltipContent side="top" className="max-w-70 text-xs leading-relaxed">
                             <div className="flex flex-col gap-1">
-                               {f.subjectsArray.length > 0
-                                  ? f.subjectsArray.map((s, i) => (
-                                      <div key={i} className="py-0.5">{s}</div>
-                                    ))
-                                  : <span className="text-gray-400">No subjects</span>
-                                }
+                              {f.subjectsArray.length > 0
+                                ? f.subjectsArray.map((s, i) => <div key={i} className="py-0.5">{s}</div>)
+                                : <span className="text-gray-400">No subjects</span>}
                             </div>
                           </TooltipContent>
                         </Tooltip>
                       </TableCell>
-
-                      {/* Actions */}
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <button
@@ -626,12 +646,9 @@ export default function AddFaculty() {
             </Table>
           </div>
 
-          {/* Pagination */}
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm text-gray-500">
             <span>
-              Showing{" "}
-              {filtered.length === 0 ? 0 : (page - 1) * ROWS_PER_PAGE + 1} –{" "}
-              {Math.min(page * ROWS_PER_PAGE, filtered.length)} of {filtered.length} entries
+              Showing {filtered.length === 0 ? 0 : (page - 1) * ROWS_PER_PAGE + 1} – {Math.min(page * ROWS_PER_PAGE, filtered.length)} of {filtered.length} entries
             </span>
             <div className="flex items-center gap-1">
               <button
@@ -645,9 +662,7 @@ export default function AddFaculty() {
                 <button
                   key={pg}
                   onClick={() => setPage(pg)}
-                  className={`w-7 h-7 text-xs font-semibold transition-colors ${
-                    pg === page ? "bg-[#002f73] text-white shadow-sm" : "hover:bg-gray-100 text-gray-600"
-                  }`}
+                  className={`w-7 h-7 text-xs font-semibold transition-colors ${pg === page ? "bg-[#002f73] text-white shadow-sm" : "hover:bg-gray-100 text-gray-600"}`}
                 >
                   {pg}
                 </button>
@@ -663,18 +678,23 @@ export default function AddFaculty() {
           </div>
         </div>
 
-        {/* Modals */}
         {isAdding && (
           <AddFacultyModal
             onClose={() => setIsAdding(false)}
-            onAdded={(row) => { setRows((prev) => [row, ...prev]); setIsAdding(false); }}
+            onAdded={(row) => {
+              setFacultyRecords((prev) => [row, ...prev]);
+              setIsAdding(false);
+            }}
           />
         )}
 
         {isImporting && (
           <ImportFacultyModal
             onClose={() => setIsImporting(false)}
-            onSuccess={(result) => { handleImportSuccess(result); setIsImporting(false); }}
+            onSuccess={(result) => {
+              handleImportSuccess(result);
+              setIsImporting(false);
+            }}
           />
         )}
 
@@ -683,11 +703,11 @@ export default function AddFaculty() {
             row={editTarget}
             onClose={() => setEditTarget(null)}
             onSaved={(updated) => {
-              setRows((prev) => prev.map((r) => r.id === updated.id ? updated : r));
+              setFacultyRecords((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
               setEditTarget(null);
             }}
             onDeleted={(id) => {
-              setRows((prev) => prev.filter((r) => r.id !== id));
+              setFacultyRecords((prev) => prev.filter((r) => r.id !== id));
               setEditTarget(null);
             }}
           />

@@ -59,6 +59,14 @@ router.use('/faculty', facultyImportRouter);
 // list - public
 router.get('/faculty', asyncHandler(getFacultyList));
 
+// list - protected admin view, reuses the same controller
+router.get(
+    '/faculty/manage',
+    authToken,
+    requireRole('principal', 'strand_head'),
+    asyncHandler(getFacultyList)
+);
+
 // single read - public
 router.get('/faculty/:id', asyncHandler(getFacultyById));
 

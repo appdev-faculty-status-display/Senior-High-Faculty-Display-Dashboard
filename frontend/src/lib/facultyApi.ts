@@ -1,7 +1,8 @@
 // frontend/src/lib/facultyApi.ts
 import type { ConsultationHours, ScheduleEntry } from "@/types/faculty-states";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
-const BASE = import.meta.env.VITE_API_URL ?? '';
+const BASE = (import.meta.env.VITE_API_URL || 'https://facultyboard-cqdzg5a8dwccegby.japaneast-01.azurewebsites.net');
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -31,11 +32,6 @@ export interface ImportFacultyResult {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem('auth_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let msg = `Request failed (${res.status})`;
@@ -58,10 +54,14 @@ export async function getFacultyList(strand?: string): Promise<{ data: FacultyRe
   return handleResponse(res);
 }
 
+export async function getFacultyListAdmin(strand?: string): Promise<{ data: FacultyRecord[]; total: number }> {
+  const qs = strand ? `?strand=${encodeURIComponent(strand)}` : '';
+  const res = await fetchWithAuth(`${BASE}/api/faculty/manage${qs}`);
+  return handleResponse(res);
+}
+
 export async function getFacultyById(id: string): Promise<FacultyRecord> {
-  const res = await fetch(`${BASE}/api/faculty/${id}`, {
-    headers: authHeaders(),
-  });
+  const res = await fetch(`${BASE}/api/faculty/${id}`);
   return handleResponse(res);
 }
 
@@ -76,9 +76,9 @@ export interface CreateFacultyPayload {
 }
 
 export async function createFaculty(payload: CreateFacultyPayload): Promise<FacultyRecord> {
-  const res = await fetch(`${BASE}/api/faculty`, {
+  const res = await fetchWithAuth(`${BASE}/api/faculty`, {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify({ ...payload, subjects: JSON.stringify(payload.subjects) }),
   });
   return handleResponse(res);
@@ -100,18 +100,18 @@ export async function updateFaculty(id: string, payload: UpdateFacultyPayload): 
   const body: Record<string, unknown> = { ...payload };
   if (payload.subjects) body.subjects = JSON.stringify(payload.subjects);
 
-  const res = await fetch(`${BASE}/api/faculty/${id}`, {
+  const res = await fetchWithAuth(`${BASE}/api/faculty/${id}`, {
     method:  'PATCH',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify(body),
   });
   return handleResponse(res);
 }
 
 export async function deleteFaculty(id: string): Promise<{ id: string; facultyId: string; deleted: boolean }> {
-  const res = await fetch(`${BASE}/api/faculty/${id}`, {
+  const res = await fetchWithAuth(`${BASE}/api/faculty/${id}`, {
     method:  'DELETE',
-    headers: authHeaders(),
+    headers: { 'Content-Type': 'application/json' },
   });
   return handleResponse(res);
 }
@@ -124,9 +124,9 @@ export async function importFaculty(
   form.append('file', file);
   form.append('replaceSchedule', String(replaceSchedule));
 
-  const res = await fetch(`${BASE}/api/faculty/import`, {
+  const res = await fetchWithAuth(`${BASE}/api/faculty/import`, {
     method:  'POST',
-    headers: authHeaders(),    // DO NOT set Content-Type — let the browser set multipart boundary
+    headers: {},    // DO NOT set Content-Type — let the browser set multipart boundary
     body:    form,
   });
   return handleResponse(res);
@@ -134,8 +134,8 @@ export async function importFaculty(
 
 // Template Download
 export async function downloadFacultyTemplate(): Promise<void> {
-  const res = await fetch(`${BASE}/api/faculty/template`, {
-    headers: authHeaders(),
+  const res = await fetchWithAuth(`${BASE}/api/faculty/template`, {
+    headers: { 'Content-Type': 'application/json' },
   });
 
   if (!res.ok) throw new Error('Failed to download template');
