@@ -51,6 +51,10 @@ router.post('/auth/refresh', authLimiter, refresh);
 router.post('/auth/logout', logout);
 
 // ── Faculty ───────────────────────────────────────────────────────────────────
+
+// bulk import
+router.use('/faculty', facultyImportRouter);
+
 // list - public
 router.get('/faculty', asyncHandler(getFacultyList));
 

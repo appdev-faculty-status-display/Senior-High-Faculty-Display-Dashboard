@@ -42,8 +42,9 @@ async function handleResponse<T>(res: Response): Promise<T> {
       const body = await res.json();
       msg = body.message ?? msg;
     } catch {
-    throw new Error(msg);
+      // ignore JSON parse errors and use default message
     }
+    throw new Error(msg);
   }  
   return res.json() as Promise<T>;
 }
@@ -128,4 +129,54 @@ export async function importFaculty(
     body:    form,
   });
   return handleResponse(res);
+}
+
+// Template Download
+export async function downloadFacultyTemplate(): Promise<void> {
+  const ExcelJS = (await import('exceljs')).default;
+ 
+  const workbook  = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Faculty Import');
+ 
+  // Column definitions with widths
+  worksheet.columns = [
+    { header: 'name',     key: 'name',     width: 25 },
+    { header: 'email',    key: 'email',    width: 30 },
+    { header: 'userId',   key: 'userId',   width: 20 },
+    { header: 'strand',   key: 'strand',   width: 12 },
+    { header: 'role',     key: 'role',     width: 14 },
+    { header: 'subjects', key: 'subjects', width: 35 },
+    { header: 'schedule', key: 'schedule', width: 80 },
+  ];
+ 
+  // Style the header row
+  const headerRow = worksheet.getRow(1);
+  headerRow.eachCell((cell) => {
+    cell.font      = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF002F73' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  });
+ 
+  // Example data row
+  worksheet.addRow({
+    name:     'Juan Dela Cruz',
+    email:    'jdelacruz@school.edu',
+    userId:   'jdelacruz',
+    strand:   'STEM',
+    role:     'faculty',
+    subjects: '["Math","Science"]',
+    schedule: '[{"day":"Monday","startTime":"07:30","endTime":"09:00","subject":"Math","room":"101"}]',
+  });
+ 
+  // Trigger download
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob   = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const url  = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href     = url;
+  link.download = 'faculty_import_template.xlsx';
+  link.click();
+  URL.revokeObjectURL(url);
 }
