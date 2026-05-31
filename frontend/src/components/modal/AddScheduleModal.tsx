@@ -211,6 +211,16 @@ export default function AddScheduleModal({ onClose, onSaved, existingSchedules }
         };
     }, []);
 
+    useEffect(() => {
+        if (!successMessage) return;
+
+        const timer = window.setTimeout(() => {
+            setSuccessMessage(null);
+        }, 15000);
+
+        return () => window.clearTimeout(timer);
+    }, [successMessage]);
+
     const facultyById = useMemo(() => new Map(facultyOptions.map((faculty) => [faculty.facultyId, faculty])), [facultyOptions]);
     const subjectOptions = useMemo(() => {
         return Array.from(
@@ -429,6 +439,7 @@ export default function AddScheduleModal({ onClose, onSaved, existingSchedules }
             onSaved(data as AddEntryResult);
             setSuccessMessage(`Saved ${resolvedFaculty.name}'s schedule entry.`);
             resetForAnotherEntry();
+            onClose();
         } catch {
             setSubmitError("Network error. Please check your connection and try again.");
         } finally {

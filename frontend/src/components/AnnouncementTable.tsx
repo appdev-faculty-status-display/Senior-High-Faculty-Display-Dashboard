@@ -4,6 +4,7 @@ import type { Announcement, CreateAnnouncementBody } from "../types/announcement
 import TrashIcon from "./icons/TrashIcon";
 import AddAnnouncementModal from "./modal/AddAnnouncementModal";
 import { formatDateTime } from "@/lib/utils";
+import ActionNotice from "@/components/ui/ActionNotice";
 
 interface Props {
     announcements: Announcement[];
@@ -30,6 +31,7 @@ export default function AnnouncementTable({
     const [showAdd, setShowAdd] = useState(false);
     const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
     const [mutationError, setMutationError] = useState<string | null>(null);
+    const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
     const handleDeleteConfirm = async () => {
         if (!pendingDeleteId) return;
@@ -44,12 +46,25 @@ export default function AnnouncementTable({
 
     return (
         <section className="p-6">
+            {successNotice && (
+                <ActionNotice
+                    title="Announcement posted"
+                    message={successNotice}
+                    onDismiss={() => setSuccessNotice(null)}
+                />
+            )}
+
             {showAdd && (
                 <AddAnnouncementModal
                     onClose={() => { setShowAdd(false); setMutationError(null); }}
                     onSubmit={async (draft) => {
                         try {
                             await onAdd(draft);
+                            setSuccessNotice(
+                                draft.scope === "strand"
+                                    ? `Your strand announcement for ${draft.strand ?? "the selected strand"} is now live.`
+                                    : "Your all-school announcement is now live."
+                            );
                             setShowAdd(false);
                             setMutationError(null);
                         } catch (err) {
