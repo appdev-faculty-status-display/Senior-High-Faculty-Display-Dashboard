@@ -1,4 +1,5 @@
 // frontend/src/lib/facultyApi.ts
+import ExcelJS from "exceljs";
 import type { ConsultationHours, ScheduleEntry } from "@/types/faculty-states";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 
@@ -134,17 +135,70 @@ export async function importFaculty(
 
 // Template Download
 export async function downloadFacultyTemplate(): Promise<void> {
-  const res = await fetchWithAuth(`${BASE}/api/faculty/template`, {
-    headers: { 'Content-Type': 'application/json' },
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "Senior High Faculty Display Dashboard";
+  workbook.created = new Date();
+
+  const templateSheet = workbook.addWorksheet("Faculty Import");
+  templateSheet.columns = [
+    { header: "name", key: "name", width: 24 },
+    { header: "email", key: "email", width: 30 },
+    { header: "userId", key: "userId", width: 18 },
+    { header: "strand", key: "strand", width: 14 },
+    { header: "role", key: "role", width: 16 },
+    { header: "subjects", key: "subjects", width: 30 },
+    { header: "schedule", key: "schedule", width: 60 },
+  ];
+  templateSheet.getRow(1).font = { bold: true };
+  templateSheet.addRow({
+    name: "Juan Dela Cruz",
+    email: "jdelacruz@school.edu",
+    userId: "jdelacruz",
+    strand: "STEM",
+    role: "faculty",
+    subjects: '["Math", "Science"]',
+    schedule: '[{"day":"Monday","startTime":"07:30","endTime":"09:00","subject":"Math","room":"101"}]',
   });
 
-  if (!res.ok) throw new Error('Failed to download template');
+  const instructionsSheet = workbook.addWorksheet("Instructions");
+  instructionsSheet.columns = [
+    { header: "Field", key: "field", width: 18 },
+    { header: "Requirement", key: "requirement", width: 18 },
+    { header: "Example", key: "example", width: 36 },
+    { header: "Notes", key: "notes", width: 72 },
+  ];
+  instructionsSheet.getRow(1).font = { bold: true };
+  instructionsSheet.addRows([
+    {
+      field: "subjects",
+      requirement: "Required",
+      example: '["Math", "Science"]',
+      notes: "Must be a JSON array string with at least one subject.",
+    },
+    {
+      field: "schedule",
+      requirement: "Optional",
+      example: '[{"day":"Monday","startTime":"07:30","endTime":"09:00","subject":"Math","room":"101"}]',
+      notes: "Use a JSON array string when you want to include schedule rows.",
+    },
+    {
+      field: "role",
+      requirement: "Required",
+      example: "faculty",
+      notes: "Allowed values: faculty, strand_head, principal.",
+    },
+  ]);
 
-  const blob = await res.blob();
-  const url  = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href     = url;
-  link.download = 'faculty_import_template.xlsx';
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "faculty_import_template.xlsx";
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
