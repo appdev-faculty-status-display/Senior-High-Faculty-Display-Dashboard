@@ -7,10 +7,10 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "faculty-activity",       label: "Faculty Activity" },
   { id: "consultation",           label: "Consultation" },
   { id: "resource-communication", label: "Resource & Communication" },
-  { id: "add-announcement",       label: "Add Announcement" },
-  { id: "add-schedule",           label: "Add Schedule" },
-  { id: "manage-faculty",         label: "Manage Faculty" },
-];
+  { id: "add-announcement",       label: "Announcement Management" },
+  { id: "add-schedule",           label: "Schedule Management" },
+  { id: "manage-faculty",         label: "Faculty Management" },
+];  
 
 // Faculty Activity
 
