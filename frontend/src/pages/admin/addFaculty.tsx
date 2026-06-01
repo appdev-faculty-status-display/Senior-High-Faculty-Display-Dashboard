@@ -5,6 +5,7 @@ import { updateFaculty, deleteFaculty, createFaculty, downloadFacultyTemplate } 
 import ImportFacultyModal from "@/components/modal/ImportfacultyModal";
 import SelectFilter from "@/components/SelectFilter";
 import { useFacultyRecords } from "@/hooks/useFacultyRecords";
+import ActionNotice from "@/components/ui/ActionNotice";
 
 import IconSearch from "@/components/icons/SearchIcon";
 import IconEdit from "@/components/icons/EditIcon";
@@ -426,6 +427,7 @@ export default function AddFaculty() {
   const [lastImport, setLastImport] = useState<ImportFacultyResult | null>(null);
   const [templateLoading, setTemplateLoading] = useState(false);
   const [editTarget, setEditTarget] = useState<FacultyRow | null>(null);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
   const rows = useMemo(() => facultyRecords.map(toRow), [facultyRecords]);
 
@@ -462,6 +464,11 @@ export default function AddFaculty() {
 
   function handleImportSuccess(result: ImportFacultyResult) {
     setLastImport(result);
+    setSuccessNotice(
+      result.status === "failed"
+        ? "Faculty import finished with errors. Review the import summary above."
+        : `Faculty import completed: ${result.recordsCreated} created and ${result.recordsUpdated} updated.`
+    );
     if (result.status !== "failed") {
       refresh().catch(() => {});
     }
@@ -470,6 +477,14 @@ export default function AddFaculty() {
   return (
     <TooltipProvider>
       <section className="min-h-screen w-full bg-gray-50 p-6">
+        {successNotice && (
+          <ActionNotice
+            title="Faculty updated"
+            message={successNotice}
+            onDismiss={() => setSuccessNotice(null)}
+          />
+        )}
+
         <div className="flex items-start justify-between mb-5">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-[#002f73] uppercase">
@@ -683,6 +698,7 @@ export default function AddFaculty() {
             onClose={() => setIsAdding(false)}
             onAdded={(row) => {
               setFacultyRecords((prev) => [row, ...prev]);
+              setSuccessNotice(`Faculty member ${row.name} was added successfully.`);
               setIsAdding(false);
             }}
           />

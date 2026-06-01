@@ -15,6 +15,7 @@ import EditScheduleModal      from "@/components/modal/EditScheduleModal";
 import ImportScheduleModal    from "@/components/modal/ImportScheduleModal";
 import AddScheduleModal       from "@/components/modal/AddScheduleModal";
 import DownloadTemplateButton from "@/components/DownloadTemplateButton";
+import ActionNotice from "@/components/ui/ActionNotice";
 
 // —— Constants ———————————————
 const ROWS_PER_PAGE = 8;
@@ -38,6 +39,7 @@ export default function ClassScheduleDashboard() {
     const [isImporting,      setIsImporting]      = useState(false);
     const [isEditing,        setIsEditing]        = useState(false);
     const [selectedSchedule, setSelectedSchedule] = useState<FacultySchedule | null>(null);
+    const [successNotice,    setSuccessNotice]    = useState<string | null>(null);
 
     const handleDelete = async (s: FacultySchedule) => {
         try {
@@ -62,6 +64,14 @@ export default function ClassScheduleDashboard() {
 
     return (
         <section className="min-h-screen w-full bg-gray-50 p-6">
+
+            {successNotice && (
+                <ActionNotice
+                    title="Schedule updated"
+                    message={successNotice}
+                    onDismiss={() => setSuccessNotice(null)}
+                />
+            )}
 
             {/* Header */}
             <div className="flex items-start justify-between mb-5">
@@ -230,7 +240,10 @@ export default function ClassScheduleDashboard() {
                 <AddScheduleModal
                         existingSchedules={schedules}
                     onClose={() => setIsAdding(false)}
-                        onSaved={() => { fetchSchedules(); }}
+                        onSaved={(result) => {
+                            fetchSchedules();
+                            setSuccessNotice(`Schedule entry saved successfully for ${result.facultyId}.`);
+                        }}
                 />
             )}
 
@@ -238,7 +251,15 @@ export default function ClassScheduleDashboard() {
             {isImporting && (
                 <ImportScheduleModal
                     onClose={() => setIsImporting(false)}
-                    onImportComplete={() => { fetchSchedules(); setIsImporting(false); }}
+                    onImportComplete={(result) => {
+                        fetchSchedules();
+                        setSuccessNotice(
+                            result.status === "failed"
+                                ? "Schedule import finished with errors. Review the import summary if one is shown."
+                                : `Schedule import completed: ${result.recordsApplied} entries applied from ${result.recordsProcessed} processed.`
+                        );
+                        setIsImporting(false);
+                    }}
                 />
             )}
 
