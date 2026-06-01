@@ -71,7 +71,6 @@ export interface ConsultationWindowChartProps {
 export interface ConsultationEfficiencyCardProps {
   quickConsultations: number;
   consultationRoom: number;
-  avgQueueWaitMin: number;
 }
 
 export interface ManualOverrideChartProps {
