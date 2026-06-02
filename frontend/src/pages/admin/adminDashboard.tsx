@@ -15,6 +15,7 @@ import UrgencyPurposeAnalysis        from "@/components/ui/admin-dashboard/Urgen
 
 // Types
 import type { ActiveNav, SidebarNavItemProps, MainContentProps, ConsultationEfficiencyCardProps, RecencyLogEntry } from "@/types/adminDashboard.types";
+import type { ConsultationResponse, FacultyActivityResponse } from "@/lib/analyticsApi";
 
 // Mock Data 
 import { NAV_ITEMS, MOCK_STATUS_DATA, MOCK_RECENCY_LOG, MOCK_CONSULTATION_EFFICIENCY } from "@/data/mockAdminDashboardData";
@@ -98,11 +99,6 @@ function FacultyActivityContent() {
   const [statusData, setStatusData] = useState<Record<string, number>>(MOCK_STATUS_DATA);
   const [recencyLog, setRecencyLog] = useState<RecencyLogEntry[]>(MOCK_RECENCY_LOG);
 
-  type FacultyActivityResponse = {
-    statusDistribution?: Record<string, number>;
-    recencyLog?: RecencyLogEntry[];
-  };
-
   function handleExportCSV() {
     downloadCSV(
       [
@@ -172,10 +168,6 @@ function ConsultationContent() {
   const [dateTo,        setDateTo]        = useState("");
   const [facultySearch, setFacultySearch] = useState("");
   const [consultationEfficiency, setConsultationEfficiency] = useState<ConsultationEfficiencyCardProps>(MOCK_CONSULTATION_EFFICIENCY);
-
-  type ConsultationResponse = {
-    consultationEfficiency?: ConsultationEfficiencyCardProps;
-  };
 
   function handleExportCSV() {
     downloadCSV(

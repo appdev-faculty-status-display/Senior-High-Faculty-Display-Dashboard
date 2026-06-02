@@ -1,4 +1,18 @@
 import { fetchWithAuth } from './fetchWithAuth';
+import type { RecencyLogEntry } from "@/types/adminDashboard.types";
+import type { Status } from "@/types/schedule";
+
+export interface FacultyActivityResponse {
+  statusDistribution?: Record<string, number>;
+  recencyLog?: Array<Omit<RecencyLogEntry, "currentStatus"> & { currentStatus: Status }>;
+}
+
+export interface ConsultationResponse {
+  consultationEfficiency?: {
+    quickConsultations: number;
+    consultationRoom: number;
+  };
+}
 
 type CacheEntry = { expiresAt: number; data: unknown };
 const cache = new Map<string, CacheEntry>();
@@ -36,12 +50,12 @@ async function cachedGet<T>(path: string, params?: Record<string,string|number|u
   return data;
 }
 
-export async function getFacultyActivity(opts?: { from?: string; to?: string; strand?: string }) {
-  return cachedGet('faculty-activity', opts);
+export async function getFacultyActivity(opts?: { from?: string; to?: string; strand?: string }): Promise<FacultyActivityResponse> {
+  return cachedGet<FacultyActivityResponse>('faculty-activity', opts);
 }
 
-export async function getConsultation(opts?: { from?: string; to?: string; faculty?: string }) {
-  return cachedGet('consultation', opts);
+export async function getConsultation(opts?: { from?: string; to?: string; faculty?: string }): Promise<ConsultationResponse> {
+  return cachedGet<ConsultationResponse>('consultation', opts);
 }
 
 export function clearAnalyticsCache() {
