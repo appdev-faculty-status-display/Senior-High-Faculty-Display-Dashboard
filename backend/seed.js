@@ -19,36 +19,78 @@ async function seed() {
 
         const facultyRecords = [
             {
-                facultyId: 'ADM001',
-                userId: 'principal@nu-laguna.edu.ph',
-                name: 'Test Principal',
-                role: 'principal',
+                facultyId: 'FAC001',
+                userId: 'test.faculty@nu-laguna.edu.ph',
+                name: 'Test Faculty',
+                role: 'faculty',
                 strand: 'STEM',
-                currentLocation: 'Admin Office'
+                currentLocation: 'Room 101'
             },
             {
-                facultyId: 'SHD-STEM',
-                userId: 'strandhead.stem@nu-laguna.edu.ph',
-                name: 'Test STEM Strand Head',
+                facultyId: 'FAC002',
+                userId: 'test.faculty2@nu-laguna.edu.ph',
+                name: 'Test Faculty Two',
+                role: 'faculty',
+                strand: 'STEM',
+                currentLocation: 'Room 102'
+            },
+            {
+                facultyId: 'SHD001',
+                userId: 'test.strandhead@nu-laguna.edu.ph',
+                name: 'Test Strand Head',
                 role: 'strand_head',
                 strand: 'STEM',
                 currentLocation: 'Room 201'
             },
             {
-                facultyId: 'SHD-ABM',
-                userId: 'strandhead.abm@nu-laguna.edu.ph',
-                name: 'Test ABM Strand Head',
-                role: 'strand_head',
-                strand: 'ABM',
-                currentLocation: 'Room 202'
+                facultyId: 'ADM001',
+                userId: 'test.admin@nu-laguna.edu.ph',
+                name: 'Test Principal',
+                role: 'principal',
+                strand: 'STEM',
+                currentLocation: 'Admin Office'
+            },
+
+            // new real teachers matching mockRequestForm.ts
+            {
+                facultyId: 'FAC-ROBLES',
+                userId: 'roblesk@students.nu-laguna.edu.ph',
+                name: 'Mr. Robles',
+                role: 'faculty',
+                strand: 'STEM',
+                currentLocation: 'Room 301'
             },
             {
-                facultyId: 'SHD-HUMSS',
-                userId: 'strandhead.humss@nu-laguna.edu.ph',
-                name: 'Test HUMSS Strand Head',
-                role: 'strand_head',
+                facultyId: 'FAC-PAGARAN',
+                userId: 'pagaranag@students.nu-laguna.edu.ph',
+                name: 'Mr. Pagaran',
+                role: 'faculty',
                 strand: 'HUMSS',
-                currentLocation: 'Room 203'
+                currentLocation: 'Room 302'
+            },
+            {
+                facultyId: 'FAC-LEGASPI',
+                userId: 'mjlegaspi@nu-laguna.edu.ph',
+                name: 'Mr. Legaspi',
+                role: 'faculty',
+                strand: 'ABM',
+                currentLocation: 'Room 303'
+            },
+            {
+                facultyId: 'FAC-JOMPILLA',
+                userId: 'jompillam@students.nu-laguna.edu.ph',
+                name: 'Mr. Jompilla',
+                role: 'faculty',
+                strand: 'ABM',
+                currentLocation: 'Room 304'
+            },
+            {
+                facultyId: 'FAC-CATAAG',
+                userId: 'cataagjl@students.nu-laguna.edu.ph',
+                name: 'Mr. Cataag',
+                role: 'faculty',
+                strand: 'STEM',
+                currentLocation: 'Room 305'
             }
         ];
 
