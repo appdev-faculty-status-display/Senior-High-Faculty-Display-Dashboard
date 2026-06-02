@@ -231,8 +231,9 @@ interface FacultyFormErrors {
 
 export default function FacultyRequestForm() {
     const navigate = useNavigate();
-    const BASE_URL = "https://default1d981f773ca346aeb0d4e8044e6c7f.84.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/ee48206fbba24374b3febbb7ffd2d7b5/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=8apFKkEJlgK5R7sZMmlOuhKaPkN5zi_8FdnzzuVQYWU"
-    import.meta.env.VITE_API_URL || "https://facultyboard-cqdzg5a8dwccegby.japaneast-01.azurewebsites.net";
+    const BASE_URL =
+        import.meta.env.VITE_API_URL ||
+        "https://facultyboard-cqdzg5a8dwccegby.japaneast-01.azurewebsites.net";
 
     const [rooms, setRooms] = useState<Room[]>(mockRooms);
     const [form, setForm] = useState<FacultyFormState>({
@@ -308,7 +309,7 @@ export default function FacultyRequestForm() {
             cancelled.current = true;
             controller.abort();
         };
-    }, [form.teacher]);
+    }, [BASE_URL, form.teacher]);
 
     useEffect(() => {
         const timeWindowError = getTimeWindowError(startTime, endTime);
@@ -371,7 +372,7 @@ export default function FacultyRequestForm() {
             cancelled.current = true;
             controller.abort();
         };
-    }, [endTime, form.room, startTime]);
+    }, [BASE_URL, endTime, form.room, startTime]);
 
     useEffect(() => {
         const timer = setInterval(() => {
