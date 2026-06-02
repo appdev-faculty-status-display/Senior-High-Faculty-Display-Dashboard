@@ -1,5 +1,26 @@
 // frontend/src/utils/pdfExportHelper.ts
-import html2canvas from "html2canvas";
+
+function copyStyles(sourceDoc: Document, targetDoc: Document): void {
+  sourceDoc.querySelectorAll('link[rel="stylesheet"], style').forEach((node) => {
+    targetDoc.head.appendChild(node.cloneNode(true));
+  });
+}
+
+function convertCanvasesToImages(root: HTMLElement): void {
+  root.querySelectorAll("canvas").forEach((canvas) => {
+    try {
+      const image = document.createElement("img");
+      image.src = canvas.toDataURL("image/png");
+      image.alt = canvas.getAttribute("aria-label") ?? "Chart image";
+      image.style.width = `${canvas.width}px`;
+      image.style.height = `${canvas.height}px`;
+      image.style.maxWidth = "100%";
+      canvas.replaceWith(image);
+    } catch {
+      // If a chart canvas cannot be serialized, keep the original element.
+    }
+  });
+}
 
 export function exportTablePDF(
   columns: string[],
@@ -78,15 +99,6 @@ export function exportTablePDF(
 }
 
 export async function printElement(el: HTMLElement, title: string): Promise<void> {
-  const canvas = await html2canvas(el, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: "#ffffff",
-    logging: false,
-  });
-
-  const imgData = canvas.toDataURL("image/png");
-
   const win = window.open("", "_blank");
   if (!win) return;
 
@@ -96,23 +108,27 @@ export async function printElement(el: HTMLElement, title: string): Promise<void
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title></title>
+  <title>${title}</title>
   <style>
     @page { margin: 10mm; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family:  Variab;e, sans-serif; color: #1a1a1a; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body { font-family: Inter Variable, sans-serif; color: #1a1a1a; }
     h1   { font-size: 13px; font-weight: 800; color: #002f73; margin-bottom: 2px; }
     p    { font-size: 9px; color: #4f4f4f; margin-bottom: 8px; }
-    img  { width: 100%; height: auto; display: block; }
+    #print-root { width: 100%; }
+    img  { max-width: 100%; height: auto; display: block; }
   </style>
 </head>
 <body>
   <h1 id="pe-title"></h1>
   <p  id="pe-subtitle"></p>
-  <img id="pe-img" />
+  <div id="print-root"></div>
 </body>
 </html>`);
   doc.close();
+
+  copyStyles(document, doc);
 
   const titleEl = doc.getElementById("pe-title");
   if (titleEl) titleEl.textContent = title;
@@ -124,9 +140,18 @@ export async function printElement(el: HTMLElement, title: string): Promise<void
     })}`;
   }
 
-  const imgEl = doc.getElementById("pe-img") as HTMLImageElement;
-  if (imgEl) {
-    imgEl.src = imgData;
-    imgEl.onload = () => { win.focus(); win.print(); };
+  const printRoot = doc.getElementById("print-root");
+  if (printRoot) {
+    const clone = el.cloneNode(true) as HTMLElement;
+    convertCanvasesToImages(clone);
+    printRoot.appendChild(clone);
   }
+
+  await new Promise<void>((resolve) => {
+    window.setTimeout(() => resolve(), 0);
+  });
+
+  win.focus();
+  win.print();
+  win.close();
 }

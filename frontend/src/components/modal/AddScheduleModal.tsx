@@ -1,6 +1,6 @@
 // components/modal/AddScheduleModal.tsx
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FacultySchedule, Day, AddEntryResult } from "../../types/schedule";
 import { doRangesOverlap, formatPHTime, isValidHHMM } from "../../utils/phTime";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
@@ -211,6 +211,16 @@ export default function AddScheduleModal({ onClose, onSaved, existingSchedules }
         };
     }, []);
 
+    useEffect(() => {
+        if (!successMessage) return;
+
+        const timer = window.setTimeout(() => {
+            setSuccessMessage(null);
+        }, 15000);
+
+        return () => window.clearTimeout(timer);
+    }, [successMessage]);
+
     const facultyById = useMemo(() => new Map(facultyOptions.map((faculty) => [faculty.facultyId, faculty])), [facultyOptions]);
     const subjectOptions = useMemo(() => {
         return Array.from(
@@ -238,7 +248,7 @@ export default function AddScheduleModal({ onClose, onSaved, existingSchedules }
         ? "Loading faculty list..."
         : facultyLoadError ?? "Type a name or Faculty ID, then pick a match from the list.";
 
-    function resolveFacultyFromQuery(query: string): FacultyRecord | null {
+    const resolveFacultyFromQuery = useCallback((query: string): FacultyRecord | null => {
         const trimmed = query.trim().toLowerCase();
         if (!trimmed) return null;
         return (
@@ -246,13 +256,13 @@ export default function AddScheduleModal({ onClose, onSaved, existingSchedules }
             facultyOptions.find((faculty) => faculty.name.toLowerCase() === trimmed) ??
             null
         );
-    }
+    }, [facultyOptions]);
 
-    function resolveSubjectFromQuery(query: string): string {
+    const resolveSubjectFromQuery = useCallback((query: string): string => {
         const trimmed = query.trim();
         if (!trimmed) return "";
         return subjectOptions.find((subject) => subject.toLowerCase() === trimmed.toLowerCase()) ?? "";
-    }
+    }, [subjectOptions]);
 
     const sameRoomConflict = useMemo(() => {
         if (!day || !room.trim() || !isValidHHMM(startTime) || !isValidHHMM(endTime)) return null;
@@ -320,6 +330,8 @@ export default function AddScheduleModal({ onClose, onSaved, existingSchedules }
         selectedSubject,
         subjectQuery,
         startTime,
+        resolveFacultyFromQuery,
+        resolveSubjectFromQuery,
     ]);
 
     const canSave = Boolean(
@@ -429,6 +441,7 @@ export default function AddScheduleModal({ onClose, onSaved, existingSchedules }
             onSaved(data as AddEntryResult);
             setSuccessMessage(`Saved ${resolvedFaculty.name}'s schedule entry.`);
             resetForAnotherEntry();
+            onClose();
         } catch {
             setSubmitError("Network error. Please check your connection and try again.");
         } finally {

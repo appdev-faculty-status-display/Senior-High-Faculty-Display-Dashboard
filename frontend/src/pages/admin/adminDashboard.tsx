@@ -1,5 +1,5 @@
 // frontend/src/pages/admin/adminDashboard.tsx
-import { useState, useRef, type ReactNode } from "react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import AddSchedule    from "@/components/ui/admin-dashboard/addSchedule";
 import AddFaculty     from "@/pages/admin/addFaculty";
@@ -9,42 +9,21 @@ import { DateRangePicker } from "@/components/ui/admin-dashboard/DatePicker";
 
 // Chart Components
 import StatusDistributionChart       from "@/components/ui/admin-dashboard/StatusDistributionChart";
-import ConsultationWindowChart       from "@/components/ui/admin-dashboard/ConsulationWindowChart";
-import ManualOverrideChart           from "@/components/ui/admin-dashboard/ManualOverrideChart";
 import RecencyLogTable               from "@/components/ui/admin-dashboard/RecencyLogTable";
 import ConsultationEfficiencyCard    from "@/components/ui/admin-dashboard/ConsultationEfficiencyCard";
-import CancellationRateChart         from "@/components/ui/admin-dashboard/CancellationRateChart";
-import ApprovalBottleneckCard        from "@/components/ui/admin-dashboard/ApprovalBottleneckChart";
-import RoomOccupancyChart            from "@/components/ui/admin-dashboard/RoomOccupancyChart";
-import AnnouncementReachChart        from "@/components/ui/admin-dashboard/AnnouncementReachChart";
-import NotificationSuccessChart      from "@/components/ui/admin-dashboard/NotificationSuccessChart";
 import UrgencyPurposeAnalysis        from "@/components/ui/admin-dashboard/UrgencyPurposeAnalysis";
-import ConsultationParticipantsTable from "@/components/ui/admin-dashboard/ConsultationParticipantsTable";
 
 // Types
-import type { ActiveNav, SidebarNavItemProps, MainContentProps } from "@/types/adminDashboard.types";
+import type { ActiveNav, SidebarNavItemProps, MainContentProps, ConsultationEfficiencyCardProps, RecencyLogEntry } from "@/types/adminDashboard.types";
+import type { ConsultationResponse, FacultyActivityResponse } from "@/lib/analyticsApi";
 
 // Mock Data 
-import {
-  NAV_ITEMS,
-  MOCK_STATUS_DATA,
-  MOCK_RECENCY_LOG,
-  MOCK_ANNOUNCEMENT_LABELS,
-  MOCK_STRAND_SPECIFIC,
-  MOCK_SCHOOL_WIDE,
-  MOCK_ROOM_OCCUPANCY,
-  MOCK_CONSULTATION_WINDOW,
-  MOCK_CONSULTATION_EFFICIENCY,
-  MOCK_CANCELLATION_RATE,
-  MOCK_APPROVAL_BOTTLENECK,
-  MOCK_MANUAL_OVERRIDE,
-  MOCK_NOTIFICATION_SUCCESS,
-  MOCK_CONSULTATION_PARTICIPANTS,
-} from "@/data/mockAdminDashboardData";
+import { NAV_ITEMS, MOCK_STATUS_DATA, MOCK_RECENCY_LOG, MOCK_CONSULTATION_EFFICIENCY } from "@/data/mockAdminDashboardData";
 
 // Utils
 import { downloadCSV }  from "@/utils/csvEscapeHelper";
 import { printElement } from "@/utils/pdfExportHelper";
+import * as analyticsApi from '../../lib/analyticsApi';
 
 // Hooks
 import { useAuth } from "@/hooks/useAuth";
@@ -117,15 +96,17 @@ function FacultyActivityContent() {
   const analyticsRef = useRef<HTMLDivElement>(null);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo,   setDateTo]   = useState("");
+  const [statusData, setStatusData] = useState<Record<string, number>>(MOCK_STATUS_DATA);
+  const [recencyLog, setRecencyLog] = useState<RecencyLogEntry[]>(MOCK_RECENCY_LOG);
 
   function handleExportCSV() {
     downloadCSV(
       [
         ["Metric", "Value"],
-        ...Object.entries(MOCK_STATUS_DATA).map(([k, v]) => [k, String(v)]),
+        ...Object.entries(statusData).map(([k, v]) => [k, String(v)]),
         ["---", "---"],
         ["Faculty Name", "Strand", "Status", "Last Updated", "Recency"],
-        ...MOCK_RECENCY_LOG.map((e) => [e.facultyName, e.strand, e.currentStatus, e.lastUpdated, e.recency]),
+        ...recencyLog.map((e) => [e.facultyName, e.strand, e.currentStatus, e.lastUpdated, e.recency]),
       ],
       "faculty_activity_analytics"
     );
@@ -134,6 +115,18 @@ function FacultyActivityContent() {
   function handleExportPDF() {
     if (analyticsRef.current) printElement(analyticsRef.current, "Faculty Activity Analytics");
   }
+
+  useEffect(() => {
+    let mounted = true;
+    analyticsApi.getFacultyActivity({ from: dateFrom || undefined, to: dateTo || undefined })
+      .then((data: FacultyActivityResponse) => {
+        if (!mounted) return;
+        if (data.statusDistribution) setStatusData(data.statusDistribution);
+        if (data.recencyLog) setRecencyLog(data.recencyLog);
+      })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, [dateFrom, dateTo]);
 
   return (
     <div className="p-6 flex flex-col gap-6 font-sans">
@@ -150,16 +143,14 @@ function FacultyActivityContent() {
       />
 
       <div ref={analyticsRef} className="flex flex-col gap-6">
-        {/* Row 1: Status + Consultation Window + Manual Override in one line */}
-        <div className="grid grid-cols-3 gap-6">
-          <StatusDistributionChart data={MOCK_STATUS_DATA} />
-          <ConsultationWindowChart {...MOCK_CONSULTATION_WINDOW} />
-          <ManualOverrideChart {...MOCK_MANUAL_OVERRIDE} />
+        {/* Row 1: Status */}
+        <div className="grid grid-cols-1 gap-6">
+          <StatusDistributionChart data={statusData} />
         </div>
 
         {/* Row 2: Recency Log full width — local filters: faculty, strand, status */}
         <RecencyLogTable
-          entries={MOCK_RECENCY_LOG}
+          entries={recencyLog}
           globalTimeFrom={dateFrom}
           globalTimeTo={dateTo}
         />
@@ -176,19 +167,14 @@ function ConsultationContent() {
   const [dateFrom,      setDateFrom]      = useState("");
   const [dateTo,        setDateTo]        = useState("");
   const [facultySearch, setFacultySearch] = useState("");
+  const [consultationEfficiency, setConsultationEfficiency] = useState<ConsultationEfficiencyCardProps>(MOCK_CONSULTATION_EFFICIENCY);
 
   function handleExportCSV() {
     downloadCSV(
       [
         ["Metric", "Value"],
-        ["Quick Consultations",        String(MOCK_CONSULTATION_EFFICIENCY.quickConsultations)],
-        ["Consultation Room",          String(MOCK_CONSULTATION_EFFICIENCY.consultationRoom)],
-        ["Avg Queue Wait (min)",       String(MOCK_CONSULTATION_EFFICIENCY.avgQueueWaitMin)],
-        ["Resolved (%)",               String(MOCK_CANCELLATION_RATE.resolved)],
-        ["Schedule Conflict (%)",      String(MOCK_CANCELLATION_RATE.scheduleConflict)],
-        ["Long Wait Time (%)",         String(MOCK_CANCELLATION_RATE.longWaitTime)],
-        ["Faculty Approval (min)",     String(MOCK_APPROVAL_BOTTLENECK.facultyApprovalMin)],
-        ["Strand Head Approval (min)", String(MOCK_APPROVAL_BOTTLENECK.strandHeadApprovalMin)],
+        ["Quick Consultations",        String(consultationEfficiency.quickConsultations)],
+        ["Consultation Room",          String(consultationEfficiency.consultationRoom)],
       ],
       "consultation_analytics"
     );
@@ -197,6 +183,17 @@ function ConsultationContent() {
   function handleExportPDF() {
     if (analyticsRef.current) printElement(analyticsRef.current, "Consultation Analytics");
   }
+
+  useEffect(() => {
+    let mounted = true;
+    analyticsApi.getConsultation({ from: dateFrom || undefined, to: dateTo || undefined, faculty: facultySearch || undefined })
+      .then((data: ConsultationResponse) => {
+        if (!mounted) return;
+        if (data.consultationEfficiency) setConsultationEfficiency(data.consultationEfficiency);
+      })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, [dateFrom, dateTo, facultySearch]);
 
   return (
     <div className="p-6 flex flex-col gap-6 font-sans">
@@ -235,22 +232,11 @@ function ConsultationContent() {
 
       <div ref={analyticsRef} className="flex flex-col gap-6">
         <div className="grid gap-6" style={{ gridTemplateColumns: "3fr 2fr" }}>
-          <ConsultationEfficiencyCard {...MOCK_CONSULTATION_EFFICIENCY} />
-          <CancellationRateChart {...MOCK_CANCELLATION_RATE} />
-        </div>
-        <div className="grid gap-6" style={{ gridTemplateColumns: "3fr 2fr" }}>
-          <ApprovalBottleneckCard {...MOCK_APPROVAL_BOTTLENECK} />
+          <ConsultationEfficiencyCard {...consultationEfficiency} />
           <UrgencyPurposeAnalysis />
         </div>
       </div>
-
-      {/* Participants table — global filters passed in, local filters inside */}
-      <ConsultationParticipantsTable
-        participants={MOCK_CONSULTATION_PARTICIPANTS}
-        globalFaculty={facultySearch}
-        globalDateFrom={dateFrom}
-        globalDateTo={dateTo}
-      />
+      {/* Note: Participants table removed per updated analytics requirements */}
     </div>
   );
 }
@@ -258,81 +244,7 @@ function ConsultationContent() {
 // Page: Resource & Communication
 // Global filter: date range + strand
 
-function ResourceCommunicationContent() {
-  const analyticsRef = useRef<HTMLDivElement>(null);
-  const [dateFrom,     setDateFrom]     = useState("");
-  const [dateTo,       setDateTo]       = useState("");
-  const [strandFilter, setStrandFilter] = useState("All");
-
-  const STRANDS = ["All", "STEM", "ABM", "HUMSS", "TVL", "GAS"];
-
-  function handleExportCSV() {
-    downloadCSV(
-      [
-        ["Month", "Strand-Specific Reach", "School-Wide Reach"],
-        ...MOCK_ANNOUNCEMENT_LABELS.map((label, i) => [
-          label, String(MOCK_STRAND_SPECIFIC[i]), String(MOCK_SCHOOL_WIDE[i]),
-        ]),
-        ["---", "---", "---"],
-        ["Channel", "Sent", "Failed"],
-        ...MOCK_NOTIFICATION_SUCCESS.labels.map((label, i) => [
-          label,
-          String(MOCK_NOTIFICATION_SUCCESS.sent[i]),
-          String(MOCK_NOTIFICATION_SUCCESS.failed[i]),
-        ]),
-        ["---", "---", "---"],
-        ["Room", "Used (%)", "Available (%)"],
-        ...MOCK_ROOM_OCCUPANCY.map((r) => [r.room, String(r.used), String(r.available)]),
-      ],
-      "resource_communication_analytics"
-    );
-  }
-
-  function handleExportPDF() {
-    if (analyticsRef.current) printElement(analyticsRef.current, "Resource & Communication Analytics");
-  }
-
-  return (
-    <div className="p-6 flex flex-col gap-6 font-sans">
-      <PageHeader
-        title="Resource & Communication"
-        description="Announcement reach, notification success rates, and room occupancy statistics."
-        filters={
-          <div className="flex items-center gap-2">
-            <DateRangePicker
-              from={dateFrom} to={dateTo}
-              onFromChange={setDateFrom} onToChange={setDateTo}
-            />
-            <select
-              value={strandFilter}
-              onChange={(e) => setStrandFilter(e.target.value)}
-              className="py-1.5 px-2 text-xs border border-[#cbd5e1] bg-white text-[#1a1a1a] focus:outline-none focus:border-[#064db6]"
-            >
-              {STRANDS.map((s) => (
-                <option key={s} value={s}>{s === "All" ? "All Strands" : s}</option>
-              ))}
-            </select>
-          </div>
-        }
-        actions={<ExportButtons onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} />}
-      />
-
-      <div ref={analyticsRef} className="flex flex-col gap-6">
-        {/* Announcement Reach — full width on top */}
-        <AnnouncementReachChart
-          labels={MOCK_ANNOUNCEMENT_LABELS}
-          strandSpecific={MOCK_STRAND_SPECIFIC}
-          schoolWide={MOCK_SCHOOL_WIDE}
-        />
-        {/* Notification + Room Occupancy side by side */}
-        <div className="grid grid-cols-2 gap-6">
-          <NotificationSuccessChart {...MOCK_NOTIFICATION_SUCCESS} />
-          <RoomOccupancyChart rooms={MOCK_ROOM_OCCUPANCY} />
-        </div>
-      </div>
-    </div>
-  );
-}
+// Resource & Communication page removed per analytics scope change
 
 // Sidebar Nav Item
 
@@ -375,7 +287,6 @@ function MainContent({ activeNav }: MainContentProps) {
   const contentMap: Record<string, ReactNode> = {
     "faculty-activity":       <FacultyActivityContent />,
     "consultation":           <ConsultationContent />,
-    "resource-communication": <ResourceCommunicationContent />,
     "add-announcement":       <AddAnnouncement />,
     "add-schedule":           <AddSchedule />,
     "manage-faculty":         <AddFaculty />,

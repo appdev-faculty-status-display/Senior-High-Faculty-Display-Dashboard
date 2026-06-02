@@ -35,6 +35,7 @@ const announcementsRouter = require('./announcements.route');
 const notificationRouter = require('./notification.route');
 const requestsRouter = require('./request.route');
 const schedulesRouter = require('./schedule.route');
+const analyticsRouter = require('./analytics.route');
 
 const upload = multer();
 
@@ -117,5 +118,8 @@ router.patch(
 // ── Notifications ─────────────────────────────────────────────────────────────
 router.use('/notifications', notificationRouter);
 router.use('/requests', requestsRouter);
+
+// Analytics endpoints for admin charts
+router.use('/analytics', analyticsRouter);
 
 module.exports = router;
