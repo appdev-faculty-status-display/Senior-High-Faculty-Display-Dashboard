@@ -107,7 +107,7 @@ async function downloadFacultyTemplate(req, res) {
   ws['!cols'] = headers.map((h) => ({ wch: Math.max(h.length + 4, 24) }));
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, wb, 'Faculty Import');
+  XLSX.utils.book_append_sheet(wb, ws, 'Faculty Import');
 
   const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 

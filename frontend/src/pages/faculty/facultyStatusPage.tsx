@@ -2,24 +2,25 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 
-type Status = "pending" | "approved" | "rejected";
+type Status = "pending" | "confirmed" | "rejected";
 
 const statusLabelMap: Record<Status, string> = {
     pending: "Pending",
-    approved: "Approved",
+    confirmed: "Confirmed",
     rejected: "Rejected",
 };
 
 const statusStyleMap: Record<Status, string> = {
     pending: "bg-[#ffc107]/10 text-[#b37a00] border-[#ffc107]/30",
-    approved: "bg-[#31ac52]/10 text-[#1d7a38] border-[#31ac52]/30",
+    confirmed: "bg-[#31ac52]/10 text-[#1d7a38] border-[#31ac52]/30",
     rejected: "bg-[#ed3a30]/10 text-[#b91f18] border-[#ed3a30]/30",
 };
 
-export default function StatusPage() {
+export default function FacultyStatusPage() {
     const [searchParams] = useSearchParams();
     const requestId = searchParams.get("requestId");
-    const BASE_URL = (import.meta.env.VITE_API_URL || 'https://facultyboard-cqdzg5a8dwccegby.japaneast-01.azurewebsites.net');
+    const BASE_URL =
+        import.meta.env.VITE_API_URL || "https://facultyboard-cqdzg5a8dwccegby.japaneast-01.azurewebsites.net";
 
     const [status, setStatus] = useState<Status>("pending");
     const [rejectionReason, setRejectionReason] = useState<string>("");
@@ -34,7 +35,7 @@ export default function StatusPage() {
 
         const poll = async () => {
             try {
-                const res = await fetch(`${BASE_URL}/api/requests/${requestId}`);
+                const res = await fetch(`${BASE_URL}/api/requests/faculty/${requestId}`);
                 if (!res.ok) {
                     if (res.status === 404) {
                         setErrorMessage("This request is not available yet. Checking again soon.");
@@ -82,8 +83,8 @@ export default function StatusPage() {
                     <div className="flex items-center px-5 py-4">
                         <img src={logo} alt="logo" className="w-12 h-12" />
                         <div className="ml-4 text-white">
-                            <div className="text-lg font-black">Consultation Status</div>
-                            <div className="text-sm text-white/90">Track your consultation request in real time.</div>
+                            <div className="text-lg font-black">Consultation Room Status</div>
+                            <div className="text-sm text-white/90">Track your room request in real time.</div>
                         </div>
                     </div>
                 </div>
@@ -99,17 +100,15 @@ export default function StatusPage() {
 
                     {status === "pending" && (
                         <div className="flex flex-col items-start gap-4">
-                            {/* <div className="flex items-center gap-3">
-                                <div className="w-4 h-4 bg-[#ffc107] animate-pulse" />
-                                <h2 className="text-[#1a1a1a] font-black">Waiting for Teacher Response</h2>
-                            </div> */}
-                            <p className="text-sm text-[#4f4f4f]">Please wait for the confirmation through the Teams workflow notification.</p>
-                            {loading && <div className="text-sm text-[#4f4f4f]">Loading…</div>}
+                            <p className="text-sm text-[#4f4f4f]">
+                                Please wait for the confirmation through the workflow notification.
+                            </p>
+                            {loading && <div className="text-sm text-[#4f4f4f]">Loading...</div>}
                             {errorMessage && <div className="text-sm text-[#ed3a30]">{errorMessage}</div>}
                         </div>
                     )}
 
-                    {status === "approved" && (
+                    {status === "confirmed" && (
                         <div className="flex flex-col items-start gap-4">
                             <div className="flex items-center gap-3">
                                 <div className="p-3 bg-[#31ac52]/10">
@@ -117,9 +116,9 @@ export default function StatusPage() {
                                         <path d="M20 6L9 17l-5-5" stroke="#31ac52" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter" />
                                     </svg>
                                 </div>
-                                <h2 className="text-[#1a1a1a] font-black">Consultation Approved</h2>
+                                <h2 className="text-[#1a1a1a] font-black">Room Request Confirmed</h2>
                             </div>
-                            <p className="text-sm text-[#4f4f4f]">Please proceed to the faculty room.</p>
+                            <p className="text-sm text-[#4f4f4f]">Please proceed to the reserved consultation room.</p>
                         </div>
                     )}
 

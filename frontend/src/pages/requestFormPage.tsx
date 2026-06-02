@@ -310,7 +310,7 @@ export default function RequestForm() {
       cancelled.current = true;
       controller.abort();
     };
-  }, [form.teacher]);
+  }, [BASE_URL, form.teacher]);
 
   useEffect(() => {
     const timeWindowError = getTimeWindowError(startTime, endTime);
@@ -373,7 +373,7 @@ export default function RequestForm() {
       cancelled.current = true;
       controller.abort();
     };
-  }, [endTime, form.room, startTime]);
+  }, [BASE_URL, endTime, form.room, startTime]);
 
   useEffect(() => {
     const timer = setInterval(() => {
