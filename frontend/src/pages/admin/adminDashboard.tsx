@@ -14,7 +14,7 @@ import ConsultationEfficiencyCard    from "@/components/ui/admin-dashboard/Consu
 import UrgencyPurposeAnalysis        from "@/components/ui/admin-dashboard/UrgencyPurposeAnalysis";
 
 // Types
-import type { ActiveNav, SidebarNavItemProps, MainContentProps } from "@/types/adminDashboard.types";
+import type { ActiveNav, SidebarNavItemProps, MainContentProps, ConsultationEfficiencyCardProps, RecencyLogEntry } from "@/types/adminDashboard.types";
 
 // Mock Data 
 import { NAV_ITEMS, MOCK_STATUS_DATA, MOCK_RECENCY_LOG, MOCK_CONSULTATION_EFFICIENCY } from "@/data/mockAdminDashboardData";
@@ -95,8 +95,13 @@ function FacultyActivityContent() {
   const analyticsRef = useRef<HTMLDivElement>(null);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo,   setDateTo]   = useState("");
-  const [statusData, setStatusData] = useState<any>(MOCK_STATUS_DATA);
-  const [recencyLog, setRecencyLog] = useState<any[]>(MOCK_RECENCY_LOG);
+  const [statusData, setStatusData] = useState<Record<string, number>>(MOCK_STATUS_DATA);
+  const [recencyLog, setRecencyLog] = useState<RecencyLogEntry[]>(MOCK_RECENCY_LOG);
+
+  type FacultyActivityResponse = {
+    statusDistribution?: Record<string, number>;
+    recencyLog?: RecencyLogEntry[];
+  };
 
   function handleExportCSV() {
     downloadCSV(
@@ -118,7 +123,7 @@ function FacultyActivityContent() {
   useEffect(() => {
     let mounted = true;
     analyticsApi.getFacultyActivity({ from: dateFrom || undefined, to: dateTo || undefined })
-      .then((data: any) => {
+      .then((data: FacultyActivityResponse) => {
         if (!mounted) return;
         if (data.statusDistribution) setStatusData(data.statusDistribution);
         if (data.recencyLog) setRecencyLog(data.recencyLog);
@@ -166,7 +171,11 @@ function ConsultationContent() {
   const [dateFrom,      setDateFrom]      = useState("");
   const [dateTo,        setDateTo]        = useState("");
   const [facultySearch, setFacultySearch] = useState("");
-  const [consultationEfficiency, setConsultationEfficiency] = useState<any>(MOCK_CONSULTATION_EFFICIENCY);
+  const [consultationEfficiency, setConsultationEfficiency] = useState<ConsultationEfficiencyCardProps>(MOCK_CONSULTATION_EFFICIENCY);
+
+  type ConsultationResponse = {
+    consultationEfficiency?: ConsultationEfficiencyCardProps;
+  };
 
   function handleExportCSV() {
     downloadCSV(
@@ -186,7 +195,7 @@ function ConsultationContent() {
   useEffect(() => {
     let mounted = true;
     analyticsApi.getConsultation({ from: dateFrom || undefined, to: dateTo || undefined, faculty: facultySearch || undefined })
-      .then((data: any) => {
+      .then((data: ConsultationResponse) => {
         if (!mounted) return;
         if (data.consultationEfficiency) setConsultationEfficiency(data.consultationEfficiency);
       })

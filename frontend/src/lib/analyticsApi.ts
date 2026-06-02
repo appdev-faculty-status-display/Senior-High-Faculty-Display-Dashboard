@@ -1,6 +1,6 @@
 import { fetchWithAuth } from './fetchWithAuth';
 
-type CacheEntry = { expiresAt: number; data: any };
+type CacheEntry = { expiresAt: number; data: unknown };
 const cache = new Map<string, CacheEntry>();
 const TTL_MS = 30 * 1000; // 30s cache
 
@@ -14,12 +14,12 @@ function buildKey(path: string, params?: Record<string,string|number|undefined>)
   return qs ? `${path}?${qs}` : path;
 }
 
-async function cachedGet(path: string, params?: Record<string,string|number|undefined>, forceRefresh = false) {
+async function cachedGet<T>(path: string, params?: Record<string,string|number|undefined>, forceRefresh = false): Promise<T> {
   const key = buildKey(path, params);
   const now = Date.now();
   if (!forceRefresh) {
     const e = cache.get(key);
-    if (e && e.expiresAt > now) return e.data;
+    if (e && e.expiresAt > now) return e.data as T;
   }
 
   const qs = params
@@ -31,7 +31,7 @@ async function cachedGet(path: string, params?: Record<string,string|number|unde
   const url = `/api/analytics/${path}${qs ? `?${qs}` : ''}`;
   const res = await fetchWithAuth(url);
   if (!res.ok) throw new Error(`Fetch failed ${res.status}`);
-  const data = await res.json();
+  const data = (await res.json()) as T;
   cache.set(key, { expiresAt: now + TTL_MS, data });
   return data;
 }

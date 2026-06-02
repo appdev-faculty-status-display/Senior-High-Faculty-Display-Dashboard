@@ -68,7 +68,7 @@ export default function StatusPage() {
             mounted = false;
             clearInterval(intervalId);
         };
-    }, [requestId]);
+    }, [BASE_URL, requestId]);
 
     return (
         <div className="min-h-screen bg-[#f5f6fa] flex items-center justify-center px-4 py-8">
